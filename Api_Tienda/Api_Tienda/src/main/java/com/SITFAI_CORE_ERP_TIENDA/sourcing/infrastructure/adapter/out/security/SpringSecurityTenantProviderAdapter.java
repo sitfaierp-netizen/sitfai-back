@@ -1,0 +1,28 @@
+package com.SITFAI_CORE_ERP_TIENDA.sourcing.infrastructure.adapter.out.security;
+
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.TenantAuthenticationDetails;
+import com.SITFAI_CORE_ERP_TIENDA.sourcing.application.port.output.TenantProviderPort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+
+@Component("sourcingTenantProviderAdapter")
+public class SpringSecurityTenantProviderAdapter implements TenantProviderPort {
+
+    @Override
+    public UUID obtenerEmpresaIdActual() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new IllegalStateException("No hay un usuario autenticado en el contexto de seguridad.");
+        }
+
+        Object details = auth.getDetails();
+        if (details instanceof TenantAuthenticationDetails tenantDetails) {
+            return tenantDetails.empresaUuid();
+        }
+
+        throw new IllegalStateException("No se encontraron detalles de tenant.");
+    }
+}
