@@ -1,0 +1,193 @@
+{
+  "id": "sitfai-erp",
+  "realm": "sitfai-erp",
+  "displayName": "SITFAI ERP Multi-Tenant Realm",
+  "displayNameHtml": "<b>SITFAI ERP</b>",
+  "notBefore": 0,
+  "defaultSignatureAlgorithm": "RS256",
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 0,
+  "accessTokenLifespan": 1800,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "SUPER_ADMIN",
+        "description": "Super Administrador global de la plataforma SITFAI ERP (EMP-05)"
+      },
+      {
+        "name": "EMPRESA_ADMIN",
+        "description": "Administrador del Tenant / Empresa (SUC-05)"
+      },
+      {
+        "name": "SUCURSAL_MANAGER",
+        "description": "Gerente de Sucursal con permisos de cierre de caja (CAJ-06)"
+      },
+      {
+        "name": "BODEGA_OPERATOR",
+        "description": "Operador de Bodega y gestión de stock (BOD-07)"
+      },
+      {
+        "name": "CAJERO",
+        "description": "Operador de Caja y punto de venta (CAJ-06)"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "api-tienda-client",
+      "name": "API Tienda Client",
+      "description": "Cliente para autenticacion directa de Api_Tienda",
+      "enabled": true,
+      "publicClient": true,
+      "bearerOnly": false,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "protocolMappers": [
+        {
+          "name": "empresa_id-protocol-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "empresa_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "empresa_id",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "sitfai-api-client",
+      "name": "SITFAI API Tienda Client",
+      "description": "Cliente OpenID Connect para API Tienda y microservicios SITFAI ERP",
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "sitfai-api-secret",
+      "publicClient": true,
+      "bearerOnly": false,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "protocolMappers": [
+        {
+          "name": "empresa_id-protocol-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "empresa_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "empresa_id",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "cajero_test",
+      "enabled": true,
+      "email": "cajero@sitfai.local",
+      "firstName": "Cajero",
+      "lastName": "Test",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "12345",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CAJERO"
+      ],
+      "attributes": {
+        "empresa_id": [
+          "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+        ]
+      }
+    },
+    {
+      "username": "bodega_test",
+      "enabled": true,
+      "email": "bodega@sitfai.local",
+      "firstName": "Bodega",
+      "lastName": "Test",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "12345",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "BODEGA_OPERATOR"
+      ],
+      "attributes": {
+        "empresa_id": [
+          "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+        ]
+      }
+    }
+  ]
+}

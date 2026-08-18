@@ -1,0 +1,381 @@
+{
+  "info": {
+    "_postman_id": "8f3b2d1a-4c5e-4a6b-9c8d-1e2f3a4b5c6d",
+    "name": "SITFAI ERP — E2E Testing Collection",
+    "description": "Colección de pruebas End-to-End para SITFAI ERP (Autenticación IAM Keycloak, Healthcheck, Venta en Tienda y Eventos de Dominio / Descuento de Stock)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "iam_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "api_url",
+      "value": "http://localhost:8084",
+      "type": "string"
+    },
+    {
+      "key": "realm",
+      "value": "sitfai-erp",
+      "type": "string"
+    },
+    {
+      "key": "client_id",
+      "value": "api-tienda-client",
+      "type": "string"
+    },
+    {
+      "key": "empresa_id",
+      "value": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pedido_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Auth / Obtener Token (Cajero)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Token obtenido con éxito (Status 200)\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var jsonData = pm.response.json();",
+              "if (jsonData.access_token) {",
+              "    pm.collectionVariables.set(\"jwt_token\", jsonData.access_token);",
+              "    console.log(\"JWT Token guardado en {{jwt_token}}\");",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "password",
+              "type": "text"
+            },
+            {
+              "key": "client_id",
+              "value": "{{client_id}}",
+              "type": "text"
+            },
+            {
+              "key": "username",
+              "value": "cajero_test",
+              "type": "text"
+            },
+            {
+              "key": "password",
+              "value": "12345",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{iam_url}}/realms/{{realm}}/protocol/openid-connect/token",
+          "host": [
+            "{{iam_url}}"
+          ],
+          "path": [
+            "realms",
+            "{{realm}}",
+            "protocol",
+            "openid-connect",
+            "token"
+          ]
+        },
+        "description": "Autenticación directa en Keycloak Realm sitfai-erp con usuario cajero_test (Rol: CAJERO). Extrae el access_token JWT enriquecido con el claim empresa_id."
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Healthcheck (Público)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Servicio Activo (Status UP)\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"UP\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_url}}/actuator/health",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "actuator",
+            "health"
+          ]
+        },
+        "description": "Endpoint público de Spring Boot Actuator para validar el estado de salud y disponibilidad del microservicio Api_Tienda."
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Crear Pedido (Borrador Core)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Pedido creado con éxito (Status 201)\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "var jsonData = pm.response.json();",
+              "if (jsonData.id) {",
+              "    pm.collectionVariables.set(\"pedido_id\", jsonData.id);",
+              "    console.log(\"Pedido ID guardado en {{pedido_id}}: \" + jsonData.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Empresa-Id",
+            "value": "{{empresa_id}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clienteId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n}"
+        },
+        "url": {
+          "raw": "{{api_url}}/api/v1/pedidos",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "pedidos"
+          ]
+        },
+        "description": "Crea un nuevo pedido en estado BORRADOR. Requiere Bearer JWT Token de Keycloak y header multitenant X-Empresa-Id."
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Agregar Línea al Pedido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Línea agregada con éxito (Status 200)\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Empresa-Id",
+            "value": "{{empresa_id}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productoId\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\n  \"cantidad\": 2,\n  \"precioUnitario\": 25.50,\n  \"moneda\": \"USD\"\n}"
+        },
+        "url": {
+          "raw": "{{api_url}}/api/v1/pedidos/{{pedido_id}}/lineas",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "pedidos",
+            "{{pedido_id}}",
+            "lineas"
+          ]
+        },
+        "description": "Agrega una línea de producto con cantidad y precio al pedido borrador creado previamente."
+      },
+      "response": []
+    },
+    {
+      "name": "05 - Confirmar Pedido (Dispara Evento de Dominio)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Pedido confirmado con éxito (Status 200)\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Empresa-Id",
+            "value": "{{empresa_id}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{api_url}}/api/v1/pedidos/{{pedido_id}}/confirmar",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "pedidos",
+            "{{pedido_id}}",
+            "confirmar"
+          ]
+        },
+        "description": "Confirma el pedido, cambiando su estado a CONFIRMADO y disparando el Evento de Dominio PedidoConfirmadoEvent para el descuento de stock asincrónico."
+      },
+      "response": []
+    },
+    {
+      "name": "06 - Consultar Stock en Bodega",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Consulta de stock exitosa (Status 200)\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Empresa-Id",
+            "value": "{{empresa_id}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{api_url}}/api/v1/bodegas/bodega-central-01/stock/7c9e6679-7425-40de-944b-e07fc1f90ae7",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "bodegas",
+            "bodega-central-01",
+            "stock",
+            "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+          ]
+        },
+        "description": "Consulta el stock disponible del producto en la bodega para verificar el efecto del evento de dominio."
+      },
+      "response": []
+    }
+  ]
+}

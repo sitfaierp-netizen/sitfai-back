@@ -1,0 +1,525 @@
+package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model;
+
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.DomainEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.MovimientoRegistradoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockActualizadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.PuntoReordenAlcanzadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.StockInsuficienteException;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.BodegaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Cantidad;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.DocumentoFuenteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.PuntoReorden;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.SucursalId;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * AGGREGATE ROOT: Bodega
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * <p>
+ * La Bodega es la raíz del Agregado en el Bounded Context de Inventario.
+ * Es el único punto de entrada para registrar movimientos de stock.
+ * Todo acceso al stock de productos debe pasar por este Agregado.
+ * <p>
+ * ── REGLAS DE NEGOCIO APLICADAS ────────────────────────────────────────────────
+ * <ul>
+ *   <li>BOD-01: Una Bodega pertenece a exactamente una Sucursal ({@code sucursalId}).</li>
+ *   <li>BOD-02: El código de Bodega es único dentro de la Sucursal (validado en Application).</li>
+ *   <li>BOD-03: La Bodega es el único lugar donde se registran movimientos de stock.</li>
+ *   <li>BOD-04: No existe movimiento sin {@code DocumentoFuenteId} — obligatorio.</li>
+ *   <li>BOD-05: ⚠️ INVARIANTE CRÍTICA — El stock NUNCA puede ser negativo.</li>
+ *   <li>BOD-06: Las transferencias generan dos movimientos independientes (en Bodegas distintas).</li>
+ *   <li>BOD-08: El sistema emitirá una alerta si el stock cae a <= PuntoReorden.</li>
+ *   <li>MT-01: El {@code empresaId} está presente para multitenancy.</li>
+ *   <li>AUD-01: Los campos {@code creadoEn} y {@code actualizadoEn} están presentes.</li>
+ *   <li>AUD-03: Los Domain Events se acumulan para ser publicados por la capa de Aplicación.</li>
+ * </ul>
+ * <p>
+ * ── AISLAMIENTO ────────────────────────────────────────────────────────────────
+ * ⚠️ PROHIBIDO: Cero imports de JPA, Spring o Jackson. Este es Java puro.
+ * El mapeo a la BD es responsabilidad EXCLUSIVA de la capa de Infraestructura.
+ */
+public final class Bodega {
+
+    // ── Identidad ─────────────────────────────────────────────────────────────
+
+    /** Identificador único de la Bodega (UUID — REGLA-6). */
+    private final BodegaId id;
+
+    // ── Multitenancy (MT-01) ──────────────────────────────────────────────────
+
+    /** Tenant al que pertenece la Bodega. Nunca cambia una vez creada. */
+    private final EmpresaId empresaId;
+
+    // ── Pertenencia jerárquica (BOD-01) ───────────────────────────────────────
+
+    /** Sucursal a la que pertenece esta Bodega. Nunca cambia una vez creada. */
+    private final SucursalId sucursalId;
+
+    // ── Atributos descriptivos ────────────────────────────────────────────────
+
+    /**
+     * Código único de la Bodega dentro de la Sucursal (BOD-02).
+     * Ej: "BDG-001", "PRINCIPAL", "REFRIGERADOS".
+     */
+    private final String codigo;
+
+    /** Nombre descriptivo de la Bodega. */
+    private String nombre;
+
+    /** Indica si la Bodega está operativa. Una Bodega inactiva no acepta movimientos. */
+    private boolean activa;
+
+    /** Clasificación del propósito logístico de esta bodega. */
+    private final TipoBodega tipo;
+
+    // ── Stock ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Stock actual por producto.
+     * Clave: ProductoId — Valor: cantidad en stock (BigDecimal, siempre >= 0 — BOD-05).
+     * <p>
+     * Un producto ausente en el mapa equivale a stock = 0.
+     */
+    private final Map<ProductoId, BigDecimal> stock;
+
+    /**
+     * Puntos de reorden por producto (BOD-08).
+     * Si no está presente, se asume un punto de reorden por defecto de 0.
+     */
+    private final Map<ProductoId, PuntoReorden> puntosReorden;
+
+    // ── Historial de movimientos ──────────────────────────────────────────────
+
+    /**
+     * Movimientos registrados en este agregado durante la sesión actual.
+     * Se persisten en la capa de Infraestructura al llamar al repositorio.
+     */
+    private final List<MovimientoInventario> movimientos;
+
+    // ── Domain Events (AUD-03) ────────────────────────────────────────────────
+
+    /**
+     * Eventos de dominio acumulados durante esta transacción.
+     * La capa de Aplicación los drena y los publica DESPUÉS de persistir el Agregado.
+     */
+    private final List<DomainEvent> domainEvents;
+
+    // ── Auditoría (AUD-01) ────────────────────────────────────────────────────
+
+    private final Instant creadoEn;
+    private Instant actualizadoEn;
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // CONSTRUCTORES (privados — solo accesibles vía factory methods)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    private Bodega(
+            BodegaId id,
+            EmpresaId empresaId,
+            SucursalId sucursalId,
+            String codigo,
+            String nombre,
+            boolean activa,
+            TipoBodega tipo,
+            Map<ProductoId, BigDecimal> stock,
+            Map<ProductoId, PuntoReorden> puntosReorden,
+            List<MovimientoInventario> movimientos,
+            Instant creadoEn,
+            Instant actualizadoEn) {
+
+        this.id = id;
+        this.empresaId = empresaId;
+        this.sucursalId = sucursalId;
+        this.codigo = codigo;
+        this.nombre = nombre;
+        this.activa = activa;
+        this.tipo = tipo;
+        this.stock = new HashMap<>(stock);
+        this.puntosReorden = (puntosReorden != null) ? new HashMap<>(puntosReorden) : new HashMap<>();
+        this.movimientos = new ArrayList<>(movimientos);
+        this.domainEvents = new ArrayList<>();
+        this.creadoEn = creadoEn;
+        this.actualizadoEn = actualizadoEn;
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // FACTORY METHODS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Crea una nueva Bodega. Stock inicial vacío (todos los productos en 0).
+     *
+     * @param empresaId  Tenant al que pertenecerá (MT-01).
+     * @param sucursalId Sucursal a la que pertenecerá (BOD-01).
+     * @param codigo     Código único dentro de la Sucursal (BOD-02).
+     * @param nombre     Nombre descriptivo.
+     * @return           Nueva instancia del Agregado Bodega.
+     */
+    public static Bodega crear(
+            EmpresaId empresaId,
+            SucursalId sucursalId,
+            String codigo,
+            String nombre) {
+        return crear(empresaId, sucursalId, codigo, nombre, TipoBodega.VENTA);
+    }
+
+    /**
+     * Crea una nueva Bodega con un tipo específico. Stock inicial vacío.
+     *
+     * @param empresaId  Tenant al que pertenecerá (MT-01).
+     * @param sucursalId Sucursal a la que pertenecerá (BOD-01).
+     * @param codigo     Código único dentro de la Sucursal (BOD-02).
+     * @param nombre     Nombre descriptivo.
+     * @param tipo       El tipo o propósito de la bodega.
+     * @return           Nueva instancia del Agregado Bodega.
+     */
+    public static Bodega crear(
+            EmpresaId empresaId,
+            SucursalId sucursalId,
+            String codigo,
+            String nombre,
+            TipoBodega tipo) {
+
+        validarCamposObligatorios(empresaId, sucursalId, codigo, nombre);
+        Objects.requireNonNull(tipo, "Bodega: tipo de bodega es obligatorio.");
+
+        Instant ahora = Instant.now();
+        return new Bodega(
+                BodegaId.nuevo(),
+                empresaId,
+                sucursalId,
+                codigo.trim().toUpperCase(),
+                nombre.trim(),
+                true,
+                tipo,
+                new HashMap<>(),
+                new HashMap<>(),
+                new ArrayList<>(),
+                ahora,
+                ahora
+        );
+    }
+
+    /**
+     * Reconstituye una Bodega desde la base de datos.
+     * Usado EXCLUSIVAMENTE por los adaptadores JPA de la capa de Infraestructura.
+     * No genera un nuevo BodegaId ni timestamp — usa los persistidos.
+     */
+    public static Bodega reconstituir(
+            BodegaId id,
+            EmpresaId empresaId,
+            SucursalId sucursalId,
+            String codigo,
+            String nombre,
+            boolean activa,
+            Map<ProductoId, BigDecimal> stock,
+            Map<ProductoId, PuntoReorden> puntosReorden,
+            List<MovimientoInventario> movimientos,
+            Instant creadoEn,
+            Instant actualizadoEn) {
+        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, TipoBodega.VENTA, stock, puntosReorden, movimientos, creadoEn, actualizadoEn);
+    }
+
+    public static Bodega reconstituir(
+            BodegaId id,
+            EmpresaId empresaId,
+            SucursalId sucursalId,
+            String codigo,
+            String nombre,
+            boolean activa,
+            TipoBodega tipo,
+            Map<ProductoId, BigDecimal> stock,
+            Map<ProductoId, PuntoReorden> puntosReorden,
+            List<MovimientoInventario> movimientos,
+            Instant creadoEn,
+            Instant actualizadoEn) {
+
+        Objects.requireNonNull(id,           "Bodega.reconstituir: id es obligatorio.");
+        validarCamposObligatorios(empresaId, sucursalId, codigo, nombre);
+        Objects.requireNonNull(tipo,         "Bodega.reconstituir: tipo de bodega es obligatorio.");
+
+        return new Bodega(id, empresaId, sucursalId, codigo, nombre, activa, tipo,
+                stock, puntosReorden, movimientos, creadoEn, actualizadoEn);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // COMPORTAMIENTO DE DOMINIO — MÉTODO PRINCIPAL
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Registra un nuevo {@code MovimientoInventario} en esta Bodega.
+     * <p>
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │ INVARIANTE BOD-05 (CRÍTICA):                                        │
+     * │ Si el movimiento es de SALIDA y la cantidad solicitada supera       │
+     * │ el stock disponible del producto, se lanza                          │
+     * │ {@code StockInsuficienteException} ANTES de modificar cualquier     │
+     * │ estado del Agregado. El Agregado permanece en estado consistente.  │
+     * └─────────────────────────────────────────────────────────────────────┘
+     * <p>
+     * Reglas aplicadas: BOD-03, BOD-04, BOD-05.
+     *
+     * @param productoId      Producto cuyo stock se afecta.
+     * @param cantidad        Cantidad del movimiento (siempre positiva — la dirección la da {@code tipo}).
+     * @param tipo            ENTRADA suma al stock; SALIDA resta del stock.
+     * @param documentoFuente Documento obligatorio (BOD-04).
+     * @throws StockInsuficienteException si {@code tipo == SALIDA} y stock resultante < 0 (BOD-05).
+     * @throws IllegalStateException      si la Bodega está inactiva.
+     * @throws IllegalArgumentException   si algún argumento es null.
+     */
+    public void registrarMovimiento(
+            ProductoId productoId,
+            Cantidad cantidad,
+            TipoMovimiento tipo,
+            DocumentoFuenteId documentoFuente) {
+
+        // ── Pre-condición: Bodega activa ──────────────────────────────────────
+        if (!this.activa) {
+            throw new IllegalStateException(
+                    String.format("La Bodega '%s' está inactiva y no puede recibir movimientos.", this.id));
+        }
+
+        // ── Pre-condición: argumentos ─────────────────────────────────────────
+        Objects.requireNonNull(productoId,      "registrarMovimiento: productoId es obligatorio.");
+        Objects.requireNonNull(cantidad,        "registrarMovimiento: cantidad es obligatoria.");
+        Objects.requireNonNull(tipo,            "registrarMovimiento: tipo es obligatorio.");
+        Objects.requireNonNull(documentoFuente, "registrarMovimiento: documentoFuente es obligatorio (BOD-04).");
+
+        // ── Stock actual del producto (0 si no existe aún) ───────────────────
+        BigDecimal stockActual = this.stock.getOrDefault(productoId, BigDecimal.ZERO);
+
+        // ═════════════════════════════════════════════════════════════════════
+        // BOD-05 — INVARIANTE: Stock nunca negativo
+        // ═════════════════════════════════════════════════════════════════════
+        if (tipo == TipoMovimiento.SALIDA) {
+            BigDecimal stockResultante = stockActual.subtract(cantidad.valor());
+            if (stockResultante.compareTo(BigDecimal.ZERO) < 0) {
+                throw new StockInsuficienteException(
+                        this.id,
+                        productoId,
+                        stockActual,
+                        cantidad.valor()
+                );
+            }
+        }
+
+        // ── Aplicar el movimiento al stock ────────────────────────────────────
+        BigDecimal nuevoStock = switch (tipo) {
+            case ENTRADA -> stockActual.add(cantidad.valor());
+            case SALIDA  -> stockActual.subtract(cantidad.valor());
+        };
+
+        this.stock.put(productoId, nuevoStock);
+        this.actualizadoEn = Instant.now();
+
+        // ── Crear y registrar la Entidad de Movimiento ────────────────────────
+        MovimientoInventario movimiento = MovimientoInventario.crear(
+                this.id,
+                productoId,
+                this.empresaId,
+                cantidad,
+                tipo,
+                documentoFuente
+        );
+        this.movimientos.add(movimiento);
+
+        // ── Emitir Domain Events (AUD-03) ─────────────────────────────────────
+        this.domainEvents.add(MovimientoRegistradoEvent.of(
+                this.id,
+                productoId,
+                this.empresaId,
+                tipo,
+                cantidad,
+                documentoFuente
+        ));
+
+        this.domainEvents.add(StockActualizadoEvent.of(
+                this.id,
+                productoId,
+                this.empresaId,
+                nuevoStock
+        ));
+
+        // ═════════════════════════════════════════════════════════════════════
+        // BOD-08 — REPLENISHMENT: Verificar Punto de Reorden en SALIDA
+        // ═════════════════════════════════════════════════════════════════════
+        if (tipo == TipoMovimiento.SALIDA) {
+            BigDecimal umbral = this.puntosReorden.getOrDefault(productoId, PuntoReorden.porDefecto()).valor();
+            
+            // Emitir el evento SOLO si el stock acaba de cruzar el umbral hacia abajo por primera vez
+            if (stockActual.compareTo(umbral) > 0 && nuevoStock.compareTo(umbral) <= 0) {
+                this.domainEvents.add(PuntoReordenAlcanzadoEvent.of(
+                        this.empresaId,
+                        this.id,
+                        productoId,
+                        nuevoStock
+                ));
+            }
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // GESTIÓN DE PUNTO DE REORDEN
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Establece el punto de reorden para un producto específico.
+     *
+     * @param productoId   Identificador del producto.
+     * @param puntoReorden Valor del punto de reorden (>= 0).
+     */
+    public void establecerPuntoReorden(ProductoId productoId, PuntoReorden puntoReorden) {
+        Objects.requireNonNull(productoId, "establecerPuntoReorden: productoId es obligatorio.");
+        Objects.requireNonNull(puntoReorden, "establecerPuntoReorden: puntoReorden es obligatorio.");
+        this.puntosReorden.put(productoId, puntoReorden);
+        this.actualizadoEn = Instant.now();
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // CONSULTAS DE STOCK Y ESTADO
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Determina si esta bodega permite registrar ventas comerciales.
+     * Solo las bodegas de tipo VENTA y que se encuentran activas lo permiten.
+     *
+     * @return true si es apta para venta, false si es cuarentena, merma o está inactiva.
+     */
+    public boolean puedeVender() {
+        return this.tipo == TipoBodega.VENTA && this.activa;
+    }
+
+    /**
+     * Retorna el stock actual de un producto en esta Bodega.
+     * Un producto sin movimientos retorna {@code BigDecimal.ZERO}.
+     *
+     * @param productoId Producto a consultar.
+     * @return Stock actual (siempre >= 0 por invariante BOD-05).
+     */
+    public BigDecimal consultarStock(ProductoId productoId) {
+        Objects.requireNonNull(productoId, "consultarStock: productoId es obligatorio.");
+        return this.stock.getOrDefault(productoId, BigDecimal.ZERO);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // GESTIÓN DE DOMAIN EVENTS (Patrón "Pull" para la capa de Aplicación)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Retorna los Domain Events acumulados durante esta transacción.
+     * Vista inmutable — la capa de Aplicación usa {@code drainDomainEvents()} para publicarlos.
+     */
+    public List<DomainEvent> getDomainEvents() {
+        return Collections.unmodifiableList(domainEvents);
+    }
+
+    /**
+     * Drena y limpia la lista de Domain Events.
+     * La capa de Aplicación llama este método DESPUÉS de persistir el Agregado
+     * y ANTES de publicar los eventos (AUD-03).
+     */
+    public List<DomainEvent> drainDomainEvents() {
+        List<DomainEvent> eventos = new ArrayList<>(domainEvents);
+        domainEvents.clear();
+        return Collections.unmodifiableList(eventos);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // ACCESSORS (sin setters — el estado solo cambia vía métodos de dominio)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    public BodegaId getId()                          { return id; }
+    public EmpresaId getEmpresaId()                  { return empresaId; }
+    public SucursalId getSucursalId()                { return sucursalId; }
+    public String getCodigo()                        { return codigo; }
+    public String getNombre()                        { return nombre; }
+    public boolean isActiva()                        { return activa; }
+    public TipoBodega getTipo()                      { return tipo; }
+    public Instant getCreadoEn()                     { return creadoEn; }
+    public Instant getActualizadoEn()                { return actualizadoEn; }
+
+    /** Vista inmutable del stock actual. */
+    public Map<ProductoId, BigDecimal> getStock() {
+        return Collections.unmodifiableMap(stock);
+    }
+
+    /** Vista inmutable de los puntos de reorden. */
+    public Map<ProductoId, PuntoReorden> getPuntosReorden() {
+        return Collections.unmodifiableMap(puntosReorden);
+    }
+
+    /** Vista inmutable de los movimientos registrados en esta sesión. */
+    public List<MovimientoInventario> getMovimientos() {
+        return Collections.unmodifiableList(movimientos);
+    }
+
+    /**
+     * Desactiva la Bodega. Una Bodega inactiva no puede registrar movimientos.
+     * Solo roles autorizados pueden invocar este comportamiento (validado en Application).
+     */
+    public void desactivar() {
+        this.activa = false;
+        this.actualizadoEn = Instant.now();
+    }
+
+    /**
+     * Reactiva una Bodega previamente desactivada.
+     */
+    public void activar() {
+        this.activa = true;
+        this.actualizadoEn = Instant.now();
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // VALIDACIÓN INTERNA
+    // ═════════════════════════════════════════════════════════════════════════
+
+    private static void validarCamposObligatorios(
+            EmpresaId empresaId,
+            SucursalId sucursalId,
+            String codigo,
+            String nombre) {
+
+        Objects.requireNonNull(empresaId,  "Bodega: empresaId es obligatorio (MT-01).");
+        Objects.requireNonNull(sucursalId, "Bodega: sucursalId es obligatorio (BOD-01).");
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException("Bodega: el código es obligatorio (BOD-02).");
+        }
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("Bodega: el nombre es obligatorio.");
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // EQUALS / HASHCODE — Por identidad (ID del Agregado)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Bodega bodega)) return false;
+        return Objects.equals(id, bodega.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Bodega{id=%s, empresa=%s, sucursal=%s, codigo='%s', activa=%s}",
+                id, empresaId, sucursalId, codigo, activa);
+    }
+}

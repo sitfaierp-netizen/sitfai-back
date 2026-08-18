@@ -1,0 +1,55 @@
+# ==========================================
+# ENTORNOS Y SECRETOS (¡CRÍTICO!)
+# ==========================================
+.env
+.env.*
+*.local
+application-secret.yml
+application-secret.properties
+firebase-adminsdk.json
+credentials.json
+
+# ==========================================
+# COMPILADOS Y LOGS
+# ==========================================
+*.class
+*.log
+*.jar
+*.war
+
+# ==========================================
+# IDEs Y BUILD TOOLS (MANTENER EXISTENTES)
+# ==========================================
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/

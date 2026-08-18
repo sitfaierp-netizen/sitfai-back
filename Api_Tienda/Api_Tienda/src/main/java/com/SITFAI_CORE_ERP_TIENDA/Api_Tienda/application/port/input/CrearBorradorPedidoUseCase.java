@@ -1,0 +1,12 @@
+package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.input;
+
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.dto.CrearPedidoCommand;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.dto.PedidoResponse;
+
+/**
+ * Driving Port: Caso de uso para inicializar un nuevo Pedido en estado BORRADOR.
+ */
+public interface CrearBorradorPedidoUseCase {
+
+    PedidoResponse ejecutar(CrearPedidoCommand command);
+}
