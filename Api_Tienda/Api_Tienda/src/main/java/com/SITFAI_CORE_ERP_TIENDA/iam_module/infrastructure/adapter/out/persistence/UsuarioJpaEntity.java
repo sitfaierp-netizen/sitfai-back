@@ -5,6 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import java.time.Instant;
 import java.util.Objects;
 
@@ -14,6 +17,8 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "iam_usuario")
+@SQLDelete(sql = "UPDATE iam_usuario SET activo = false, deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("activo = true")
 public class UsuarioJpaEntity {
 
     @Id
@@ -41,6 +46,15 @@ public class UsuarioJpaEntity {
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
+    @Column(name = "activo", nullable = false)
+    private boolean activo = true;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by", length = 36)
+    private String deletedBy;
+
     public UsuarioJpaEntity() {
     }
 
@@ -52,7 +66,10 @@ public class UsuarioJpaEntity {
             String rol,
             String estado,
             Instant creadoEn,
-            Instant actualizadoEn
+            Instant actualizadoEn,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy
     ) {
         this.id = id;
         this.empresaId = empresaId;
@@ -62,6 +79,9 @@ public class UsuarioJpaEntity {
         this.estado = estado;
         this.creadoEn = creadoEn;
         this.actualizadoEn = actualizadoEn;
+        this.activo = activo;
+        this.deletedAt = deletedAt;
+        this.deletedBy = deletedBy;
     }
 
     public String getId() {
@@ -126,6 +146,30 @@ public class UsuarioJpaEntity {
 
     public void setActualizadoEn(Instant actualizadoEn) {
         this.actualizadoEn = actualizadoEn;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
     }
 
     @Override

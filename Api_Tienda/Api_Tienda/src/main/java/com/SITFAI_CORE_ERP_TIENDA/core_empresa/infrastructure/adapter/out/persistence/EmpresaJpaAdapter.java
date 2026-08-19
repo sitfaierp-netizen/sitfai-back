@@ -102,7 +102,10 @@ public class EmpresaJpaAdapter implements EmpresaRepository {
                 Collections.emptyList(), // En un caso real recuperaríamos sucursales si fuera necesario o se modela como aggregate separado
                 entity.getCreadoEn(),
                 entity.getActualizadoEn(),
-                entity.getVersion()
+                entity.getVersion(),
+                entity.isActivo(),
+                entity.getDeletedAt(),
+                entity.getDeletedBy()
         );
     }
 }

@@ -69,7 +69,10 @@ class CambiarEstadoSucursalServiceTest {
                 Collections.emptyList(),
                 Instant.now(),
                 Instant.now(),
-                0L
+                0L,
+                true,
+                null,
+                null
         );
     }
 
@@ -82,21 +85,24 @@ class CambiarEstadoSucursalServiceTest {
                 Collections.emptyList(),
                 Instant.now(),
                 Instant.now(),
-                0L
+                0L,
+                true,
+                null,
+                null
         );
     }
 
     private Sucursal unaSucursalActiva() {
         return Sucursal.reconstituir(
                 sucursalId, "MATRIZ", "Sucursal Matriz",
-                EstadoSucursal.ACTIVA, Instant.now(), Instant.now()
+                EstadoSucursal.ACTIVA, Instant.now(), Instant.now(), true, null, null
         );
     }
 
     private Sucursal unaSucursalInactiva() {
         return Sucursal.reconstituir(
                 sucursalId, "MATRIZ", "Sucursal Matriz",
-                EstadoSucursal.INACTIVA, Instant.now(), Instant.now()
+                EstadoSucursal.INACTIVA, Instant.now(), Instant.now(), true, null, null
         );
     }
 

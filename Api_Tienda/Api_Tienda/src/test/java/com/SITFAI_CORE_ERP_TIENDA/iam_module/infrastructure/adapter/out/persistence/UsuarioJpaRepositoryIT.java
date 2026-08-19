@@ -66,7 +66,10 @@ class UsuarioJpaRepositoryIT {
                 "CAJERO",
                 "ACTIVO",
                 ahora,
-                ahora
+                ahora,
+                true,
+                null,
+                null
         );
 
         repository.save(entity);
@@ -96,7 +99,10 @@ class UsuarioJpaRepositoryIT {
                 "EMPRESA_ADMIN",
                 "ACTIVO",
                 ahora,
-                ahora
+                ahora,
+                true,
+                null,
+                null
         );
 
         repository.save(entity);
@@ -120,7 +126,10 @@ class UsuarioJpaRepositoryIT {
                 "BODEGA_OPERATOR",
                 "ACTIVO",
                 ahora,
-                ahora
+                ahora,
+                true,
+                null,
+                null
         );
 
         repository.save(entity);

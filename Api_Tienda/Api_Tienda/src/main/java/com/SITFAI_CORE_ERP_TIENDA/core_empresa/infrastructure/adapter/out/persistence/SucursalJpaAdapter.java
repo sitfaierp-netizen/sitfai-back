@@ -66,7 +66,10 @@ public class SucursalJpaAdapter implements SucursalRepository {
                 entity.getNombre(),
                 EstadoSucursal.valueOf(entity.getEstado()),
                 entity.getCreadoEn(),
-                entity.getActualizadoEn()
+                entity.getActualizadoEn(),
+                entity.isActivo(),
+                entity.getDeletedAt(),
+                entity.getDeletedBy()
         );
     }
 

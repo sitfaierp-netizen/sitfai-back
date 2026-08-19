@@ -30,7 +30,10 @@ public final class UsuarioPersistenceMapper {
                 usuario.getRol().name(),
                 usuario.getEstado().name(),
                 usuario.getCreadoEn(),
-                usuario.getActualizadoEn()
+                usuario.getActualizadoEn(),
+                usuario.isActivo(),
+                usuario.getDeletedAt(),
+                usuario.getDeletedBy()
         );
     }
 
@@ -46,7 +49,10 @@ public final class UsuarioPersistenceMapper {
                 RolUsuario.valueOf(entity.getRol()),
                 EstadoUsuario.valueOf(entity.getEstado()),
                 entity.getCreadoEn(),
-                entity.getActualizadoEn()
+                entity.getActualizadoEn(),
+                entity.isActivo(),
+                entity.getDeletedAt(),
+                entity.getDeletedBy()
         );
     }
 

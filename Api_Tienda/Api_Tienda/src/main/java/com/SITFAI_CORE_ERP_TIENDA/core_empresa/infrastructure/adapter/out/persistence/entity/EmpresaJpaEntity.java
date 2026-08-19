@@ -5,10 +5,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import java.time.Instant;
 
 @Entity
 @Table(name = "core_empresa")
+@SQLDelete(sql = "UPDATE core_empresa SET activo = false, deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND version = ?")
+@SQLRestriction("activo = true")
 public class EmpresaJpaEntity {
 
     @Id
@@ -33,6 +38,15 @@ public class EmpresaJpaEntity {
     @jakarta.persistence.Version
     @Column(name = "version", nullable = false)
     private Long version = 0L;
+
+    @Column(name = "activo", nullable = false)
+    private boolean activo = true;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by", length = 36)
+    private String deletedBy;
 
     public String getId() {
         return id;
@@ -88,5 +102,29 @@ public class EmpresaJpaEntity {
 
     public void setVersion(Long version) {
         this.version = version;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
     }
 }

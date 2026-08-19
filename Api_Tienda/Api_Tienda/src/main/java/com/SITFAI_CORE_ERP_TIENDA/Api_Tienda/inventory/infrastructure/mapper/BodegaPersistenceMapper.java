@@ -84,7 +84,10 @@ public class BodegaPersistenceMapper {
                 movimientosDominio,
                 entity.getCreadoEn(),
                 entity.getActualizadoEn(),
-                entity.getVersion()
+                entity.getVersion(),
+                entity.isActivo(),
+                entity.getDeletedAt(),
+                entity.getDeletedBy()
         );
     }
 
@@ -106,7 +109,10 @@ public class BodegaPersistenceMapper {
         entity.setTipo(domain.getTipo() != null ? domain.getTipo().name() : TipoBodega.VENTA.name());
         entity.setCreadoEn(domain.getCreadoEn());
         entity.setActualizadoEn(domain.getActualizadoEn());
-        entity.setVersion(domain.getVersion() != null ? domain.getVersion() : 0L);
+        entity.setVersion(domain.getVersion());
+        entity.setActivo(domain.isActivo());
+        entity.setDeletedAt(domain.getDeletedAt());
+        entity.setDeletedBy(domain.getDeletedBy());
 
         // Mapear lotes
         List<StockLoteJpaEntity> lotesJpa = new ArrayList<>();

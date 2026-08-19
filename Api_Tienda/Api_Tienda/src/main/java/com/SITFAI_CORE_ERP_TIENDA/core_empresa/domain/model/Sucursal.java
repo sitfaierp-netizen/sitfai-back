@@ -20,6 +20,9 @@ public class Sucursal {
     private EstadoSucursal estado;
     private final Instant creadoEn;
     private Instant actualizadoEn;
+    private boolean activo = true;
+    private Instant deletedAt;
+    private String deletedBy;
 
     private Sucursal(SucursalId id, String codigo, String nombre, EstadoSucursal estado, Instant creadoEn, Instant actualizadoEn) {
         this.id = Objects.requireNonNull(id, "SucursalId no puede ser null.");
@@ -28,6 +31,18 @@ public class Sucursal {
         this.estado = Objects.requireNonNull(estado, "EstadoSucursal no puede ser null.");
         this.creadoEn = Objects.requireNonNull(creadoEn, "creadoEn no puede ser null.");
         this.actualizadoEn = Objects.requireNonNull(actualizadoEn, "actualizadoEn no puede ser null.");
+    }
+
+    private Sucursal(SucursalId id, String codigo, String nombre, EstadoSucursal estado, Instant creadoEn, Instant actualizadoEn, boolean activo, Instant deletedAt, String deletedBy) {
+        this.id = Objects.requireNonNull(id, "SucursalId no puede ser null.");
+        this.codigo = validarCodigo(codigo);
+        this.nombre = validarNombre(nombre);
+        this.estado = Objects.requireNonNull(estado, "EstadoSucursal no puede ser null.");
+        this.creadoEn = Objects.requireNonNull(creadoEn, "creadoEn no puede ser null.");
+        this.actualizadoEn = Objects.requireNonNull(actualizadoEn, "actualizadoEn no puede ser null.");
+        this.activo = activo;
+        this.deletedAt = deletedAt;
+        this.deletedBy = deletedBy;
     }
 
     /**
@@ -47,9 +62,12 @@ public class Sucursal {
             String nombre,
             EstadoSucursal estado,
             Instant creadoEn,
-            Instant actualizadoEn
+            Instant actualizadoEn,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy
     ) {
-        return new Sucursal(id, codigo, nombre, estado, creadoEn, actualizadoEn);
+        return new Sucursal(id, codigo, nombre, estado, creadoEn, actualizadoEn, activo, deletedAt, deletedBy);
     }
 
     /**
@@ -75,6 +93,20 @@ public class Sucursal {
     }
 
     /**
+     * Elimina logicamente la sucursal.
+     */
+    public void eliminar(String actorId) {
+        if (!this.activo) {
+            return;
+        }
+        Objects.requireNonNull(actorId, "El actorId no puede ser null.");
+        this.activo = false;
+        this.deletedAt = Instant.now();
+        this.deletedBy = actorId;
+        this.actualizadoEn = Instant.now();
+    }
+
+    /**
      * Actualiza el nombre descriptivo de la sucursal.
      */
     public void cambiarNombre(String nuevoNombre) {
@@ -84,6 +116,18 @@ public class Sucursal {
 
     public boolean isActiva() {
         return this.estado == EstadoSucursal.ACTIVA;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
     }
 
     private static String validarCodigo(String codigo) {

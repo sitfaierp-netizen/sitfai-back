@@ -174,7 +174,10 @@ class BodegaFefoTest {
                 bodegaReorden.getMovimientos(), 
                 bodegaReorden.getCreadoEn(), 
                 bodegaReorden.getActualizadoEn(),
-                0L
+                0L,
+                true,
+                null,
+                null
         );
 
         bodegaReorden.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(15)), LoteId.de("L1"), null, documentoIngreso);
@@ -191,7 +194,10 @@ class BodegaFefoTest {
                 java.util.Collections.emptyList(), 
                 java.time.Instant.now(), 
                 java.time.Instant.now(), 
-                0L
+                0L,
+                true,
+                null,
+                null
         );
 
         bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(15)), LoteId.de("L1"), null, documentoIngreso);

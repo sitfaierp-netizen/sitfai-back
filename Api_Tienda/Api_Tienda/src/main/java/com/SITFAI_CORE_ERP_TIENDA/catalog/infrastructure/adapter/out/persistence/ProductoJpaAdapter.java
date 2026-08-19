@@ -58,7 +58,8 @@ public class ProductoJpaAdapter implements ProductoRepository {
                 p.getNombre(), p.getDescripcion(), p.getCategoriaId().toString(),
                 p.getUnidadMedida().name(), p.getPrecioCompra(), p.getPrecioVenta(),
                 p.getImpuesto().name(), p.getCodigoBarras(), p.getEstado().name(),
-                p.getCreadoEn(), p.getActualizadoEn()
+                p.getCreadoEn(), p.getActualizadoEn(), p.isActivo(),
+                p.getDeletedAt(), p.getDeletedBy()
         );
     }
 
@@ -69,7 +70,8 @@ public class ProductoJpaAdapter implements ProductoRepository {
                 CategoriaId.de(e.getCategoriaId()), UnidadMedida.valueOf(e.getUnidadMedida()),
                 e.getPrecioCompra(), e.getPrecioVenta(), Impuesto.valueOf(e.getImpuesto()),
                 e.getCodigoBarras(), EstadoProducto.valueOf(e.getEstado()),
-                e.getCreadoEn(), e.getActualizadoEn()
+                e.getCreadoEn(), e.getActualizadoEn(), e.isActivo(),
+                e.getDeletedAt(), e.getDeletedBy()
         );
     }
 }
