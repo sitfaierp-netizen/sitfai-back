@@ -1,12 +1,12 @@
 # =============================================================================
-# SITFAI ERP — Orquestación Global de Microservicios y Contenedores
+# SITFAI ERP â€” OrquestaciÃ³n Global de Microservicios y Contenedores
 # Stack: MySQL 8.4 | Keycloak IAM 26.0 | Backend Modular (Java 21) | API Gateway
 # =============================================================================
-# ADR-002: Keycloak como único Identity & Access Management (IAM).
+# ADR-002: Keycloak como Ãºnico Identity & Access Management (IAM).
 # ADR-003: Persistencia relacional MySQL multi-esquema con seguridad multitenant.
 # ADR-006: Puerto 8085 asignado a Api_Tienda / Backend Modular.
-# ADR-007: Credenciales mediante variables de entorno (cero contraseñas quemadas).
-# ADR-008: Validación estricta de esquemas JPA (validate) y migraciones con Flyway.
+# ADR-007: Credenciales mediante variables de entorno (cero contraseÃ±as quemadas).
+# ADR-008: ValidaciÃ³n estricta de esquemas JPA (validate) y migraciones con Flyway.
 # =============================================================================
 
 version: '3.8'
@@ -15,36 +15,36 @@ services:
   # ---------------------------------------------------------------------------
   # Servicio 1: Base de Datos Relacional Multi-Esquema (MySQL 8.4 LTS)
   # ---------------------------------------------------------------------------
-  mysql-db:
-    image: mysql:8.4
-    container_name: sitfai-mysql-db
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
-      MYSQL_DATABASE: sitfai_tienda
-      MYSQL_USER: ${DB_USER:-sitfai_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
-      TZ: UTC
-    ports:
-      - "${DB_PORT:-3306}:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_secret}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - sitfai-net
+  # mysql-db:
+  #   image: mysql:8.4
+  #   container_name: sitfai-mysql-db
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
+  #     MYSQL_DATABASE: sitfai_tienda
+  #     MYSQL_USER: ${DB_USER:-sitfai_user}
+  #     MYSQL_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
+  #     TZ: UTC
+  #   ports:
+  #     - "${DB_PORT:-3306}:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #     - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+  #   command:
+  #     - --character-set-server=utf8mb4
+  #     - --collation-server=utf8mb4_unicode_ci
+  #     - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+  #   healthcheck:
+  #     test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_secret}" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     - sitfai-net
 
   # ---------------------------------------------------------------------------
-  # Servicio 2: Servidor de Identidad y Autenticación (Keycloak IAM)
+  # Servicio 2: Servidor de Identidad y AutenticaciÃ³n (Keycloak IAM)
   # ---------------------------------------------------------------------------
   keycloak-iam:
     image: quay.io/keycloak/keycloak:26.0.0
@@ -53,15 +53,16 @@ services:
     command: start-dev --import-realm
     volumes:
       - ./docker/keycloak:/opt/keycloak/data/import:ro
+      - ./themes/sitfai-theme:/opt/keycloak/themes/sitfai-theme:ro
     environment:
       # Credenciales de Administrador de Keycloak
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
 
-      # Conexión a Base de Datos MySQL
+      # ConexiÃ³n a Base de Datos MySQL
       KC_DB: mysql
-      KC_DB_URL_HOST: mysql-db
-      KC_DB_URL_PORT: 3306
+      KC_DB_URL_HOST: host.docker.internal
+      KC_DB_URL_PORT: 3307
       KC_DB_URL_DATABASE: sitfai_iam
       KC_DB_USERNAME: ${DB_USER:-sitfai_user}
       KC_DB_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
@@ -72,9 +73,8 @@ services:
       KC_HTTP_PORT: 8080
     ports:
       - "${IAM_PORT:-8080}:8080"
-    depends_on:
-      mysql-db:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - sitfai-net
 
@@ -90,14 +90,14 @@ services:
     ports:
       - "8084:8085"
     environment:
-      # Configuración de Base de Datos
-      DB_HOST: mysql-db
-      DB_PORT: 3306
+      # ConfiguraciÃ³n de Base de Datos
+      DB_HOST: host.docker.internal
+      DB_PORT: 3307
       DB_NAME: sitfai_tienda
       DB_USER: ${DB_USER:-sitfai_user}
       DB_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
 
-      # Configuración de Keycloak IAM Resource Server & Admin Client
+      # ConfiguraciÃ³n de Keycloak IAM Resource Server & Admin Client
       KEYCLOAK_HOST: keycloak-iam
       KEYCLOAK_URL: http://keycloak-iam:8080
       KEYCLOAK_REALM: sitfai-erp
@@ -105,10 +105,10 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
       IAM_PORT: 8080
     depends_on:
-      mysql-db:
-        condition: service_healthy
       keycloak-iam:
         condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - sitfai-net
 
@@ -124,7 +124,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Validación Perimetral JWT de Keycloak
+      # ValidaciÃ³n Perimetral JWT de Keycloak
       KEYCLOAK_ISSUER_URI: http://keycloak-iam:8080/realms/sitfai-erp
       KEYCLOAK_JWK_URI: http://keycloak-iam:8080/realms/sitfai-erp/protocol/openid-connect/certs
 
@@ -143,17 +143,36 @@ services:
       - sitfai-net
 
 # -----------------------------------------------------------------------------
-# Volúmenes Persistentes
+# VolÃºmenes Persistentes
 # -----------------------------------------------------------------------------
-volumes:
-  mysql_data:
-    name: sitfai_mysql_data
-    driver: local
+# volumes:
+#   mysql_data:
+#     name: sitfai_mysql_data
+#     driver: local
 
 # -----------------------------------------------------------------------------
 # Redes Internas
 # -----------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
+  # Servicio 5: Frontend Vue SPA
+  # ---------------------------------------------------------------------------
+  sitfai-frontend:
+    build:
+      context: ../sitfai-front
+      dockerfile: Dockerfile
+    container_name: sitfai-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      sitfai-gateway:
+        condition: service_started
+    networks:
+      - sitfai-net
+
 networks:
   sitfai-net:
     name: sitfai_network
     driver: bridge
+
