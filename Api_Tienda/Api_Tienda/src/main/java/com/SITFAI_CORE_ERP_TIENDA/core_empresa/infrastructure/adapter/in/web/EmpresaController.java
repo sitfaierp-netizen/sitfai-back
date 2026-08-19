@@ -9,9 +9,15 @@ import com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.in.web.dto
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.in.web.dto.SucursalWebResponse;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.in.web.dto.EmpresaWebResponse;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.in.web.mapper.EmpresaWebMapper;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.dto.ActualizarEmpresaCommand;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.input.ActualizarEmpresaUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.input.EliminarEmpresaUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.in.web.dto.ActualizarEmpresaRequest;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.dto.RegistrarEmpresaCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,16 +45,22 @@ public class EmpresaController {
     private final ConsultarEmpresaUseCase consultarEmpresaUseCase;
     private final ObtenerSucursalesPorEmpresaUseCase obtenerSucursalesPorEmpresaUseCase;
     private final CambiarEstadoSucursalUseCase cambiarEstadoSucursalUseCase;
+    private final ActualizarEmpresaUseCase actualizarEmpresaUseCase;
+    private final EliminarEmpresaUseCase eliminarEmpresaUseCase;
 
     public EmpresaController(
             RegistrarEmpresaUseCase registrarEmpresaUseCase,
             ConsultarEmpresaUseCase consultarEmpresaUseCase,
             ObtenerSucursalesPorEmpresaUseCase obtenerSucursalesPorEmpresaUseCase,
-            CambiarEstadoSucursalUseCase cambiarEstadoSucursalUseCase) {
+            CambiarEstadoSucursalUseCase cambiarEstadoSucursalUseCase,
+            ActualizarEmpresaUseCase actualizarEmpresaUseCase,
+            EliminarEmpresaUseCase eliminarEmpresaUseCase) {
         this.registrarEmpresaUseCase = Objects.requireNonNull(registrarEmpresaUseCase, "registrarEmpresaUseCase no puede ser null.");
         this.consultarEmpresaUseCase = Objects.requireNonNull(consultarEmpresaUseCase, "consultarEmpresaUseCase no puede ser null.");
         this.obtenerSucursalesPorEmpresaUseCase = Objects.requireNonNull(obtenerSucursalesPorEmpresaUseCase, "obtenerSucursalesPorEmpresaUseCase no puede ser null.");
         this.cambiarEstadoSucursalUseCase = Objects.requireNonNull(cambiarEstadoSucursalUseCase, "cambiarEstadoSucursalUseCase no puede ser null.");
+        this.actualizarEmpresaUseCase = Objects.requireNonNull(actualizarEmpresaUseCase, "actualizarEmpresaUseCase no puede ser null.");
+        this.eliminarEmpresaUseCase = Objects.requireNonNull(eliminarEmpresaUseCase, "eliminarEmpresaUseCase no puede ser null.");
     }
 
     // =========================================================================
@@ -69,6 +81,29 @@ public class EmpresaController {
                 registrarEmpresaUseCase.ejecutar(command)
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * PUT /api/v1/empresas/{empresaId}
+     */
+    @PutMapping("/{empresaId}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<EmpresaWebResponse> actualizarEmpresa(
+            @PathVariable UUID empresaId,
+            @RequestBody ActualizarEmpresaRequest request) {
+        ActualizarEmpresaCommand command = new ActualizarEmpresaCommand(empresaId, request.ruc(), request.razonSocial());
+        EmpresaWebResponse response = EmpresaWebMapper.toWebResponse(actualizarEmpresaUseCase.ejecutar(command));
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * DELETE /api/v1/empresas/{empresaId}
+     */
+    @DeleteMapping("/{empresaId}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Void> eliminarEmpresa(@PathVariable UUID empresaId) {
+        eliminarEmpresaUseCase.ejecutar(empresaId);
+        return ResponseEntity.noContent().build();
     }
 
     // =========================================================================
