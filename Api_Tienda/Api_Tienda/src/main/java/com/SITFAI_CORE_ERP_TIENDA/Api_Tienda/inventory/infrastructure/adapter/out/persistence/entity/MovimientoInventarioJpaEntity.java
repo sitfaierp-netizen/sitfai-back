@@ -54,6 +54,9 @@ public class MovimientoInventarioJpaEntity {
     @Column(name = "tipo", nullable = false, updatable = false, length = 20)
     private TipoMovimiento tipo;
 
+    @Column(name = "lote_id", length = 100)
+    private String loteId;
+
     @Column(name = "doc_fuente_tipo", nullable = false, updatable = false, length = 50)
     private String docFuenteTipo;
 
@@ -74,6 +77,7 @@ public class MovimientoInventarioJpaEntity {
             UUID empresaId,
             BigDecimal cantidad,
             TipoMovimiento tipo,
+            String loteId,
             String docFuenteTipo,
             String docFuenteNumero,
             Instant fechaRegistro) {
@@ -83,6 +87,7 @@ public class MovimientoInventarioJpaEntity {
         this.empresaId = empresaId;
         this.cantidad = cantidad;
         this.tipo = tipo;
+        this.loteId = loteId;
         this.docFuenteTipo = docFuenteTipo;
         this.docFuenteNumero = docFuenteNumero;
         this.fechaRegistro = fechaRegistro;
@@ -136,6 +141,14 @@ public class MovimientoInventarioJpaEntity {
 
     public void setTipo(TipoMovimiento tipo) {
         this.tipo = tipo;
+    }
+
+    public String getLoteId() {
+        return loteId;
+    }
+
+    public void setLoteId(String loteId) {
+        this.loteId = loteId;
     }
 
     public String getDocFuenteTipo() {

@@ -8,6 +8,8 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import java.sql.Types;
 
 /**
  * JPA Entity para el Modelo de Lectura (Read Model) de CQRS.
@@ -19,14 +21,17 @@ import java.util.UUID;
 public class StockProyeccionJpaEntity {
 
     @Id
+    @JdbcTypeCode(Types.BINARY)
     @Column(name = "empresa_id", columnDefinition = "BINARY(16)", nullable = false)
     private UUID empresaId;
 
     @Id
+    @JdbcTypeCode(Types.BINARY)
     @Column(name = "bodega_id", columnDefinition = "BINARY(16)", nullable = false)
     private UUID bodegaId;
 
     @Id
+    @JdbcTypeCode(Types.BINARY)
     @Column(name = "producto_id", columnDefinition = "BINARY(16)", nullable = false)
     private UUID productoId;
 

@@ -37,12 +37,13 @@ public class Proveedor {
     private String telefono;
     private String direccion;
     private EstadoProveedor estado;
+    private Integer plazoEntregaDias;
 
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     private Proveedor(ProveedorId proveedorId, EmpresaId empresaId, Ruc ruc,
                       String razonSocial, String emailContacto, String telefono,
-                      String direccion) {
+                      String direccion, Integer plazoEntregaDias) {
         this.proveedorId = Objects.requireNonNull(proveedorId, "ProveedorId no puede ser nulo.");
         this.empresaId = Objects.requireNonNull(empresaId, "EmpresaId no puede ser nulo (MT-01).");
         this.ruc = Objects.requireNonNull(ruc, "Ruc no puede ser nulo.");
@@ -50,41 +51,49 @@ public class Proveedor {
         if (razonSocial == null || razonSocial.isBlank()) {
             throw new DomainException("La razón social del Proveedor no puede estar vacía.");
         }
+        if (plazoEntregaDias != null && plazoEntregaDias < 0) {
+            throw new DomainException("El plazo de entrega en días no puede ser negativo.");
+        }
         
         this.razonSocial = razonSocial.trim();
         this.emailContacto = emailContacto;
         this.telefono = telefono;
         this.direccion = direccion;
+        this.plazoEntregaDias = plazoEntregaDias;
         this.estado = EstadoProveedor.ACTIVO;
         this.creadoEn = Instant.now();
     }
 
     public static Proveedor crear(ProveedorId proveedorId, EmpresaId empresaId, Ruc ruc,
                                   String razonSocial, String emailContacto, String telefono,
-                                  String direccion) {
-        Proveedor p = new Proveedor(proveedorId, empresaId, ruc, razonSocial, emailContacto, telefono, direccion);
+                                  String direccion, Integer plazoEntregaDias) {
+        Proveedor p = new Proveedor(proveedorId, empresaId, ruc, razonSocial, emailContacto, telefono, direccion, plazoEntregaDias);
         p.domainEvents.add(ProveedorCreadoEvent.of(proveedorId.valor(), empresaId.valor(), ruc.valor(), p.razonSocial));
         return p;
     }
 
     public static Proveedor reconstituir(ProveedorId proveedorId, EmpresaId empresaId, Ruc ruc,
                                          String razonSocial, String emailContacto, String telefono,
-                                         String direccion, EstadoProveedor estado, Instant creadoEn) {
-        Proveedor p = new Proveedor(proveedorId, empresaId, ruc, razonSocial, emailContacto, telefono, direccion);
+                                         String direccion, Integer plazoEntregaDias, EstadoProveedor estado, Instant creadoEn) {
+        Proveedor p = new Proveedor(proveedorId, empresaId, ruc, razonSocial, emailContacto, telefono, direccion, plazoEntregaDias);
         p.estado = estado;
         // Se preserva la fecha original si es necesario, aunque en reconstitución el constructor ya asignó Instant.now()
         // Lo dejamos así para simplificar o podríamos tener un constructor interno que reciba creadoEn.
         return p;
     }
 
-    public void actualizar(String razonSocial, String emailContacto, String telefono, String direccion) {
+    public void actualizar(String razonSocial, String emailContacto, String telefono, String direccion, Integer plazoEntregaDias) {
         if (razonSocial == null || razonSocial.isBlank()) {
             throw new DomainException("La razón social del Proveedor no puede estar vacía.");
+        }
+        if (plazoEntregaDias != null && plazoEntregaDias < 0) {
+            throw new DomainException("El plazo de entrega en días no puede ser negativo.");
         }
         this.razonSocial = razonSocial.trim();
         this.emailContacto = emailContacto;
         this.telefono = telefono;
         this.direccion = direccion;
+        this.plazoEntregaDias = plazoEntregaDias;
     }
 
     public void cambiarEstado(EstadoProveedor nuevoEstado) {
@@ -104,6 +113,7 @@ public class Proveedor {
     public String getEmailContacto() { return emailContacto; }
     public String getTelefono() { return telefono; }
     public String getDireccion() { return direccion; }
+    public Integer getPlazoEntregaDias() { return plazoEntregaDias; }
     public EstadoProveedor getEstado() { return estado; }
     public Instant getCreadoEn() { return creadoEn; }
     public List<DomainEvent> getDomainEvents() { return Collections.unmodifiableList(domainEvents); }

@@ -4,6 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Bodega
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Cantidad;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.DocumentoFuenteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.LoteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.ProductoId;
 
 import java.time.Instant;
@@ -47,6 +48,9 @@ public final class MovimientoInventario {
     /** Dirección del movimiento: ENTRADA o SALIDA. */
     private final TipoMovimiento tipo;
 
+    /** Lote asociado al movimiento (Opcional, usado para FEFO). */
+    private final LoteId loteId;
+
     /**
      * Documento que justifica el movimiento (BOD-04).
      * Nunca nulo — garantiza trazabilidad completa.
@@ -70,6 +74,7 @@ public final class MovimientoInventario {
             EmpresaId empresaId,
             Cantidad cantidad,
             TipoMovimiento tipo,
+            LoteId loteId,
             DocumentoFuenteId documentoFuente,
             Instant fechaRegistro) {
 
@@ -79,6 +84,7 @@ public final class MovimientoInventario {
         this.empresaId = empresaId;
         this.cantidad = cantidad;
         this.tipo = tipo;
+        this.loteId = loteId;
         this.documentoFuente = documentoFuente;
         this.fechaRegistro = fechaRegistro;
     }
@@ -94,6 +100,7 @@ public final class MovimientoInventario {
      * @param empresaId        Tenant del movimiento (BOD-01, MT-01).
      * @param cantidad         Cantidad de unidades (siempre positiva).
      * @param tipo             ENTRADA o SALIDA.
+     * @param loteId           Identificador del lote (Opcional).
      * @param documentoFuente  Documento obligatorio que justifica el movimiento (BOD-04).
      * @return                 Nueva instancia inmutable de MovimientoInventario.
      */
@@ -103,6 +110,7 @@ public final class MovimientoInventario {
             EmpresaId empresaId,
             Cantidad cantidad,
             TipoMovimiento tipo,
+            LoteId loteId,
             DocumentoFuenteId documentoFuente) {
 
         validarCampos(bodegaId, productoId, empresaId, cantidad, tipo, documentoFuente);
@@ -114,6 +122,7 @@ public final class MovimientoInventario {
                 empresaId,
                 cantidad,
                 tipo,
+                loteId,
                 documentoFuente,
                 Instant.now()
         );
@@ -130,6 +139,7 @@ public final class MovimientoInventario {
             EmpresaId empresaId,
             Cantidad cantidad,
             TipoMovimiento tipo,
+            LoteId loteId,
             DocumentoFuenteId documentoFuente,
             Instant fechaRegistro) {
 
@@ -141,7 +151,22 @@ public final class MovimientoInventario {
             throw new IllegalArgumentException("MovimientoInventario: la fechaRegistro no puede ser null al reconstituir.");
         }
 
-        return new MovimientoInventario(id, bodegaId, productoId, empresaId, cantidad, tipo, documentoFuente, fechaRegistro);
+        return new MovimientoInventario(id, bodegaId, productoId, empresaId, cantidad, tipo, loteId, documentoFuente, fechaRegistro);
+    }
+
+    /**
+     * Reconstitución legacy (para compatibilidad con Mapper existente).
+     */
+    public static MovimientoInventario reconstituir(
+            UUID id,
+            BodegaId bodegaId,
+            ProductoId productoId,
+            EmpresaId empresaId,
+            Cantidad cantidad,
+            TipoMovimiento tipo,
+            DocumentoFuenteId documentoFuente,
+            Instant fechaRegistro) {
+        return reconstituir(id, bodegaId, productoId, empresaId, cantidad, tipo, null, documentoFuente, fechaRegistro);
     }
 
     // ── Validación interna ──────────────────────────────────────────────────────
@@ -170,14 +195,15 @@ public final class MovimientoInventario {
     public EmpresaId getEmpresaId()               { return empresaId; }
     public Cantidad getCantidad()                 { return cantidad; }
     public TipoMovimiento getTipo()               { return tipo; }
+    public LoteId getLoteId()                     { return loteId; }
     public DocumentoFuenteId getDocumentoFuente() { return documentoFuente; }
     public Instant getFechaRegistro()             { return fechaRegistro; }
 
     @Override
     public String toString() {
         return String.format(
-                "MovimientoInventario{id=%s, bodega=%s, producto=%s, tipo=%s, cantidad=%s, doc=%s, fecha=%s}",
-                id, bodegaId, productoId, tipo, cantidad, documentoFuente, fechaRegistro
+                "MovimientoInventario{id=%s, bodega=%s, producto=%s, tipo=%s, cantidad=%s, lote=%s, doc=%s, fecha=%s}",
+                id, bodegaId, productoId, tipo, cantidad, loteId, documentoFuente, fechaRegistro
         );
     }
 }

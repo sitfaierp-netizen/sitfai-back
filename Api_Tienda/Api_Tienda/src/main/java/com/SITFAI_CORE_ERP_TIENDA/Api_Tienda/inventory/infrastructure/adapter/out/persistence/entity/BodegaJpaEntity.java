@@ -66,16 +66,15 @@ public class BodegaJpaEntity {
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-            name = "inventory_bodega_stock",
-            joinColumns = @JoinColumn(name = "bodega_id")
+    @OneToMany(
+            mappedBy = "bodega",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
     )
-    @MapKeyColumn(name = "producto_id", length = 36)
-    @Column(name = "cantidad", nullable = false, precision = 19, scale = 4)
-    private Map<UUID, BigDecimal> stock = new HashMap<>();
+    private List<StockLoteJpaEntity> lotes = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "inventory_bodega_punto_reorden",
             joinColumns = @JoinColumn(name = "bodega_id")
@@ -106,7 +105,7 @@ public class BodegaJpaEntity {
             String tipo,
             Instant creadoEn,
             Instant actualizadoEn,
-            Map<UUID, BigDecimal> stock,
+            List<StockLoteJpaEntity> lotes,
             Map<UUID, BigDecimal> puntosReorden,
             List<MovimientoInventarioJpaEntity> movimientos) {
         this.id = id;
@@ -118,7 +117,7 @@ public class BodegaJpaEntity {
         this.tipo = tipo;
         this.creadoEn = creadoEn;
         this.actualizadoEn = actualizadoEn;
-        this.stock = (stock != null) ? stock : new HashMap<>();
+        this.lotes = (lotes != null) ? lotes : new ArrayList<>();
         this.puntosReorden = (puntosReorden != null) ? puntosReorden : new HashMap<>();
         this.movimientos = (movimientos != null) ? movimientos : new ArrayList<>();
     }
@@ -126,6 +125,11 @@ public class BodegaJpaEntity {
     public void agregarMovimiento(MovimientoInventarioJpaEntity movimiento) {
         this.movimientos.add(movimiento);
         movimiento.setBodega(this);
+    }
+
+    public void agregarLote(StockLoteJpaEntity lote) {
+        this.lotes.add(lote);
+        lote.setBodega(this);
     }
 
     // Getters y Setters
@@ -202,12 +206,12 @@ public class BodegaJpaEntity {
         this.actualizadoEn = actualizadoEn;
     }
 
-    public Map<UUID, BigDecimal> getStock() {
-        return stock;
+    public List<StockLoteJpaEntity> getLotes() {
+        return lotes;
     }
 
-    public void setStock(Map<UUID, BigDecimal> stock) {
-        this.stock = stock;
+    public void setLotes(List<StockLoteJpaEntity> lotes) {
+        this.lotes = lotes;
     }
 
     public Map<UUID, BigDecimal> getPuntosReorden() {

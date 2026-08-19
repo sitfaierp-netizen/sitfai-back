@@ -20,15 +20,17 @@ public class ProveedorJpaEntity {
     @Column(name = "telefono", length = 50) private String telefono;
     @Column(name = "direccion", length = 500) private String direccion;
     @Column(name = "estado", nullable = false, length = 20) private String estado;
+    @Column(name = "plazo_entrega_dias", nullable = false) private Integer plazoEntregaDias;
     @Column(name = "creado_en", nullable = false) private Instant creadoEn;
 
     protected ProveedorJpaEntity() {}
 
     public ProveedorJpaEntity(String id, String empresaId, String ruc, String razonSocial,
                               String emailContacto, String telefono, String direccion,
-                              String estado, Instant creadoEn) {
+                              Integer plazoEntregaDias, String estado, Instant creadoEn) {
         this.id = id; this.empresaId = empresaId; this.ruc = ruc; this.razonSocial = razonSocial;
         this.emailContacto = emailContacto; this.telefono = telefono; this.direccion = direccion;
+        this.plazoEntregaDias = plazoEntregaDias;
         this.estado = estado; this.creadoEn = creadoEn;
     }
 
@@ -39,6 +41,7 @@ public class ProveedorJpaEntity {
     public String getEmailContacto() { return emailContacto; }
     public String getTelefono() { return telefono; }
     public String getDireccion() { return direccion; }
+    public Integer getPlazoEntregaDias() { return plazoEntregaDias; }
     public String getEstado() { return estado; }
     public Instant getCreadoEn() { return creadoEn; }
 }

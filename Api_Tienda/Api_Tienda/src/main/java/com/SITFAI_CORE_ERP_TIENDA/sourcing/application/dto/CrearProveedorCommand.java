@@ -9,5 +9,6 @@ public record CrearProveedorCommand(
         String razonSocial,
         String emailContacto,
         String telefono,
-        String direccion
+        String direccion,
+        Integer plazoEntregaDias
 ) {}

@@ -44,7 +44,8 @@ public class CrearProveedorService implements CrearProveedorUseCase {
                 command.razonSocial(),
                 command.emailContacto(),
                 command.telefono(),
-                command.direccion()
+                command.direccion(),
+                command.plazoEntregaDias()
         );
 
         // 3. Persistir
@@ -62,6 +63,7 @@ public class CrearProveedorService implements CrearProveedorUseCase {
                 proveedor.getEmailContacto(),
                 proveedor.getTelefono(),
                 proveedor.getDireccion(),
+                proveedor.getPlazoEntregaDias(),
                 proveedor.getEstado().name(),
                 proveedor.getCreadoEn()
         );
