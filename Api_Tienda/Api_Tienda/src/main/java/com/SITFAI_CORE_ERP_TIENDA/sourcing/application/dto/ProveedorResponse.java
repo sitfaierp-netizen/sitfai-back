@@ -12,6 +12,7 @@ public record ProveedorResponse(
         String emailContacto,
         String telefono,
         String direccion,
+        Integer plazoEntregaDias,
         String estado,
         Instant creadoEn
 ) {}

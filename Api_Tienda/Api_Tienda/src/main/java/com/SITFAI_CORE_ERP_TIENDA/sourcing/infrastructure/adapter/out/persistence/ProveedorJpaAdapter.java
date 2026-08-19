@@ -44,7 +44,7 @@ public class ProveedorJpaAdapter implements ProveedorRepository {
         return new ProveedorJpaEntity(
                 p.getProveedorId().toString(), p.getEmpresaId().toString(), p.getRuc().valor(),
                 p.getRazonSocial(), p.getEmailContacto(), p.getTelefono(), p.getDireccion(),
-                p.getEstado().name(), p.getCreadoEn()
+                p.getPlazoEntregaDias(), p.getEstado().name(), p.getCreadoEn()
         );
     }
 
@@ -52,7 +52,7 @@ public class ProveedorJpaAdapter implements ProveedorRepository {
         return Proveedor.reconstituir(
                 ProveedorId.de(e.getId()), EmpresaId.de(UUID.fromString(e.getEmpresaId())),
                 new Ruc(e.getRuc()), e.getRazonSocial(), e.getEmailContacto(), e.getTelefono(),
-                e.getDireccion(), EstadoProveedor.valueOf(e.getEstado()), e.getCreadoEn()
+                e.getDireccion(), e.getPlazoEntregaDias(), EstadoProveedor.valueOf(e.getEstado()), e.getCreadoEn()
         );
     }
 }

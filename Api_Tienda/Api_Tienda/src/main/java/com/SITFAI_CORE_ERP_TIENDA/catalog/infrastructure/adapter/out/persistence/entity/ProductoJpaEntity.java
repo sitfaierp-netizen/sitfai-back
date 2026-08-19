@@ -22,7 +22,7 @@ public class ProductoJpaEntity {
     @Column(name = "categoria_id", nullable = false, length = 36) private String categoriaId;
     @Column(name = "unidad_medida", nullable = false, length = 20) private String unidadMedida;
 
-    @Column(name = "precio_compra", nullable = false, precision = 19, scale = 4)
+    @Column(name = "precio_compra", nullable = true, precision = 19, scale = 4)
     private BigDecimal precioCompra;
 
     @Column(name = "precio_venta", nullable = false, precision = 19, scale = 4)

@@ -89,7 +89,7 @@ public class Producto {
         this.nombre = nombre.trim();
 
         // [INV-CAT-04] precioCompra ≥ 0
-        if (precioCompra == null || precioCompra.compareTo(BigDecimal.ZERO) < 0) {
+        if (precioCompra != null && precioCompra.compareTo(BigDecimal.ZERO) < 0) {
             throw new DomainException(
                     "[INV-CAT-04] El precioCompra no puede ser negativo. Recibido: " + precioCompra);
         }
@@ -174,7 +174,7 @@ public class Producto {
         if (nombre == null || nombre.isBlank()) {
             throw new DomainException("[INV-CAT-02] El nombre del Producto no puede estar vacío.");
         }
-        if (precioCompra == null || precioCompra.compareTo(BigDecimal.ZERO) < 0) {
+        if (precioCompra != null && precioCompra.compareTo(BigDecimal.ZERO) < 0) {
             throw new DomainException("[INV-CAT-04] El precioCompra no puede ser negativo.");
         }
         validarPrecioVenta(precioVenta);
