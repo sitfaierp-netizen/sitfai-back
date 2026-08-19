@@ -37,6 +37,7 @@ public class Empresa {
     private final List<DomainEvent> domainEvents;
     private final Instant creadoEn;
     private Instant actualizadoEn;
+    private Long version;
 
     private Empresa(
             EmpresaId id,
@@ -45,7 +46,8 @@ public class Empresa {
             EstadoEmpresa estado,
             List<Sucursal> sucursales,
             Instant creadoEn,
-            Instant actualizadoEn
+            Instant actualizadoEn,
+            Long version
     ) {
         this.id = Objects.requireNonNull(id, "EmpresaId no puede ser null.");
         this.ruc = Objects.requireNonNull(ruc, "Ruc no puede ser null.");
@@ -55,6 +57,7 @@ public class Empresa {
         this.domainEvents = new ArrayList<>();
         this.creadoEn = Objects.requireNonNull(creadoEn, "creadoEn no puede ser null.");
         this.actualizadoEn = Objects.requireNonNull(actualizadoEn, "actualizadoEn no puede ser null.");
+        this.version = version;
     }
 
     /**
@@ -83,7 +86,7 @@ public class Empresa {
         List<Sucursal> sucursalesIniciales = new ArrayList<>();
         sucursalesIniciales.add(principal);
 
-        Empresa empresa = new Empresa(id, ruc, nombre, EstadoEmpresa.ACTIVA, sucursalesIniciales, ahora, ahora);
+        Empresa empresa = new Empresa(id, ruc, nombre, EstadoEmpresa.ACTIVA, sucursalesIniciales, ahora, ahora, 0L);
 
         empresa.domainEvents.add(EmpresaCreadaEvent.ahora(
                 id,
@@ -106,9 +109,10 @@ public class Empresa {
             EstadoEmpresa estado,
             List<Sucursal> sucursales,
             Instant creadoEn,
-            Instant actualizadoEn
+            Instant actualizadoEn,
+            Long version
     ) {
-        return new Empresa(id, ruc, nombre, estado, sucursales, creadoEn, actualizadoEn);
+        return new Empresa(id, ruc, nombre, estado, sucursales, creadoEn, actualizadoEn, version);
     }
 
     /**
@@ -303,6 +307,10 @@ public class Empresa {
 
     public Instant getActualizadoEn() {
         return actualizadoEn;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     @Override

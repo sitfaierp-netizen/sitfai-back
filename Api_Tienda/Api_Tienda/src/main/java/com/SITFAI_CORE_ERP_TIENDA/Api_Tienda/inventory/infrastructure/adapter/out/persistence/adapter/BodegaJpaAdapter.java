@@ -40,14 +40,37 @@ public class BodegaJpaAdapter implements BodegaRepository {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public Bodega guardar(Bodega bodega) {
         Objects.requireNonNull(bodega, "Bodega a guardar no puede ser null");
         BodegaJpaEntity jpaEntity = mapper.toJpaEntity(bodega);
-        BodegaJpaEntity savedEntity = bodegaJpaRepository.save(jpaEntity);
-        return mapper.toDomain(savedEntity);
+        try {
+            BodegaJpaEntity savedEntity = bodegaJpaRepository.saveAndFlush(jpaEntity);
+            return mapper.toDomain(savedEntity);
+        } catch (RuntimeException e) {
+            if (esErrorDeConcurrencia(e)) {
+                throw new com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.OptimisticConcurrencyException("Bodega", bodega.getId().valor());
+            }
+            throw e;
+        }
+    }
+
+    private boolean esErrorDeConcurrencia(Throwable e) {
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause instanceof org.springframework.dao.OptimisticLockingFailureException ||
+                cause instanceof jakarta.persistence.OptimisticLockException ||
+                cause instanceof org.hibernate.StaleObjectStateException ||
+                cause instanceof org.springframework.orm.jpa.JpaSystemException) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Optional<Bodega> buscarPorId(BodegaId bodegaId, EmpresaId empresaId) {
         Objects.requireNonNull(bodegaId, "bodegaId no puede ser null");
         Objects.requireNonNull(empresaId, "empresaId no puede ser null (MT-01)");
@@ -56,6 +79,7 @@ public class BodegaJpaAdapter implements BodegaRepository {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<Bodega> listarActivasPorEmpresa(EmpresaId empresaId) {
         Objects.requireNonNull(empresaId, "empresaId no puede ser null (MT-01)");
         return bodegaJpaRepository.findByEmpresaIdAndActivaTrue(empresaId.valor())

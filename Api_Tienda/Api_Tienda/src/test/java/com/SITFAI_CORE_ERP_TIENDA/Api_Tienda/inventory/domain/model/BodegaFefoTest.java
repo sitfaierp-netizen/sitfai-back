@@ -161,15 +161,46 @@ class BodegaFefoTest {
         Bodega bodegaReorden = Bodega.crear(empresaId, sucursalId, "BOD-02", "Bodega Secundaria", TipoBodega.VENTA);
         
         // Inyectar el punto de reorden vía reconstitución
-        bodegaReorden = Bodega.reconstituir(bodegaReorden.getId(), empresaId, sucursalId, bodegaReorden.getCodigo(), bodegaReorden.getNombre(), true, null, puntosReorden, bodegaReorden.getMovimientos(), bodegaReorden.getCreadoEn(), bodegaReorden.getActualizadoEn());
+        bodegaReorden = Bodega.reconstituir(
+                bodegaReorden.getId(), 
+                empresaId, 
+                sucursalId, 
+                bodegaReorden.getCodigo(), 
+                bodegaReorden.getNombre(), 
+                true, 
+                TipoBodega.VENTA, 
+                java.util.Collections.emptyList(),
+                puntosReorden, 
+                bodegaReorden.getMovimientos(), 
+                bodegaReorden.getCreadoEn(), 
+                bodegaReorden.getActualizadoEn(),
+                0L
+        );
 
         bodegaReorden.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(15)), LoteId.de("L1"), null, documentoIngreso);
-        bodegaReorden.drainDomainEvents();
+        bodega = Bodega.reconstituir(
+                BodegaId.de(UUID.randomUUID()),
+                empresaId, 
+                sucursalId, 
+                "BOD-02", 
+                "Bodega Secundaria", 
+                true, 
+                TipoBodega.VENTA,
+                java.util.Collections.emptyList(),
+                puntosReorden, 
+                java.util.Collections.emptyList(), 
+                java.time.Instant.now(), 
+                java.time.Instant.now(), 
+                0L
+        );
+
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(15)), LoteId.de("L1"), null, documentoIngreso);
+        bodega.drainDomainEvents();
 
         // Baja a 8 (cruza el umbral de 10)
-        bodegaReorden.descontarStock(productoId, Cantidad.de(BigDecimal.valueOf(7)), documentoSalida);
+        bodega.descontarStock(productoId, Cantidad.de(BigDecimal.valueOf(7)), documentoSalida);
 
-        long eventosReorden = bodegaReorden.getDomainEvents().stream()
+        long eventosReorden = bodega.getDomainEvents().stream()
                 .filter(e -> e instanceof PuntoReordenAlcanzadoEvent)
                 .count();
 

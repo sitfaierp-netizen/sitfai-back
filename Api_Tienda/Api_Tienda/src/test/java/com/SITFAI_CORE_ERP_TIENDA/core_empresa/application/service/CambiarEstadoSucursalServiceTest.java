@@ -68,7 +68,8 @@ class CambiarEstadoSucursalServiceTest {
                 EstadoEmpresa.ACTIVA,
                 Collections.emptyList(),
                 Instant.now(),
-                Instant.now()
+                Instant.now(),
+                0L
         );
     }
 
@@ -80,7 +81,8 @@ class CambiarEstadoSucursalServiceTest {
                 EstadoEmpresa.SUSPENDIDA,
                 Collections.emptyList(),
                 Instant.now(),
-                Instant.now()
+                Instant.now(),
+                0L
         );
     }
 

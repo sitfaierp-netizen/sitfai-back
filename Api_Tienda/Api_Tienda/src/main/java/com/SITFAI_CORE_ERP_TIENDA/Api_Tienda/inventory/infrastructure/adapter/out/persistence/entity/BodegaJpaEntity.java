@@ -66,6 +66,10 @@ public class BodegaJpaEntity {
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
+    @jakarta.persistence.Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     @OneToMany(
             mappedBy = "bodega",
             cascade = CascadeType.ALL,
@@ -105,6 +109,7 @@ public class BodegaJpaEntity {
             String tipo,
             Instant creadoEn,
             Instant actualizadoEn,
+            Long version,
             List<StockLoteJpaEntity> lotes,
             Map<UUID, BigDecimal> puntosReorden,
             List<MovimientoInventarioJpaEntity> movimientos) {
@@ -117,6 +122,7 @@ public class BodegaJpaEntity {
         this.tipo = tipo;
         this.creadoEn = creadoEn;
         this.actualizadoEn = actualizadoEn;
+        this.version = version != null ? version : 0L;
         this.lotes = (lotes != null) ? lotes : new ArrayList<>();
         this.puntosReorden = (puntosReorden != null) ? puntosReorden : new HashMap<>();
         this.movimientos = (movimientos != null) ? movimientos : new ArrayList<>();
@@ -204,6 +210,14 @@ public class BodegaJpaEntity {
 
     public void setActualizadoEn(Instant actualizadoEn) {
         this.actualizadoEn = actualizadoEn;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public List<StockLoteJpaEntity> getLotes() {

@@ -30,6 +30,10 @@ public class EmpresaJpaEntity {
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
+    @jakarta.persistence.Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     public String getId() {
         return id;
     }
@@ -76,5 +80,13 @@ public class EmpresaJpaEntity {
 
     public void setActualizadoEn(Instant actualizadoEn) {
         this.actualizadoEn = actualizadoEn;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

@@ -117,6 +117,7 @@ public final class Bodega {
 
     private final Instant creadoEn;
     private Instant actualizadoEn;
+    private Long version;
 
     // ═════════════════════════════════════════════════════════════════════════
     // CONSTRUCTORES (privados — solo accesibles vía factory methods)
@@ -134,7 +135,8 @@ public final class Bodega {
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
-            Instant actualizadoEn) {
+            Instant actualizadoEn,
+            Long version) {
 
         this.id = id;
         this.empresaId = empresaId;
@@ -149,6 +151,7 @@ public final class Bodega {
         this.domainEvents = new ArrayList<>();
         this.creadoEn = creadoEn;
         this.actualizadoEn = actualizadoEn;
+        this.version = version;
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -205,7 +208,8 @@ public final class Bodega {
                 new HashMap<>(),
                 new ArrayList<>(),
                 ahora,
-                ahora
+                ahora,
+                0L
         );
     }
 
@@ -225,8 +229,9 @@ public final class Bodega {
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
-            Instant actualizadoEn) {
-        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, TipoBodega.VENTA, lotes, puntosReorden, movimientos, creadoEn, actualizadoEn);
+            Instant actualizadoEn,
+            Long version) {
+        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, TipoBodega.VENTA, lotes, puntosReorden, movimientos, creadoEn, actualizadoEn, version);
     }
 
     public static Bodega reconstituir(
@@ -241,12 +246,13 @@ public final class Bodega {
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
-            Instant actualizadoEn) {
+            Instant actualizadoEn,
+            Long version) {
         List<StockLote> lotesMigrados = new ArrayList<>();
         if (stock != null) {
             stock.forEach((k, v) -> lotesMigrados.add(new StockLote(k, LoteId.de("LEGACY"), v, null)));
         }
-        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, tipo, lotesMigrados, puntosReorden, movimientos, creadoEn, actualizadoEn);
+        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, tipo, lotesMigrados, puntosReorden, movimientos, creadoEn, actualizadoEn, version);
     }
 
     public static Bodega reconstituir(
@@ -261,14 +267,15 @@ public final class Bodega {
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
-            Instant actualizadoEn) {
+            Instant actualizadoEn,
+            Long version) {
 
         Objects.requireNonNull(id,           "Bodega.reconstituir: id es obligatorio.");
         validarCamposObligatorios(empresaId, sucursalId, codigo, nombre);
         Objects.requireNonNull(tipo,         "Bodega.reconstituir: tipo de bodega es obligatorio.");
 
         return new Bodega(id, empresaId, sucursalId, codigo, nombre, activa, tipo,
-                lotes, puntosReorden, movimientos, creadoEn, actualizadoEn);
+                lotes, puntosReorden, movimientos, creadoEn, actualizadoEn, version);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -491,6 +498,7 @@ public final class Bodega {
     public TipoBodega getTipo()                      { return tipo; }
     public Instant getCreadoEn()                     { return creadoEn; }
     public Instant getActualizadoEn()                { return actualizadoEn; }
+    public Long getVersion()                         { return version; }
 
     /** Vista inmutable del stock actual (Legacy compatibility) */
     public Map<ProductoId, BigDecimal> getStock() {
