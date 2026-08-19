@@ -3,15 +3,18 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.mapper;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.Bodega;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.MovimientoInventario;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.TipoBodega;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.StockLote;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.BodegaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Cantidad;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.DocumentoFuenteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.LoteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.PuntoReorden;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.SucursalId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.out.persistence.entity.BodegaJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.out.persistence.entity.MovimientoInventarioJpaEntity;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.out.persistence.entity.StockLoteJpaEntity;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -39,11 +42,16 @@ public class BodegaPersistenceMapper {
             return null;
         }
 
-        // Mapear stock
-        Map<ProductoId, BigDecimal> stockDominio = new HashMap<>();
-        if (entity.getStock() != null) {
-            for (Map.Entry<UUID, BigDecimal> entry : entity.getStock().entrySet()) {
-                stockDominio.put(new ProductoId(entry.getKey()), entry.getValue());
+        // Mapear lotes
+        List<StockLote> lotesDominio = new ArrayList<>();
+        if (entity.getLotes() != null) {
+            for (StockLoteJpaEntity loteJpa : entity.getLotes()) {
+                lotesDominio.add(new StockLote(
+                        new ProductoId(loteJpa.getProductoId()),
+                        LoteId.de(loteJpa.getLoteId()),
+                        loteJpa.getCantidad(),
+                        loteJpa.getFechaCaducidad()
+                ));
             }
         }
 
@@ -71,7 +79,7 @@ public class BodegaPersistenceMapper {
                 entity.getNombre(),
                 entity.isActiva(),
                 entity.getTipo() != null ? TipoBodega.valueOf(entity.getTipo()) : TipoBodega.VENTA,
-                stockDominio,
+                lotesDominio,
                 puntosReordenDominio,
                 movimientosDominio,
                 entity.getCreadoEn(),
@@ -87,22 +95,6 @@ public class BodegaPersistenceMapper {
             return null;
         }
 
-        // Mapear stock
-        Map<UUID, BigDecimal> stockJpa = new HashMap<>();
-        if (domain.getStock() != null) {
-            for (Map.Entry<ProductoId, BigDecimal> entry : domain.getStock().entrySet()) {
-                stockJpa.put(entry.getKey().valor(), entry.getValue());
-            }
-        }
-
-        // Mapear puntos de reorden
-        Map<UUID, BigDecimal> puntosReordenJpa = new HashMap<>();
-        if (domain.getPuntosReorden() != null) { // Asumiendo que se agregará getPuntosReorden en Bodega
-            for (Map.Entry<ProductoId, PuntoReorden> entry : domain.getPuntosReorden().entrySet()) {
-                puntosReordenJpa.put(entry.getKey().valor(), entry.getValue().valor());
-            }
-        }
-
         BodegaJpaEntity entity = new BodegaJpaEntity();
         entity.setId(domain.getId().valor());
         entity.setEmpresaId(domain.getEmpresaId().valor());
@@ -113,7 +105,36 @@ public class BodegaPersistenceMapper {
         entity.setTipo(domain.getTipo() != null ? domain.getTipo().name() : TipoBodega.VENTA.name());
         entity.setCreadoEn(domain.getCreadoEn());
         entity.setActualizadoEn(domain.getActualizadoEn());
-        entity.setStock(stockJpa);
+
+        // Mapear lotes
+        List<StockLoteJpaEntity> lotesJpa = new ArrayList<>();
+        if (domain.getLotes() != null) {
+            for (StockLote loteDominio : domain.getLotes()) {
+                UUID loteDbId = UUID.nameUUIDFromBytes(
+                        (domain.getId().valor().toString() + "-" + loteDominio.getProductoId().valor().toString() + "-" + loteDominio.getLoteId().valor()).getBytes()
+                );
+                StockLoteJpaEntity loteJpa = new StockLoteJpaEntity(
+                        loteDbId,
+                        entity,
+                        domain.getEmpresaId().valor(),
+                        loteDominio.getProductoId().valor(),
+                        loteDominio.getLoteId().valor(),
+                        loteDominio.getCantidad(),
+                        loteDominio.getFechaCaducidad()
+                );
+                lotesJpa.add(loteJpa);
+            }
+        }
+        entity.setLotes(lotesJpa);
+
+        // Mapear puntos de reorden
+        Map<UUID, BigDecimal> puntosReordenJpa = new HashMap<>();
+        if (domain.getPuntosReorden() != null) { // Asumiendo que se agregará getPuntosReorden en Bodega
+            for (Map.Entry<ProductoId, PuntoReorden> entry : domain.getPuntosReorden().entrySet()) {
+                puntosReordenJpa.put(entry.getKey().valor(), entry.getValue().valor());
+            }
+        }
+
         entity.setPuntosReorden(puntosReordenJpa);
 
         // Mapear movimientos con referencia bidireccional
@@ -143,6 +164,7 @@ public class BodegaPersistenceMapper {
                 new EmpresaId(entity.getEmpresaId()),
                 Cantidad.de(entity.getCantidad()),
                 entity.getTipo(),
+                entity.getLoteId() != null ? LoteId.de(entity.getLoteId()) : null,
                 new DocumentoFuenteId(entity.getDocFuenteTipo(), entity.getDocFuenteNumero()),
                 entity.getFechaRegistro()
         );
@@ -163,6 +185,7 @@ public class BodegaPersistenceMapper {
                 domain.getEmpresaId().valor(),
                 domain.getCantidad().valor(),
                 domain.getTipo(),
+                domain.getLoteId() != null ? domain.getLoteId().valor() : null,
                 domain.getDocumentoFuente().tipo(),
                 domain.getDocumentoFuente().numero(),
                 domain.getFechaRegistro()

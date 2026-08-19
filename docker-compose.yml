@@ -15,33 +15,33 @@ services:
   # ---------------------------------------------------------------------------
   # Servicio 1: Base de Datos Relacional Multi-Esquema (MySQL 8.4 LTS)
   # ---------------------------------------------------------------------------
-  # mysql-db:
-  #   image: mysql:8.4
-  #   container_name: sitfai-mysql-db
-  #   restart: unless-stopped
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
-  #     MYSQL_DATABASE: sitfai_tienda
-  #     MYSQL_USER: ${DB_USER:-sitfai_user}
-  #     MYSQL_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
-  #     TZ: UTC
-  #   ports:
-  #     - "${DB_PORT:-3306}:3306"
-  #   volumes:
-  #     - mysql_data:/var/lib/mysql
-  #     - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
-  #   command:
-  #     - --character-set-server=utf8mb4
-  #     - --collation-server=utf8mb4_unicode_ci
-  #     - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
-  #   healthcheck:
-  #     test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_secret}" ]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 30s
-  #   networks:
-  #     - sitfai-net
+  mysql-db:
+    image: mysql:8.4
+    container_name: sitfai-mysql-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
+      MYSQL_DATABASE: sitfai_tienda
+      MYSQL_USER: ${DB_USER:-sitfai_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
+      TZ: UTC
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --sql-mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_secret}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - sitfai-net
 
   # ---------------------------------------------------------------------------
   # Servicio 2: Servidor de Identidad y AutenticaciÃ³n (Keycloak IAM)
@@ -61,8 +61,8 @@ services:
 
       # ConexiÃ³n a Base de Datos MySQL
       KC_DB: mysql
-      KC_DB_URL_HOST: host.docker.internal
-      KC_DB_URL_PORT: 3307
+      KC_DB_URL_HOST: mysql-db
+      KC_DB_URL_PORT: 3306
       KC_DB_URL_DATABASE: sitfai_iam
       KC_DB_USERNAME: ${DB_USER:-sitfai_user}
       KC_DB_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
@@ -91,8 +91,8 @@ services:
       - "8084:8085"
     environment:
       # ConfiguraciÃ³n de Base de Datos
-      DB_HOST: host.docker.internal
-      DB_PORT: 3307
+      DB_HOST: mysql-db
+      DB_PORT: 3306
       DB_NAME: sitfai_tienda
       DB_USER: ${DB_USER:-sitfai_user}
       DB_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
@@ -145,10 +145,7 @@ services:
 # -----------------------------------------------------------------------------
 # VolÃºmenes Persistentes
 # -----------------------------------------------------------------------------
-# volumes:
-#   mysql_data:
-#     name: sitfai_mysql_data
-#     driver: local
+
 
 # -----------------------------------------------------------------------------
 # Redes Internas
@@ -157,23 +154,28 @@ services:
   # ---------------------------------------------------------------------------
   # Servicio 5: Frontend Vue SPA
   # ---------------------------------------------------------------------------
-  sitfai-frontend:
-    build:
-      context: ../sitfai-front
-      dockerfile: Dockerfile
-    container_name: sitfai-frontend
-    restart: unless-stopped
-    ports:
-      - "5173:80"
-    depends_on:
-      sitfai-gateway:
-        condition: service_started
-    networks:
-      - sitfai-net
+#  sitfai-frontend:
+#    build:
+#      context: ../sitfai-front
+#      dockerfile: Dockerfile
+#    container_name: sitfai-frontend
+#    restart: unless-stopped
+#    ports:
+#      - "5173:80"
+#    depends_on:
+#      sitfai-gateway:
+#        condition: service_started
+#    networks:
+#      - sitfai-net
 
 networks:
   sitfai-net:
     name: sitfai_network
     driver: bridge
+
+volumes:
+  mysql_data:
+    name: sitfai_mysql_data
+    driver: local
 
 

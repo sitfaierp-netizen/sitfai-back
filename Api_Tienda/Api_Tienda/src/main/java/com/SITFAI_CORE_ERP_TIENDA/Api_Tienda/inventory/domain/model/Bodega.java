@@ -9,6 +9,7 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Bodega
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Cantidad;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.DocumentoFuenteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.LoteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.PuntoReorden;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.SucursalId;
@@ -86,12 +87,9 @@ public final class Bodega {
     // ── Stock ─────────────────────────────────────────────────────────────────
 
     /**
-     * Stock actual por producto.
-     * Clave: ProductoId — Valor: cantidad en stock (BigDecimal, siempre >= 0 — BOD-05).
-     * <p>
-     * Un producto ausente en el mapa equivale a stock = 0.
+     * Stock por producto y lote.
      */
-    private final Map<ProductoId, BigDecimal> stock;
+    private final List<StockLote> lotes;
 
     /**
      * Puntos de reorden por producto (BOD-08).
@@ -132,7 +130,7 @@ public final class Bodega {
             String nombre,
             boolean activa,
             TipoBodega tipo,
-            Map<ProductoId, BigDecimal> stock,
+            List<StockLote> lotes,
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
@@ -145,7 +143,7 @@ public final class Bodega {
         this.nombre = nombre;
         this.activa = activa;
         this.tipo = tipo;
-        this.stock = new HashMap<>(stock);
+        this.lotes = lotes != null ? new ArrayList<>(lotes) : new ArrayList<>();
         this.puntosReorden = (puntosReorden != null) ? new HashMap<>(puntosReorden) : new HashMap<>();
         this.movimientos = new ArrayList<>(movimientos);
         this.domainEvents = new ArrayList<>();
@@ -203,7 +201,7 @@ public final class Bodega {
                 nombre.trim(),
                 true,
                 tipo,
-                new HashMap<>(),
+                new ArrayList<>(),
                 new HashMap<>(),
                 new ArrayList<>(),
                 ahora,
@@ -223,12 +221,12 @@ public final class Bodega {
             String codigo,
             String nombre,
             boolean activa,
-            Map<ProductoId, BigDecimal> stock,
+            List<StockLote> lotes,
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
             Instant actualizadoEn) {
-        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, TipoBodega.VENTA, stock, puntosReorden, movimientos, creadoEn, actualizadoEn);
+        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, TipoBodega.VENTA, lotes, puntosReorden, movimientos, creadoEn, actualizadoEn);
     }
 
     public static Bodega reconstituir(
@@ -244,13 +242,33 @@ public final class Bodega {
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
             Instant actualizadoEn) {
+        List<StockLote> lotesMigrados = new ArrayList<>();
+        if (stock != null) {
+            stock.forEach((k, v) -> lotesMigrados.add(new StockLote(k, LoteId.de("LEGACY"), v, null)));
+        }
+        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, tipo, lotesMigrados, puntosReorden, movimientos, creadoEn, actualizadoEn);
+    }
+
+    public static Bodega reconstituir(
+            BodegaId id,
+            EmpresaId empresaId,
+            SucursalId sucursalId,
+            String codigo,
+            String nombre,
+            boolean activa,
+            TipoBodega tipo,
+            List<StockLote> lotes,
+            Map<ProductoId, PuntoReorden> puntosReorden,
+            List<MovimientoInventario> movimientos,
+            Instant creadoEn,
+            Instant actualizadoEn) {
 
         Objects.requireNonNull(id,           "Bodega.reconstituir: id es obligatorio.");
         validarCamposObligatorios(empresaId, sucursalId, codigo, nombre);
         Objects.requireNonNull(tipo,         "Bodega.reconstituir: tipo de bodega es obligatorio.");
 
         return new Bodega(id, empresaId, sucursalId, codigo, nombre, activa, tipo,
-                stock, puntosReorden, movimientos, creadoEn, actualizadoEn);
+                lotes, puntosReorden, movimientos, creadoEn, actualizadoEn);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -258,114 +276,136 @@ public final class Bodega {
     // ═════════════════════════════════════════════════════════════════════════
 
     /**
-     * Registra un nuevo {@code MovimientoInventario} en esta Bodega.
-     * <p>
-     * ┌─────────────────────────────────────────────────────────────────────┐
-     * │ INVARIANTE BOD-05 (CRÍTICA):                                        │
-     * │ Si el movimiento es de SALIDA y la cantidad solicitada supera       │
-     * │ el stock disponible del producto, se lanza                          │
-     * │ {@code StockInsuficienteException} ANTES de modificar cualquier     │
-     * │ estado del Agregado. El Agregado permanece en estado consistente.  │
-     * └─────────────────────────────────────────────────────────────────────┘
-     * <p>
-     * Reglas aplicadas: BOD-03, BOD-04, BOD-05.
-     *
-     * @param productoId      Producto cuyo stock se afecta.
-     * @param cantidad        Cantidad del movimiento (siempre positiva — la dirección la da {@code tipo}).
-     * @param tipo            ENTRADA suma al stock; SALIDA resta del stock.
-     * @param documentoFuente Documento obligatorio (BOD-04).
-     * @throws StockInsuficienteException si {@code tipo == SALIDA} y stock resultante < 0 (BOD-05).
-     * @throws IllegalStateException      si la Bodega está inactiva.
-     * @throws IllegalArgumentException   si algún argumento es null.
+     * Registra un ingreso de stock en la Bodega.
+     */
+    public void registrarIngreso(
+            ProductoId productoId,
+            Cantidad cantidad,
+            LoteId loteId,
+            Instant fechaCaducidad,
+            DocumentoFuenteId documentoFuente) {
+
+        if (!this.activa) {
+            throw new IllegalStateException(String.format("La Bodega '%s' está inactiva y no puede recibir movimientos.", this.id));
+        }
+
+        Objects.requireNonNull(productoId, "registrarIngreso: productoId es obligatorio.");
+        Objects.requireNonNull(cantidad, "registrarIngreso: cantidad es obligatoria.");
+        Objects.requireNonNull(documentoFuente, "registrarIngreso: documentoFuente es obligatorio (BOD-04).");
+
+        StockLote loteExistente = null;
+        if (loteId != null) {
+            loteExistente = this.lotes.stream()
+                    .filter(l -> l.getProductoId().equals(productoId) && Objects.equals(l.getLoteId(), loteId))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        if (loteExistente != null) {
+            loteExistente.agregar(cantidad.valor());
+        } else {
+            LoteId finalLoteId = loteId != null ? loteId : LoteId.de("DEFAULT");
+            this.lotes.add(new StockLote(productoId, finalLoteId, cantidad.valor(), fechaCaducidad));
+        }
+
+        this.actualizadoEn = Instant.now();
+
+        MovimientoInventario movimiento = MovimientoInventario.crear(
+                this.id, productoId, this.empresaId, cantidad, TipoMovimiento.ENTRADA, loteId, documentoFuente
+        );
+        this.movimientos.add(movimiento);
+
+        this.domainEvents.add(MovimientoRegistradoEvent.of(
+                this.id, productoId, this.empresaId, TipoMovimiento.ENTRADA, cantidad, documentoFuente
+        ));
+
+        this.domainEvents.add(StockActualizadoEvent.of(
+                this.id, productoId, this.empresaId, consultarStock(productoId)
+        ));
+    }
+
+    /**
+     * Legacy registrarMovimiento (para compatibilidad).
      */
     public void registrarMovimiento(
             ProductoId productoId,
             Cantidad cantidad,
             TipoMovimiento tipo,
             DocumentoFuenteId documentoFuente) {
+        if (tipo == TipoMovimiento.ENTRADA) {
+            registrarIngreso(productoId, cantidad, null, null, documentoFuente);
+        } else {
+            descontarStock(productoId, cantidad, documentoFuente);
+        }
+    }
 
-        // ── Pre-condición: Bodega activa ──────────────────────────────────────
+    /**
+     * Descuenta stock de la Bodega aplicando la lógica FEFO.
+     */
+    public void descontarStock(
+            ProductoId productoId,
+            Cantidad cantidad,
+            DocumentoFuenteId documentoFuente) {
+
         if (!this.activa) {
-            throw new IllegalStateException(
-                    String.format("La Bodega '%s' está inactiva y no puede recibir movimientos.", this.id));
+            throw new IllegalStateException(String.format("La Bodega '%s' está inactiva y no puede recibir movimientos.", this.id));
         }
 
-        // ── Pre-condición: argumentos ─────────────────────────────────────────
-        Objects.requireNonNull(productoId,      "registrarMovimiento: productoId es obligatorio.");
-        Objects.requireNonNull(cantidad,        "registrarMovimiento: cantidad es obligatoria.");
-        Objects.requireNonNull(tipo,            "registrarMovimiento: tipo es obligatorio.");
-        Objects.requireNonNull(documentoFuente, "registrarMovimiento: documentoFuente es obligatorio (BOD-04).");
+        Objects.requireNonNull(productoId, "descontarStock: productoId es obligatorio.");
+        Objects.requireNonNull(cantidad, "descontarStock: cantidad es obligatoria.");
+        Objects.requireNonNull(documentoFuente, "descontarStock: documentoFuente es obligatorio (BOD-04).");
 
-        // ── Stock actual del producto (0 si no existe aún) ───────────────────
-        BigDecimal stockActual = this.stock.getOrDefault(productoId, BigDecimal.ZERO);
+        BigDecimal stockTotal = consultarStock(productoId);
 
-        // ═════════════════════════════════════════════════════════════════════
-        // BOD-05 — INVARIANTE: Stock nunca negativo
-        // ═════════════════════════════════════════════════════════════════════
-        if (tipo == TipoMovimiento.SALIDA) {
-            BigDecimal stockResultante = stockActual.subtract(cantidad.valor());
-            if (stockResultante.compareTo(BigDecimal.ZERO) < 0) {
-                throw new StockInsuficienteException(
-                        this.id,
-                        productoId,
-                        stockActual,
-                        cantidad.valor()
-                );
-            }
+        if (stockTotal.compareTo(cantidad.valor()) < 0) {
+            throw new StockInsuficienteException(this.id, productoId, stockTotal, cantidad.valor());
         }
 
-        // ── Aplicar el movimiento al stock ────────────────────────────────────
-        BigDecimal nuevoStock = switch (tipo) {
-            case ENTRADA -> stockActual.add(cantidad.valor());
-            case SALIDA  -> stockActual.subtract(cantidad.valor());
-        };
+        // Lógica FEFO: Ordenar por fecha de caducidad ascendente (nulos al final)
+        List<StockLote> lotesProducto = this.lotes.stream()
+                .filter(l -> l.getProductoId().equals(productoId) && l.getCantidad().compareTo(BigDecimal.ZERO) > 0)
+                .sorted((l1, l2) -> {
+                    if (l1.getFechaCaducidad() == null && l2.getFechaCaducidad() == null) return 0;
+                    if (l1.getFechaCaducidad() == null) return 1;
+                    if (l2.getFechaCaducidad() == null) return -1;
+                    return l1.getFechaCaducidad().compareTo(l2.getFechaCaducidad());
+                })
+                .toList();
 
-        this.stock.put(productoId, nuevoStock);
+        BigDecimal cantidadRestante = cantidad.valor();
+
+        for (StockLote lote : lotesProducto) {
+            if (cantidadRestante.compareTo(BigDecimal.ZERO) <= 0) break;
+
+            BigDecimal disponibleEnLote = lote.getCantidad();
+            BigDecimal aDescontar = disponibleEnLote.compareTo(cantidadRestante) >= 0 ? cantidadRestante : disponibleEnLote;
+            
+            lote.descontar(aDescontar);
+            cantidadRestante = cantidadRestante.subtract(aDescontar);
+
+            MovimientoInventario mov = MovimientoInventario.crear(
+                    this.id, productoId, this.empresaId, Cantidad.de(aDescontar), TipoMovimiento.SALIDA, lote.getLoteId(), documentoFuente
+            );
+            this.movimientos.add(mov);
+        }
+
         this.actualizadoEn = Instant.now();
+        BigDecimal nuevoStock = consultarStock(productoId);
 
-        // ── Crear y registrar la Entidad de Movimiento ────────────────────────
-        MovimientoInventario movimiento = MovimientoInventario.crear(
-                this.id,
-                productoId,
-                this.empresaId,
-                cantidad,
-                tipo,
-                documentoFuente
-        );
-        this.movimientos.add(movimiento);
-
-        // ── Emitir Domain Events (AUD-03) ─────────────────────────────────────
         this.domainEvents.add(MovimientoRegistradoEvent.of(
-                this.id,
-                productoId,
-                this.empresaId,
-                tipo,
-                cantidad,
-                documentoFuente
+                this.id, productoId, this.empresaId, TipoMovimiento.SALIDA, cantidad, documentoFuente
         ));
 
         this.domainEvents.add(StockActualizadoEvent.of(
-                this.id,
-                productoId,
-                this.empresaId,
-                nuevoStock
+                this.id, productoId, this.empresaId, nuevoStock
         ));
 
-        // ═════════════════════════════════════════════════════════════════════
-        // BOD-08 — REPLENISHMENT: Verificar Punto de Reorden en SALIDA
-        // ═════════════════════════════════════════════════════════════════════
-        if (tipo == TipoMovimiento.SALIDA) {
-            BigDecimal umbral = this.puntosReorden.getOrDefault(productoId, PuntoReorden.porDefecto()).valor();
-            
-            // Emitir el evento SOLO si el stock acaba de cruzar el umbral hacia abajo por primera vez
-            if (stockActual.compareTo(umbral) > 0 && nuevoStock.compareTo(umbral) <= 0) {
-                this.domainEvents.add(PuntoReordenAlcanzadoEvent.of(
-                        this.empresaId,
-                        this.id,
-                        productoId,
-                        nuevoStock
-                ));
-            }
+        // Verificar BOD-08 (Punto de Reorden)
+        BigDecimal umbral = this.puntosReorden.getOrDefault(productoId, PuntoReorden.porDefecto()).valor();
+        if (stockTotal.compareTo(umbral) > 0 && nuevoStock.compareTo(umbral) <= 0) {
+            this.domainEvents.add(PuntoReordenAlcanzadoEvent.of(
+                    this.empresaId, this.id, productoId, nuevoStock
+            ));
         }
     }
 
@@ -409,7 +449,10 @@ public final class Bodega {
      */
     public BigDecimal consultarStock(ProductoId productoId) {
         Objects.requireNonNull(productoId, "consultarStock: productoId es obligatorio.");
-        return this.stock.getOrDefault(productoId, BigDecimal.ZERO);
+        return this.lotes.stream()
+                .filter(l -> l.getProductoId().equals(productoId))
+                .map(StockLote::getCantidad)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -449,9 +492,18 @@ public final class Bodega {
     public Instant getCreadoEn()                     { return creadoEn; }
     public Instant getActualizadoEn()                { return actualizadoEn; }
 
-    /** Vista inmutable del stock actual. */
+    /** Vista inmutable del stock actual (Legacy compatibility) */
     public Map<ProductoId, BigDecimal> getStock() {
-        return Collections.unmodifiableMap(stock);
+        Map<ProductoId, BigDecimal> stockMap = new HashMap<>();
+        for (StockLote lote : lotes) {
+            stockMap.merge(lote.getProductoId(), lote.getCantidad(), BigDecimal::add);
+        }
+        return Collections.unmodifiableMap(stockMap);
+    }
+
+    /** Vista inmutable de los lotes de stock. */
+    public List<StockLote> getLotes() {
+        return Collections.unmodifiableList(lotes);
     }
 
     /** Vista inmutable de los puntos de reorden. */
