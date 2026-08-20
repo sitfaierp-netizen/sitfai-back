@@ -8,6 +8,10 @@ import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.EmpresaSuspendidaEve
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.SucursalActivadaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.SucursalAgregadaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.SucursalDesactivadaEvent;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.EmpresaActualizadaEvent;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.EmpresaEliminadaEvent;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.SucursalActualizadaEvent;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.SucursalEliminadaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.exception.EmpresaInvalidaException;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.valueobject.NombreEmpresa;
@@ -30,7 +34,7 @@ import java.util.Objects;
 public class Empresa {
 
     private final EmpresaId id;
-    private final Ruc ruc;
+    private Ruc ruc;
     private NombreEmpresa nombre;
     private EstadoEmpresa estado;
     private final List<Sucursal> sucursales;
@@ -248,6 +252,50 @@ public class Empresa {
     public void cambiarNombre(NombreEmpresa nuevoNombre) {
         this.nombre = Objects.requireNonNull(nuevoNombre, "Nuevo nombre no puede ser null.");
         this.actualizadoEn = Instant.now();
+    }
+
+    /**
+     * Actualiza los datos de la empresa.
+     */
+    public void actualizarEmpresa(Ruc nuevoRuc, NombreEmpresa nuevoNombre) {
+        this.ruc = Objects.requireNonNull(nuevoRuc, "Nuevo Ruc no puede ser null.");
+        this.nombre = Objects.requireNonNull(nuevoNombre, "Nuevo nombre no puede ser null.");
+        this.actualizadoEn = Instant.now();
+        this.domainEvents.add(EmpresaActualizadaEvent.ahora(this.id, this.ruc, this.nombre));
+    }
+
+    /**
+     * Elimina lógicamente la empresa.
+     */
+    public void eliminarEmpresa() {
+        if (this.estado == EstadoEmpresa.ELIMINADO) {
+            return;
+        }
+        this.estado = EstadoEmpresa.ELIMINADO;
+        // Eliminar lógicamente todas las sucursales
+        this.sucursales.forEach(Sucursal::eliminar);
+        this.actualizadoEn = Instant.now();
+        this.domainEvents.add(EmpresaEliminadaEvent.ahora(this.id));
+    }
+
+    /**
+     * Actualiza los datos de una sucursal existente.
+     */
+    public void actualizarSucursal(SucursalId sucursalId, String codigo, String nombre) {
+        Sucursal sucursal = buscarSucursal(sucursalId);
+        sucursal.actualizar(codigo, nombre);
+        this.actualizadoEn = Instant.now();
+        this.domainEvents.add(SucursalActualizadaEvent.ahora(this.id, sucursalId, sucursal.getCodigo(), sucursal.getNombre()));
+    }
+
+    /**
+     * Elimina lógicamente una sucursal existente.
+     */
+    public void eliminarSucursal(SucursalId sucursalId) {
+        Sucursal sucursal = buscarSucursal(sucursalId);
+        sucursal.eliminar();
+        this.actualizadoEn = Instant.now();
+        this.domainEvents.add(SucursalEliminadaEvent.ahora(this.id, sucursalId));
     }
 
     /**

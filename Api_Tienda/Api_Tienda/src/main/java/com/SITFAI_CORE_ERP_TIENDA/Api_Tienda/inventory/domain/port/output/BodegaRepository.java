@@ -64,4 +64,21 @@ public interface BodegaRepository {
      * @return {@code true} si el código ya está en uso en la Sucursal.
      */
     boolean existeCodigoEnSucursal(EmpresaId empresaId, String sucursalId, String codigoBodega);
+
+    /**
+     * Retorna todas las Bodegas de una Sucursal.
+     *
+     * @param empresaId Tenant del contexto.
+     * @param sucursalId ID de la Sucursal.
+     * @return Lista (posiblemente vacía) de Bodegas de la Sucursal.
+     */
+    List<Bodega> listarPorSucursal(EmpresaId empresaId, String sucursalId);
+
+    /**
+     * Retorna todas las Bodegas de una Sucursal sin empresaId.
+     *
+     * @param sucursalId ID de la Sucursal.
+     * @return Lista (posiblemente vacia) de Bodegas de la Sucursal.
+     */
+    List<Bodega> listarPorSucursalId(String sucursalId);
 }

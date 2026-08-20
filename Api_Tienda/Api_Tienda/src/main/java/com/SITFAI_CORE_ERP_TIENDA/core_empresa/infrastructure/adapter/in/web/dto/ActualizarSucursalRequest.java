@@ -1,0 +1,6 @@
+package com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.in.web.dto;
+
+public record ActualizarSucursalRequest(
+        String codigo,
+        String nombre
+) {}

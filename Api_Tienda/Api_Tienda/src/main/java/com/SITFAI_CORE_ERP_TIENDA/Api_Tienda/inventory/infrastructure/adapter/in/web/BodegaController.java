@@ -96,4 +96,5 @@ public class BodegaController {
         StockResponse response = consultarStockUseCase.ejecutar(webMapper.toQuery(empresaId, bodegaId, productoId));
         return ResponseEntity.ok(webMapper.toWebResponse(response));
     }
+
 }

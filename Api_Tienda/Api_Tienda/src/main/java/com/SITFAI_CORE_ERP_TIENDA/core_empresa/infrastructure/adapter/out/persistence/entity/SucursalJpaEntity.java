@@ -1,6 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLRestriction;
 import java.time.Instant;
 
 /**
@@ -13,6 +14,7 @@ import java.time.Instant;
                 @UniqueConstraint(name = "uq_core_sucursal_empresa_codigo", columnNames = {"empresa_id", "codigo"})
         }
 )
+@SQLRestriction("estado != 'ELIMINADO'")
 public class SucursalJpaEntity {
 
     @Id
