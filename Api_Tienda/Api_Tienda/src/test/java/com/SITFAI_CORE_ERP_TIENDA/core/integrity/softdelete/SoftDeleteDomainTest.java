@@ -20,7 +20,7 @@ class SoftDeleteDomainTest {
         assertNull(empresa.getDeletedBy());
 
         String actorId = UUID.randomUUID().toString();
-        empresa.darDeBaja(actorId);
+        empresa.eliminar(actorId);
 
         assertFalse(empresa.isActivo());
         assertNotNull(empresa.getDeletedAt());

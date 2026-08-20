@@ -10,11 +10,13 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 
+import com.SITFAI_CORE_ERP_TIENDA.core.audit.infrastructure.persistence.entity.AuditableJpaEntity;
+
 @Entity
 @Table(name = "core_empresa")
 @SQLDelete(sql = "UPDATE core_empresa SET activo = false, deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND version = ?")
 @SQLRestriction("activo = true")
-public class EmpresaJpaEntity {
+public class EmpresaJpaEntity extends AuditableJpaEntity {
 
     @Id
     @Column(length = 36, nullable = false)
@@ -28,12 +30,6 @@ public class EmpresaJpaEntity {
 
     @Column(nullable = false, length = 50)
     private String estado;
-
-    @Column(name = "creado_en", nullable = false)
-    private Instant creadoEn;
-
-    @Column(name = "actualizado_en", nullable = false)
-    private Instant actualizadoEn;
 
     @jakarta.persistence.Version
     @Column(name = "version", nullable = false)
@@ -78,22 +74,6 @@ public class EmpresaJpaEntity {
 
     public void setEstado(String estado) {
         this.estado = estado;
-    }
-
-    public Instant getCreadoEn() {
-        return creadoEn;
-    }
-
-    public void setCreadoEn(Instant creadoEn) {
-        this.creadoEn = creadoEn;
-    }
-
-    public Instant getActualizadoEn() {
-        return actualizadoEn;
-    }
-
-    public void setActualizadoEn(Instant actualizadoEn) {
-        this.actualizadoEn = actualizadoEn;
     }
 
     public Long getVersion() {

@@ -4,7 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.persistence
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-@DataJpaTest
+@SpringBootTest(classes = com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication.class)
 @ActiveProfiles("test")
 class SoftDeleteUniquenessTest {
 
@@ -32,9 +32,17 @@ class SoftDeleteUniquenessTest {
     void debePermitirRegistrarMismoSKUSiAnteriorEstaBajaLogica() {
         String empresaId = UUID.randomUUID().toString();
         String sku = "SKU-ABC";
+        String categoriaId = UUID.randomUUID().toString();
+
+        // Crear la categoría requerida por la restricción de clave foránea en MySQL
+        var categoria = new com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.persistence.entity.CategoriaJpaEntity(
+            categoriaId, empresaId, "Cat 1", "Desc", "ACTIVO", Instant.now(), Instant.now(), true, null, null
+        );
+        entityManager.persist(categoria);
+        entityManager.flush();
 
         ProductoJpaEntity p1 = new ProductoJpaEntity(
-            UUID.randomUUID().toString(), empresaId, sku, "Prod 1", null, UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(), empresaId, sku, "Prod 1", null, categoriaId,
             "UNIDAD", BigDecimal.TEN, BigDecimal.valueOf(15), "IVA19", null, "ACTIVO",
             Instant.now(), Instant.now(), false, Instant.now(), "admin"
         );
@@ -43,7 +51,7 @@ class SoftDeleteUniquenessTest {
         entityManager.flush();
 
         ProductoJpaEntity p2 = new ProductoJpaEntity(
-            UUID.randomUUID().toString(), empresaId, sku, "Prod 2 (Reingreso)", null, UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(), empresaId, sku, "Prod 2 (Reingreso)", null, categoriaId,
             "UNIDAD", BigDecimal.TEN, BigDecimal.valueOf(15), "IVA19", null, "ACTIVO",
             Instant.now(), Instant.now(), true, null, null
         );

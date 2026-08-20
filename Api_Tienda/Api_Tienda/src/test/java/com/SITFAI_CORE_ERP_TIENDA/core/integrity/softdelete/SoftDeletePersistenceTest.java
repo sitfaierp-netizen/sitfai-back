@@ -4,7 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persis
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@SpringBootTest(classes = com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication.class)
 @ActiveProfiles("test")
 class SoftDeletePersistenceTest {
 
