@@ -1,22 +1,16 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity;
 
+import java.time.Instant;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
-
-import java.time.Instant;
-
-import com.SITFAI_CORE_ERP_TIENDA.core.audit.infrastructure.persistence.entity.AuditableJpaEntity;
-
 @Entity
 @Table(name = "core_empresa")
-@SQLDelete(sql = "UPDATE core_empresa SET activo = false, deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND version = ?")
-@SQLRestriction("activo = true")
-public class EmpresaJpaEntity extends AuditableJpaEntity {
+@SQLRestriction("estado != 'ELIMINADO'")
+public class EmpresaJpaEntity {
 
     @Id
     @Column(length = 36, nullable = false)

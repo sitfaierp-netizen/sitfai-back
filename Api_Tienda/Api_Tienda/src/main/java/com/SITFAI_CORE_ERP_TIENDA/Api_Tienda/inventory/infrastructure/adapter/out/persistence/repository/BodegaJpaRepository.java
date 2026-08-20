@@ -31,4 +31,14 @@ public interface BodegaJpaRepository extends JpaRepository<BodegaJpaEntity, UUID
      * Verifica si ya existe una Bodega con el mismo código dentro de una Sucursal para un tenant (BOD-02).
      */
     boolean existsByEmpresaIdAndSucursalIdAndCodigo(UUID empresaId, UUID sucursalId, String codigo);
+
+    /**
+     * Lista todas las Bodegas de una Sucursal específica (MT-01).
+     */
+    List<BodegaJpaEntity> findByEmpresaIdAndSucursalId(UUID empresaId, UUID sucursalId);
+
+    /**
+     * Lista todas las Bodegas por Sucursal Id.
+     */
+    List<BodegaJpaEntity> findBySucursalId(UUID sucursalId);
 }

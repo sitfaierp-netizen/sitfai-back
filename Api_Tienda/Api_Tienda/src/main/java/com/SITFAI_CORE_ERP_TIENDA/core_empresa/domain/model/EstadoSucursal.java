@@ -12,5 +12,10 @@ public enum EstadoSucursal {
     /**
      * Sucursal inhabilitada temporalmente (SUC-06).
      */
-    INACTIVA
+    INACTIVA,
+
+    /**
+     * Sucursal eliminada lógicamente.
+     */
+    ELIMINADO
 }

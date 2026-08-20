@@ -1,10 +1,15 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * Entidad JPA para la persistencia de Sucursal en la tabla `core_sucursal`.
@@ -16,8 +21,7 @@ import org.hibernate.annotations.SQLRestriction;
                 @UniqueConstraint(name = "uq_core_sucursal_empresa_codigo", columnNames = {"empresa_id", "codigo"})
         }
 )
-@SQLDelete(sql = "UPDATE core_sucursal SET activo = false, deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-@SQLRestriction("activo = true")
+@SQLRestriction("estado != 'ELIMINADO'")
 public class SucursalJpaEntity {
 
     @Id

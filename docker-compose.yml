@@ -16,7 +16,7 @@ services:
   # Servicio 1: Base de Datos Relacional Multi-Esquema (MySQL 8.4 LTS)
   # ---------------------------------------------------------------------------
   mysql-db:
-    image: mysql:8.4
+    image: mysql:8.0
     container_name: sitfai-mysql-db
     restart: unless-stopped
     environment:
@@ -26,7 +26,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
       TZ: UTC
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - "${DB_PORT:-3308}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
@@ -53,7 +53,7 @@ services:
     command: start-dev --import-realm
     volumes:
       - ./docker/keycloak:/opt/keycloak/data/import:ro
-      - ./themes/sitfai-theme:/opt/keycloak/themes/sitfai-theme:ro
+      - ./keycloak/themes/sitfai-theme:/opt/keycloak/themes/sitfai-theme:ro
     environment:
       # Credenciales de Administrador de Keycloak
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
@@ -73,6 +73,9 @@ services:
       KC_HTTP_PORT: 8080
     ports:
       - "${IAM_PORT:-8080}:8080"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -107,6 +110,8 @@ services:
     depends_on:
       keycloak-iam:
         condition: service_started
+      mysql-db:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

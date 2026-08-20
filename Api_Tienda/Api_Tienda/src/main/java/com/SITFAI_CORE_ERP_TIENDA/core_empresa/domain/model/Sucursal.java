@@ -15,7 +15,7 @@ import java.util.Objects;
 public class Sucursal {
 
     private final SucursalId id;
-    private final String codigo;
+    private String codigo;
     private String nombre;
     private EstadoSucursal estado;
     private final Instant creadoEn;
@@ -111,6 +111,26 @@ public class Sucursal {
      */
     public void cambiarNombre(String nuevoNombre) {
         this.nombre = validarNombre(nuevoNombre);
+        this.actualizadoEn = Instant.now();
+    }
+
+    /**
+     * Actualiza los datos de la sucursal (código y nombre).
+     */
+    public void actualizar(String codigo, String nombre) {
+        this.codigo = validarCodigo(codigo);
+        this.nombre = validarNombre(nombre);
+        this.actualizadoEn = Instant.now();
+    }
+
+    /**
+     * Elimina lógicamente la sucursal.
+     */
+    public void eliminar() {
+        if (this.estado == EstadoSucursal.ELIMINADO) {
+            return;
+        }
+        this.estado = EstadoSucursal.ELIMINADO;
         this.actualizadoEn = Instant.now();
     }
 

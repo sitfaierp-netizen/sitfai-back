@@ -17,5 +17,10 @@ public enum EstadoEmpresa {
     /**
      * Empresa dada de baja de forma terminal (EMP-04, EMP-07).
      */
-    BAJA
+    BAJA,
+
+    /**
+     * Empresa eliminada lógicamente.
+     */
+    ELIMINADO
 }

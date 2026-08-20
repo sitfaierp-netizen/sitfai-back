@@ -101,4 +101,27 @@ public class BodegaJpaAdapter implements BodegaRepository {
                 codigoBodega.trim().toUpperCase()
         );
     }
+
+    @Override
+    public List<Bodega> listarPorSucursal(EmpresaId empresaId, String sucursalId) {
+        Objects.requireNonNull(empresaId, "empresaId no puede ser null (MT-01)");
+        Objects.requireNonNull(sucursalId, "sucursalId no puede ser null");
+
+        UUID sucursalUuid = UUID.fromString(sucursalId);
+        return bodegaJpaRepository.findByEmpresaIdAndSucursalId(empresaId.valor(), sucursalUuid)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Bodega> listarPorSucursalId(String sucursalId) {
+        Objects.requireNonNull(sucursalId, "sucursalId no puede ser null");
+
+        UUID sucursalUuid = UUID.fromString(sucursalId);
+        return bodegaJpaRepository.findBySucursalId(sucursalUuid)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }
