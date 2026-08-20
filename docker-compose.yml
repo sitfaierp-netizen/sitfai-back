@@ -53,7 +53,7 @@ services:
     command: start-dev --import-realm
     volumes:
       - ./docker/keycloak:/opt/keycloak/data/import:ro
-      - ./themes/sitfai-theme:/opt/keycloak/themes/sitfai-theme:ro
+      - ./keycloak/themes/sitfai-theme:/opt/keycloak/themes/sitfai-theme:ro
     environment:
       # Credenciales de Administrador de Keycloak
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
