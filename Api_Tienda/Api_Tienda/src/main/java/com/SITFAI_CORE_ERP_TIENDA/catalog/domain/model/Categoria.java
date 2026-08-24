@@ -26,6 +26,10 @@ public class Categoria {
     private String nombre;
     private CategoriaId categoriaPadreId; // null → categoría raíz
     private EstadoCategoria estado;
+    private Instant actualizadoEn;
+    private boolean activo = true;
+    private Instant deletedAt;
+    private String deletedBy;
 
     // -------------------------------------------------------------------------
     // Constructor privado
@@ -39,6 +43,7 @@ public class Categoria {
         this.categoriaPadreId = categoriaPadreId; // nullable — categoría raíz
         this.estado          = EstadoCategoria.ACTIVO;
         this.creadoEn        = Instant.now();
+        this.actualizadoEn   = this.creadoEn;
     }
 
     // -------------------------------------------------------------------------
@@ -51,9 +56,15 @@ public class Categoria {
 
     public static Categoria reconstituir(CategoriaId id, EmpresaId empresaId,
                                          String nombre, CategoriaId padreId,
-                                         EstadoCategoria estado, Instant creadoEn) {
+                                         EstadoCategoria estado, Instant creadoEn,
+                                         Instant actualizadoEn, boolean activo,
+                                         Instant deletedAt, String deletedBy) {
         Categoria c = new Categoria(id, empresaId, nombre, padreId);
         c.estado = estado;
+        c.actualizadoEn = actualizadoEn;
+        c.activo = activo;
+        c.deletedAt = deletedAt;
+        c.deletedBy = deletedBy;
         return c;
     }
 
@@ -64,6 +75,7 @@ public class Categoria {
     public void renombrar(String nuevoNombre) {
         validarNombre(nuevoNombre);
         this.nombre = nuevoNombre.trim();
+        this.actualizadoEn = Instant.now();
     }
 
     public void cambiarEstado(EstadoCategoria nuevoEstado) {
@@ -73,6 +85,21 @@ public class Categoria {
                     "Una Categoría DESCONTINUADA no puede volver a estado ACTIVO.");
         }
         this.estado = nuevoEstado;
+        this.actualizadoEn = Instant.now();
+    }
+
+    /**
+     * Da de baja lógicamente la Categoría (Soft Delete).
+     */
+    public void darDeBaja(String actorId) {
+        if (!this.activo) {
+            return;
+        }
+        Objects.requireNonNull(actorId, "El actorId no puede ser null.");
+        this.activo = false;
+        this.deletedAt = Instant.now();
+        this.deletedBy = actorId;
+        this.actualizadoEn = Instant.now();
     }
 
     // -------------------------------------------------------------------------
@@ -93,4 +120,8 @@ public class Categoria {
     public CategoriaId getCategoriaPadreId() { return categoriaPadreId; }
     public EstadoCategoria getEstado()       { return estado; }
     public Instant getCreadoEn()             { return creadoEn; }
+    public Instant getActualizadoEn()        { return actualizadoEn; }
+    public boolean isActivo()                { return activo; }
+    public Instant getDeletedAt()            { return deletedAt; }
+    public String getDeletedBy()             { return deletedBy; }
 }

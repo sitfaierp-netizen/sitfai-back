@@ -130,7 +130,7 @@ services:
       - "8000:8000"
     environment:
       # ValidaciÃ³n Perimetral JWT de Keycloak
-      KEYCLOAK_ISSUER_URI: http://localhost:8080/realms/sitfai-erp
+      KEYCLOAK_ISSUER_URI: http://keycloak-iam:8080/realms/sitfai-erp
       KEYCLOAK_JWK_URI: http://sitfai-keycloak-iam:8080/realms/sitfai-erp/protocol/openid-connect/certs
 
       # Enrutamiento hacia el Backend Modular Monolith

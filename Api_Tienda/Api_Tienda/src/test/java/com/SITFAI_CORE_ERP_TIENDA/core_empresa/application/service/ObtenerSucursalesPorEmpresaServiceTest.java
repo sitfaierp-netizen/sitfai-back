@@ -52,7 +52,7 @@ class ObtenerSucursalesPorEmpresaServiceTest {
         EmpresaId empresaId = EmpresaId.de(empresaIdUuid);
         Sucursal sucursal = Sucursal.reconstituir(
                 SucursalId.generar(), "MATRIZ", "Sucursal Matriz",
-                EstadoSucursal.ACTIVA, Instant.now(), Instant.now()
+                EstadoSucursal.ACTIVA, Instant.now(), Instant.now(), true, null, null
         );
 
         when(empresaRepository.existe(empresaId)).thenReturn(true);

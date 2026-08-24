@@ -2,6 +2,9 @@ package com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.persistenc
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -10,6 +13,8 @@ import java.time.Instant;
 @Table(name = "catalog_productos",
        uniqueConstraints = @UniqueConstraint(name = "uq_catalog_prod_empresa_sku",
                columnNames = {"empresa_id", "sku"}))
+@SQLDelete(sql = "UPDATE catalog_productos SET activo = false, deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("activo = true")
 public class ProductoJpaEntity {
 
     @Id @Column(name = "id", nullable = false, length = 36)
@@ -34,19 +39,30 @@ public class ProductoJpaEntity {
     @Column(name = "creado_en", nullable = false) private Instant creadoEn;
     @Column(name = "actualizado_en", nullable = false) private Instant actualizadoEn;
 
+    @Column(name = "activo", nullable = false)
+    private boolean activo = true;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by", length = 36)
+    private String deletedBy;
+
     protected ProductoJpaEntity() {}
 
     public ProductoJpaEntity(String id, String empresaId, String sku, String nombre,
                               String descripcion, String categoriaId, String unidadMedida,
                               BigDecimal precioCompra, BigDecimal precioVenta,
                               String impuesto, String codigoBarras, String estado,
-                              Instant creadoEn, Instant actualizadoEn) {
+                              Instant creadoEn, Instant actualizadoEn,
+                              boolean activo, Instant deletedAt, String deletedBy) {
         this.id = id; this.empresaId = empresaId; this.sku = sku; this.nombre = nombre;
         this.descripcion = descripcion; this.categoriaId = categoriaId;
         this.unidadMedida = unidadMedida; this.precioCompra = precioCompra;
         this.precioVenta = precioVenta; this.impuesto = impuesto;
         this.codigoBarras = codigoBarras; this.estado = estado;
         this.creadoEn = creadoEn; this.actualizadoEn = actualizadoEn;
+        this.activo = activo; this.deletedAt = deletedAt; this.deletedBy = deletedBy;
     }
 
     // Getters
@@ -66,4 +82,10 @@ public class ProductoJpaEntity {
     public void   setActualizadoEn(Instant i) { this.actualizadoEn = i; }
     public Instant getCreadoEn()      { return creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
+    public boolean isActivo()         { return activo; }
+    public void setActivo(boolean a)  { this.activo = a; }
+    public Instant getDeletedAt()     { return deletedAt; }
+    public void setDeletedAt(Instant i) { this.deletedAt = i; }
+    public String getDeletedBy()      { return deletedBy; }
+    public void setDeletedBy(String s) { this.deletedBy = s; }
 }

@@ -29,6 +29,9 @@ public class Usuario {
     private EstadoUsuario estado;
     private final Instant creadoEn;
     private Instant actualizadoEn;
+    private boolean activo = true;
+    private Instant deletedAt;
+    private String deletedBy;
 
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
@@ -42,6 +45,22 @@ public class Usuario {
             Instant creadoEn,
             Instant actualizadoEn
     ) {
+        this(id, empresaId, username, email, rol, estado, creadoEn, actualizadoEn, true, null, null);
+    }
+
+    private Usuario(
+            UsuarioId id,
+            EmpresaId empresaId,
+            Username username,
+            Email email,
+            RolUsuario rol,
+            EstadoUsuario estado,
+            Instant creadoEn,
+            Instant actualizadoEn,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy
+    ) {
         this.id = Objects.requireNonNull(id, "El ID de usuario no puede ser nulo.");
         this.empresaId = Objects.requireNonNull(empresaId, "El EmpresaId (Tenant) no puede ser nulo.");
         this.username = Objects.requireNonNull(username, "El Username no puede ser nulo.");
@@ -50,6 +69,9 @@ public class Usuario {
         this.estado = Objects.requireNonNull(estado, "El EstadoUsuario no puede ser nulo.");
         this.creadoEn = Objects.requireNonNull(creadoEn, "La fecha de creación no puede ser nula.");
         this.actualizadoEn = Objects.requireNonNull(actualizadoEn, "La fecha de actualización no puede ser nula.");
+        this.activo = activo;
+        this.deletedAt = deletedAt;
+        this.deletedBy = deletedBy;
     }
 
     /**
@@ -168,7 +190,10 @@ public class Usuario {
             RolUsuario rol,
             EstadoUsuario estado,
             Instant creadoEn,
-            Instant actualizadoEn
+            Instant actualizadoEn,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy
     ) {
         return new Usuario(
                 id,
@@ -178,8 +203,25 @@ public class Usuario {
                 rol,
                 estado,
                 creadoEn,
-                actualizadoEn
+                actualizadoEn,
+                activo,
+                deletedAt,
+                deletedBy
         );
+    }
+
+    /**
+     * Da de baja lógicamente al usuario (Soft Delete).
+     */
+    public void darDeBaja(String actorId) {
+        if (!this.activo) {
+            return;
+        }
+        Objects.requireNonNull(actorId, "El actorId no puede ser null.");
+        this.activo = false;
+        this.deletedAt = Instant.now();
+        this.deletedBy = actorId;
+        this.actualizadoEn = Instant.now();
     }
 
     // Getters inmutables
@@ -217,6 +259,18 @@ public class Usuario {
 
     public Instant getActualizadoEn() {
         return actualizadoEn;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
     }
 
     public List<DomainEvent> getDomainEvents() {
