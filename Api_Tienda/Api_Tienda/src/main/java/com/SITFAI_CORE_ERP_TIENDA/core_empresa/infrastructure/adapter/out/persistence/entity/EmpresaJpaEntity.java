@@ -6,11 +6,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "core_empresa")
 @SQLRestriction("estado != 'ELIMINADO'")
-public class EmpresaJpaEntity {
+public class EmpresaJpaEntity extends com.SITFAI_CORE_ERP_TIENDA.core.audit.infrastructure.persistence.entity.AuditableJpaEntity {
 
     @Id
     @Column(length = 36, nullable = false)

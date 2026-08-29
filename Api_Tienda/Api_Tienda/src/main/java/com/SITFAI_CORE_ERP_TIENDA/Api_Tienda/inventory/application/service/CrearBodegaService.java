@@ -57,18 +57,13 @@ public class CrearBodegaService implements CrearBodegaUseCase {
         EmpresaId empresaId = EmpresaId.de(command.empresaId());
         SucursalId sucursalId = SucursalId.de(command.sucursalId());
 
-        // ── 2. Validar unicidad del código (BOD-02) ───────────────────────────
-        boolean codigoYaExiste = bodegaRepository.existeCodigoEnSucursal(
+        // ── 2. Validar unicidad del código (BOD-02 a nivel de Empresa global) ───────────────────────────
+        boolean codigoYaExiste = bodegaRepository.existeCodigoEnEmpresa(
                 empresaId,
-                command.sucursalId(),
                 command.codigo()
         );
         if (codigoYaExiste) {
-            throw new IllegalArgumentException(
-                    String.format("[BOD-02] Ya existe una Bodega con el código '%s' en la Sucursal '%s' " +
-                                    "para la Empresa '%s'.",
-                            command.codigo(), command.sucursalId(), command.empresaId())
-            );
+            throw new com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.RegistroDuplicadoException("Bodega", "codigo", command.codigo());
         }
 
         // ── 3. Instanciar el Agregado vía factory method del Dominio ──────────

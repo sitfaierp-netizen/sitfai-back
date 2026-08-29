@@ -34,6 +34,11 @@ public class ActualizarEmpresaService implements ActualizarEmpresaUseCase {
         Empresa empresa = empresaRepository.buscarPorId(id)
                 .orElseThrow(() -> new EmpresaNoEncontradaException(id));
 
+        java.util.Optional<Empresa> empresaConMismoRuc = empresaRepository.buscarPorRuc(new Ruc(command.ruc()));
+        if (empresaConMismoRuc.isPresent() && !empresaConMismoRuc.get().getId().equals(id)) {
+            throw new com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.RegistroDuplicadoException("Empresa", "ruc", command.ruc());
+        }
+
         empresa.actualizarEmpresa(new Ruc(command.ruc()), new NombreEmpresa(command.razonSocial()));
 
         empresaRepository.guardar(empresa);

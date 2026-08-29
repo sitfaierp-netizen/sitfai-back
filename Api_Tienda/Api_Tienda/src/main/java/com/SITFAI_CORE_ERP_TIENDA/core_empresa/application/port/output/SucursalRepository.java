@@ -38,4 +38,12 @@ public interface SucursalRepository {
      * @return la Sucursal guardada reconstituida desde la BD.
      */
     Sucursal guardar(Sucursal sucursal, EmpresaId empresaId);
+
+    /**
+     * Verifica si ya existe una Sucursal con el mismo código en la Empresa.
+     * @param empresaId Identificador del tenant
+     * @param codigo Código de sucursal
+     * @return true si existe
+     */
+    boolean existePorEmpresaIdYCodigo(EmpresaId empresaId, String codigo);
 }
