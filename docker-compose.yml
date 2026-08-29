@@ -159,19 +159,19 @@ services:
   # ---------------------------------------------------------------------------
   # Servicio 5: Frontend Vue SPA
   # ---------------------------------------------------------------------------
-#  sitfai-frontend:
-#    build:
-#      context: ../sitfai-front
-#      dockerfile: Dockerfile
-#    container_name: sitfai-frontend
-#    restart: unless-stopped
-#    ports:
-#      - "5173:80"
-#    depends_on:
-#      sitfai-gateway:
-#        condition: service_started
-#    networks:
-#      - sitfai-net
+  sitfai-frontend:
+    build:
+      context: ../sitfai-front
+      dockerfile: Dockerfile
+    container_name: sitfai-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      sitfai-gateway:
+        condition: service_started
+    networks:
+      - sitfai-net
 
 networks:
   sitfai-net:

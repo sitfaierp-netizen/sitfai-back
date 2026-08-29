@@ -4,6 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.catalog.application.dto.CrearProductoCommand;
 import com.SITFAI_CORE_ERP_TIENDA.catalog.application.dto.ProductoResponse;
 import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.CambiarEstadoProductoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.CrearProductoUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.ConsultarProductosUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -24,13 +25,15 @@ class ProductoControllerTest {
 
     private CrearProductoUseCase crearProductoUseCase;
     private CambiarEstadoProductoUseCase cambiarEstadoProductoUseCase;
+    private ConsultarProductosUseCase consultarProductosUseCase;
     private ProductoController productoController;
 
     @BeforeEach
     void setUp() {
         crearProductoUseCase = mock(CrearProductoUseCase.class);
         cambiarEstadoProductoUseCase = mock(CambiarEstadoProductoUseCase.class);
-        productoController = new ProductoController(crearProductoUseCase, cambiarEstadoProductoUseCase);
+        consultarProductosUseCase = mock(ConsultarProductosUseCase.class);
+        productoController = new ProductoController(crearProductoUseCase, cambiarEstadoProductoUseCase, consultarProductosUseCase);
     }
 
     @Test
@@ -59,6 +62,6 @@ class ProductoControllerTest {
         Method method = ProductoController.class.getMethod("crear", CrearProductoCommand.class);
         PreAuthorize preAuthorize = method.getAnnotation(PreAuthorize.class);
         assertNotNull(preAuthorize, "Debe tener @PreAuthorize");
-        assertTrue(preAuthorize.value().contains("EMPRESA_ADMIN"), "Debe requerir rol EMPRESA_ADMIN");
+        assertTrue(preAuthorize.value().contains("SUPER_ADMIN"), "Debe requerir rol SUPER_ADMIN");
     }
 }
