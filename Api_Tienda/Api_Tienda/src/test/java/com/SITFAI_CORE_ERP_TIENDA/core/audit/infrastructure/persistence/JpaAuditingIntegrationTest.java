@@ -24,11 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.springframework.test.context.TestPropertySource;
 
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ContextConfiguration(classes = com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication.class)
-@Import({JpaAuditingConfig.class, JpaAuditingIntegrationTest.Config.class})
+@Import({JpaAuditingConfig.class, JpaAuditingIntegrationTest.Config.class, TestcontainersConfiguration.class})
 class JpaAuditingIntegrationTest {
 
     @Autowired

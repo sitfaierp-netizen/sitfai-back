@@ -4,12 +4,12 @@ import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
 import java.util.UUID;
 import java.time.Instant;
 
-public record OrdenCompraCreadaEvent(
+public record OrdenCompraEmitidaEvent(
         UUID empresaId,
         OrdenCompraId ordenCompraId,
         Instant ocurridoEn
 ) implements DomainEvent {
-    public static OrdenCompraCreadaEvent ahora(UUID empresaId, OrdenCompraId ordenCompraId) {
-        return new OrdenCompraCreadaEvent(empresaId, ordenCompraId, Instant.now());
+    public static OrdenCompraEmitidaEvent ahora(UUID empresaId, OrdenCompraId ordenCompraId) {
+        return new OrdenCompraEmitidaEvent(empresaId, ordenCompraId, Instant.now());
     }
 }
