@@ -61,20 +61,18 @@ public class FacturaPersistenceMapper {
                 .map(FacturaPersistenceMapper::toLineaDomain)
                 .collect(Collectors.toList());
 
-        return new Factura(
+        return Factura.reconstituir(
                 new FacturaId(entity.getId()),
                 entity.getEmpresaId(),
                 new ClienteId(entity.getClienteId()),
                 entity.getPedidoId() != null ? new PedidoId(entity.getPedidoId()) : null,
                 new Ruc(entity.getRucCliente()),
                 lineasDomain,
-                // Note: impuestos domain is not fully mapped in entity to keep it simple for now, 
-                // but the totals are correctly preserved.
-                new java.util.ArrayList<>(), 
-                new Dinero(entity.getSubtotal()),
-                new Dinero(entity.getTotalImpuestos()),
-                new Dinero(entity.getTotalGeneral()),
-                com.SITFAI_CORE_ERP_TIENDA.core.document.domain.model.EstadoDocumento.valueOf(entity.getEstado()),
+                new java.util.ArrayList<>(),
+                new Dinero(entity.getSubtotal(), Dinero.MONEDA_POR_DEFECTO),
+                new Dinero(entity.getTotalImpuestos(), Dinero.MONEDA_POR_DEFECTO),
+                new Dinero(entity.getTotalGeneral(), Dinero.MONEDA_POR_DEFECTO),
+                com.SITFAI_CORE_ERP_TIENDA.core.document.domain.model.enums.DocumentStatus.valueOf(entity.getEstado()),
                 entity.getVersion(),
                 entity.getCreadoEn(),
                 entity.getCreadoPor(),
@@ -88,7 +86,7 @@ public class FacturaPersistenceMapper {
                 entity.getId(),
                 entity.getConcepto(),
                 entity.getCantidad(),
-                new Dinero(entity.getPrecioUnitario())
+                new Dinero(entity.getPrecioUnitario(), Dinero.MONEDA_POR_DEFECTO)
         );
         // Note: impuestos are empty here since we didn't persist line taxes in a separate table for brevity,
         // but the subtotal and totalImpuestos of the line would be calculated correctly if needed.

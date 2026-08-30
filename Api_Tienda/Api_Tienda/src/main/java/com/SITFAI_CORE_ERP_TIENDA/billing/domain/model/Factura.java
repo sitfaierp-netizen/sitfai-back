@@ -64,6 +64,16 @@ public class Factura implements DocumentoTransaccional {
         );
     }
 
+    // Factory method para reconstitución desde persistencia
+    public static Factura reconstituir(FacturaId id, UUID empresaId, ClienteId clienteId, PedidoId pedidoId,
+                                       Ruc rucCliente, List<LineaFactura> lineas, List<Impuesto> impuestos,
+                                       Dinero subtotal, Dinero totalImpuestos, Dinero totalGeneral,
+                                       DocumentStatus estado, Long version, Instant createdAt, String createdBy,
+                                       Instant updatedAt, String updatedBy) {
+        return new Factura(id, empresaId, clienteId, pedidoId, rucCliente, lineas, impuestos,
+                subtotal, totalImpuestos, totalGeneral, estado, version, createdAt, createdBy, updatedAt, updatedBy);
+    }
+
     // Constructor completo privado
     private Factura(FacturaId id, UUID empresaId, ClienteId clienteId, PedidoId pedidoId, Ruc rucCliente,
                     List<LineaFactura> lineas, List<Impuesto> impuestos, Dinero subtotal, Dinero totalImpuestos, Dinero totalGeneral,

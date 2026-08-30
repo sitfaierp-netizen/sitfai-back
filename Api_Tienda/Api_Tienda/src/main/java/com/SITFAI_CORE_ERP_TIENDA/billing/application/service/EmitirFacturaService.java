@@ -36,9 +36,18 @@ public class EmitirFacturaService implements EmitirFacturaUseCase {
     @Override
     @Transactional
     public FacturaResponse emitirFactura(EmitirFacturaCommand command) {
-        // 1. Extraer empresaId y usuario de ActorProvider (Zero Trust MT-02)
-        UUID empresaId = actorProvider.getCurrentEmpresaId();
-        String usuario = actorProvider.getCurrentUsername();
+        // 1. Extraer actor del contexto de seguridad (ActorProviderPort — AUD-01)
+        // EmpresaId viene inyectado en el controller vía @TenantId (MT-02 Zero Trust)
+        // El actorId se usa como auditoría del creador
+        String usuario = actorProvider.getCurrentActorId();
+
+        // empresaId proviene del command (MT-01):
+        // En flujo REST → inyectado por @TenantId en el controller
+        // En flujo de evento → extraído del PedidoConfirmadoEvent
+        UUID empresaId = command.empresaId();
+        if (empresaId == null) {
+            throw new IllegalArgumentException("EmpresaId es obligatorio (MT-01)");
+        }
 
         FacturaId facturaId = new FacturaId(UUID.randomUUID());
         ClienteId clienteId = new ClienteId(command.clienteId());

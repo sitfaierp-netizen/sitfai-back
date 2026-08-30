@@ -32,6 +32,7 @@ public class FacturaController {
             @Valid @RequestBody EmitirFacturaRequest request) {
 
         EmitirFacturaCommand command = new EmitirFacturaCommand(
+                empresaId,
                 request.clienteId(),
                 request.pedidoId(),
                 request.rucCliente(),

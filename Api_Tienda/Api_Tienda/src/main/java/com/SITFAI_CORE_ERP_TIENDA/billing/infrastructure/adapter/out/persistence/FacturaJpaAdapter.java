@@ -21,14 +21,13 @@ public class FacturaJpaAdapter implements FacturaRepository {
     }
 
     @Override
-    public Factura save(Factura factura) {
+    public void save(Factura factura) {
         FacturaJpaEntity entity = FacturaPersistenceMapper.toEntity(factura);
-        FacturaJpaEntity savedEntity = repository.save(entity);
-        return FacturaPersistenceMapper.toDomain(savedEntity);
+        repository.save(entity);
     }
 
     @Override
-    public Optional<Factura> findById(FacturaId id, UUID empresaId) {
+    public Optional<Factura> findByIdAndEmpresaId(FacturaId id, UUID empresaId) {
         return repository.findByIdAndEmpresaId(id.value(), empresaId)
                 .map(FacturaPersistenceMapper::toDomain);
     }

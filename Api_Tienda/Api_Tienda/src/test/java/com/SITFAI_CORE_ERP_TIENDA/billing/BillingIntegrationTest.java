@@ -37,9 +37,9 @@ public class BillingIntegrationTest {
         FacturaId facturaId = new FacturaId(UUID.randomUUID());
         ClienteId clienteId = new ClienteId(UUID.randomUUID());
         Ruc ruc = new Ruc("0912345678001");
-        
+
         Factura factura = Factura.crear(facturaId, empresaId, clienteId, null, ruc, "user1");
-        factura.agregarLinea("Laptop", new BigDecimal("2"), new Dinero(new BigDecimal("1000.00")));
+        factura.agregarLinea("Laptop", new BigDecimal("2"), Dinero.de(new BigDecimal("1000.00")));
         facturaRepository.save(factura);
 
         // 2. Arrange Concurrencia
@@ -49,17 +49,18 @@ public class BillingIntegrationTest {
         AtomicInteger exitos = new AtomicInteger(0);
         AtomicInteger fallos = new AtomicInteger(0);
 
-        // 3. Act: Simular ataques concurrentes (todos intentan agregar una línea y emitir)
+        // 3. Act: Simular ataques concurrentes
         for (int i = 0; i < numHilos; i++) {
             executor.submit(() -> {
                 try {
-                    // Cada hilo carga la misma versión de la factura
-                    Factura facturaCargada = facturaRepository.findById(facturaId, empresaId).orElseThrow();
-                    
-                    facturaCargada.agregarLinea("Mouse", new BigDecimal("1"), new Dinero(new BigDecimal("25.00")));
-                    facturaCargada.emitir(); // Cambia el estado a EMITIDO
-                    
-                    // Al guardar, se incrementa la versión. Solo 1 debería ganar.
+                    Factura facturaCargada = facturaRepository
+                            .findByIdAndEmpresaId(facturaId, empresaId)
+                            .orElseThrow();
+
+                    facturaCargada.agregarLinea("Mouse", new BigDecimal("1"),
+                            Dinero.de(new BigDecimal("25.00")));
+                    facturaCargada.emitir();
+
                     facturaRepository.save(facturaCargada);
                     exitos.incrementAndGet();
                 } catch (OptimisticLockingFailureException e) {
@@ -71,15 +72,15 @@ public class BillingIntegrationTest {
                 }
             });
         }
-        
+
         latch.await();
 
         // 4. Assert: Solo 1 éxito, los demás fallan por bloqueo optimista
         assertThat(exitos.get()).isEqualTo(1);
         assertThat(fallos.get()).isEqualTo(numHilos - 1);
-        
-        // Verificar que el estado final es EMITIDO
-        Factura facturaFinal = facturaRepository.findById(facturaId, empresaId).orElseThrow();
+
+        // Verificar estado final
+        Factura facturaFinal = facturaRepository.findByIdAndEmpresaId(facturaId, empresaId).orElseThrow();
         assertThat(facturaFinal.getEstado().name()).isEqualTo("EMITIDO");
         assertThat(facturaFinal.getVersion()).isGreaterThan(0L);
     }
