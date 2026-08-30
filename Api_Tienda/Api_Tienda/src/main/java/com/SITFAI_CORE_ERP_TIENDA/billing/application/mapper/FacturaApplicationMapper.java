@@ -1,36 +1,34 @@
 package com.SITFAI_CORE_ERP_TIENDA.billing.application.mapper;
 
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.FacturaResponse;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.FacturaElectronica;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.Factura;
 
-/**
- * Mapper Utilitario para Factura Electrónica.
- * Convierte el Agregado del Dominio a DTO de Respuesta.
- */
+import java.util.stream.Collectors;
+
 public final class FacturaApplicationMapper {
 
-    private FacturaApplicationMapper() {
-        // Utility class
-    }
+    private FacturaApplicationMapper() {}
 
-    public static FacturaResponse aResponse(FacturaElectronica factura) {
+    public static FacturaResponse toResponse(Factura factura) {
         return new FacturaResponse(
-                factura.getId().valor(),
-                factura.getEmpresaId().valor(),
-                factura.getNitEmisor().valor(),
-                factura.getNitReceptor().valor(),
-                factura.getEstado().name(),
-                factura.getCufe() != null ? factura.getCufe().valor() : null,
+                factura.getId().value().toString(),
+                factura.getEmpresaId().toString(),
+                factura.getClienteId().value().toString(),
+                factura.getPedidoId() != null ? factura.getPedidoId().value().toString() : null,
+                factura.getRucCliente().valor(),
                 factura.getSubtotal().monto(),
                 factura.getTotalImpuestos().monto(),
                 factura.getTotalGeneral().monto(),
-                factura.getLineas().stream().map(l -> new FacturaResponse.LineaFacturaResponse(
-                        l.getConcepto(),
-                        l.getCantidad(),
-                        l.getPrecioUnitario().monto(),
-                        l.calcularSubtotal().monto(),
-                        l.calcularTotalImpuestos().monto()
-                )).toList()
+                factura.getEstado().name(),
+                factura.getLineas().stream()
+                        .map(l -> new FacturaResponse.LineaFacturaResponse(
+                                l.getConcepto(),
+                                l.getCantidad(),
+                                l.getPrecioUnitario().monto(),
+                                l.calcularSubtotal().monto(),
+                                l.calcularTotalImpuestos().monto()
+                        ))
+                        .collect(Collectors.toList())
         );
     }
 }

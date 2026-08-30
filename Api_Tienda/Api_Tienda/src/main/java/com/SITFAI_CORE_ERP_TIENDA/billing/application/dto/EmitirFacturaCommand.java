@@ -4,25 +4,21 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * DTO: Comando inmutable para emitir una factura.
- * Cero frameworks de validación.
- */
 public record EmitirFacturaCommand(
-        UUID empresaId,
-        String nitEmisor,
-        String nitReceptor,
-        List<LineaFacturaDto> lineas
+        UUID clienteId,
+        UUID pedidoId, // Opcional
+        String rucCliente,
+        List<LineaFacturaCommand> lineas
 ) {
-    public record LineaFacturaDto(
+    public record LineaFacturaCommand(
             String concepto,
             BigDecimal cantidad,
             BigDecimal precioUnitario,
             String moneda,
-            List<ImpuestoDto> impuestos
+            List<ImpuestoCommand> impuestos
     ) {}
 
-    public record ImpuestoDto(
+    public record ImpuestoCommand(
             String tipo,
             BigDecimal tarifa
     ) {}
