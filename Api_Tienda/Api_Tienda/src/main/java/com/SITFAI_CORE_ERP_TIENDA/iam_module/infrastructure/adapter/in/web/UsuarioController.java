@@ -14,7 +14,7 @@ import com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.in.web.dto.C
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.in.web.dto.DesactivarUsuarioRequest;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.in.web.dto.ReactivarUsuarioRequest;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.in.web.dto.RegistrarUsuarioRequest;
-import org.springframework.http.HttpStatus;
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.web.TenantId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,8 +52,11 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioResponse> registrar(@RequestBody RegistrarUsuarioRequest request) {
-        RegistrarUsuarioCommand command = UsuarioWebMapper.toCommand(request);
+    public ResponseEntity<UsuarioResponse> registrar(
+            @TenantId UUID empresaId,
+            @RequestBody RegistrarUsuarioRequest request
+    ) {
+        RegistrarUsuarioCommand command = UsuarioWebMapper.toCommand(empresaId, request);
         UsuarioResponse response = registrarUsuarioUseCase.ejecutar(command);
         URI location = URI.create("/iam/usuarios/" + response.id() + "?empresaId=" + response.empresaId());
         return ResponseEntity.created(location).body(response);
@@ -61,30 +64,33 @@ public class UsuarioController {
 
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<UsuarioResponse> desactivar(
+            @TenantId UUID empresaId,
             @PathVariable UUID id,
             @RequestBody DesactivarUsuarioRequest request
     ) {
-        DesactivarUsuarioCommand command = UsuarioWebMapper.toCommand(id, request);
+        DesactivarUsuarioCommand command = UsuarioWebMapper.toCommand(empresaId, id, request);
         UsuarioResponse response = desactivarUsuarioUseCase.ejecutar(command);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/reactivar")
     public ResponseEntity<UsuarioResponse> reactivar(
+            @TenantId UUID empresaId,
             @PathVariable UUID id,
             @RequestBody ReactivarUsuarioRequest request
     ) {
-        ReactivarUsuarioCommand command = UsuarioWebMapper.toCommand(id, request);
+        ReactivarUsuarioCommand command = UsuarioWebMapper.toCommand(empresaId, id, request);
         UsuarioResponse response = reactivarUsuarioUseCase.ejecutar(command);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/rol")
     public ResponseEntity<UsuarioResponse> cambiarRol(
+            @TenantId UUID empresaId,
             @PathVariable UUID id,
             @RequestBody CambiarRolUsuarioRequest request
     ) {
-        CambiarRolUsuarioCommand command = UsuarioWebMapper.toCommand(id, request);
+        CambiarRolUsuarioCommand command = UsuarioWebMapper.toCommand(empresaId, id, request);
         UsuarioResponse response = cambiarRolUsuarioUseCase.ejecutar(command);
         return ResponseEntity.ok(response);
     }
@@ -92,7 +98,7 @@ public class UsuarioController {
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponse> obtenerPorId(
             @PathVariable UUID id,
-            @RequestParam UUID empresaId
+            @TenantId UUID empresaId
     ) {
         UsuarioResponse response = consultarUsuarioUseCase.obtenerPorId(empresaId, id);
         return ResponseEntity.ok(response);
@@ -100,7 +106,7 @@ public class UsuarioController {
 
     @GetMapping
     public ResponseEntity<List<UsuarioResponse>> listarPorEmpresa(
-            @RequestParam UUID empresaId
+            @TenantId UUID empresaId
     ) {
         List<UsuarioResponse> response = consultarUsuarioUseCase.listarPorEmpresa(empresaId);
         return ResponseEntity.ok(response);

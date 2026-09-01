@@ -23,7 +23,7 @@ public class SpringSecurityTenantProviderAdapter implements TenantProviderPort {
         }
 
         Object details = auth.getDetails();
-        if (details instanceof TenantAuthenticationDetails tenantDetails) {
+        if (auth != null && auth.getDetails() instanceof TenantAuthenticationDetails tenantDetails) {
             return tenantDetails.empresaUuid();
         }
 
