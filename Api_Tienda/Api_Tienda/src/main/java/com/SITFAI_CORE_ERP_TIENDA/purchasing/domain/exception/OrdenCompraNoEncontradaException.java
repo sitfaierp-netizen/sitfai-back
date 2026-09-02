@@ -1,7 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.exception;
 
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.OrdenCompraId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
 
 /**
  * Excepción lanzada cuando una Orden de Compra no existe para la Empresa consultada (MT-01).

@@ -3,26 +3,26 @@ package com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.Pedido;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.PedidoId;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.port.output.PedidoRepository;
-import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.entity.PedidoJpaEntity;
+import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.entity.OrdersPedidoJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.mapper.PedidoPersistenceMapper;
-import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.repository.PedidoJpaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.repository.OrdersPedidoJpaRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
 
-@Component
+@Component("ordersPedidoJpaAdapter")
 public class PedidoJpaAdapter implements PedidoRepository {
 
-    private final PedidoJpaRepository repository;
+    private final OrdersPedidoJpaRepository repository;
 
-    public PedidoJpaAdapter(PedidoJpaRepository repository) {
+    public PedidoJpaAdapter(OrdersPedidoJpaRepository repository) {
         this.repository = repository;
     }
 
     @Override
     public void save(Pedido pedido) {
-        PedidoJpaEntity entity = PedidoPersistenceMapper.toEntity(pedido);
+        OrdersPedidoJpaEntity entity = PedidoPersistenceMapper.toEntity(pedido);
         repository.save(entity);
     }
 

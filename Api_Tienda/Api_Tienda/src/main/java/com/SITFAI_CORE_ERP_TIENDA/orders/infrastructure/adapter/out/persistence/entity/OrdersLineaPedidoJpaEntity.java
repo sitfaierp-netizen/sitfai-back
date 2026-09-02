@@ -11,9 +11,9 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Entity
+@Entity(name = "OrdersLineaPedidoJpaEntity")
 @Table(name = "orders_linea_pedido")
-public class LineaPedidoJpaEntity {
+public class OrdersLineaPedidoJpaEntity {
 
     @Id
     @Column(name = "id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
@@ -21,7 +21,7 @@ public class LineaPedidoJpaEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pedido_id", nullable = false)
-    private PedidoJpaEntity pedido;
+    private OrdersPedidoJpaEntity pedido;
 
     @Column(name = "producto_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID productoId;
@@ -35,8 +35,8 @@ public class LineaPedidoJpaEntity {
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
-    public PedidoJpaEntity getPedido() { return pedido; }
-    public void setPedido(PedidoJpaEntity pedido) { this.pedido = pedido; }
+    public OrdersPedidoJpaEntity getPedido() { return pedido; }
+    public void setPedido(OrdersPedidoJpaEntity pedido) { this.pedido = pedido; }
 
     public UUID getProductoId() { return productoId; }
     public void setProductoId(UUID productoId) { this.productoId = productoId; }

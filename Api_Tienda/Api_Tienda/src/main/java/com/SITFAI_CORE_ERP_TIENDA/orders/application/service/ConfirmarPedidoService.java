@@ -10,7 +10,7 @@ import com.SITFAI_CORE_ERP_TIENDA.orders.domain.port.output.PedidoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
+@Service("ordersConfirmarPedidoService")
 @Transactional
 public class ConfirmarPedidoService {
 

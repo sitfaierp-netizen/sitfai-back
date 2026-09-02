@@ -21,7 +21,6 @@ public class CategoriaJpaAdapter implements CategoriaRepository {
         this.repository = repository;
     }
 
-    @Override
     public void guardar(Categoria categoria) {
         CategoriaJpaEntity entity = new CategoriaJpaEntity(
                 categoria.getCategoriaId().valor().toString(),
@@ -29,7 +28,11 @@ public class CategoriaJpaAdapter implements CategoriaRepository {
                 categoria.getNombre(),
                 categoria.getCategoriaPadreId() != null ? categoria.getCategoriaPadreId().valor().toString() : null,
                 categoria.getEstado().name(),
-                categoria.getCreadoEn()
+                categoria.getCreadoEn(),
+                categoria.getActualizadoEn(),
+                categoria.isActivo(),
+                categoria.getDeletedAt(),
+                categoria.getDeletedBy()
         );
         repository.save(entity);
     }
@@ -48,7 +51,11 @@ public class CategoriaJpaAdapter implements CategoriaRepository {
                 entity.getNombre(),
                 entity.getCategoriaPadreId() != null ? CategoriaId.de(entity.getCategoriaPadreId()) : null,
                 EstadoCategoria.valueOf(entity.getEstado()),
-                entity.getCreadoEn()
+                entity.getCreadoEn(),
+                entity.getActualizadoEn(),
+                entity.isActivo(),
+                entity.getDeletedAt(),
+                entity.getDeletedBy()
         );
     }
 }

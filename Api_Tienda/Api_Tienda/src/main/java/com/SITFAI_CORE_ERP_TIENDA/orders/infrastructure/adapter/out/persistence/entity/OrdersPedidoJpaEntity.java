@@ -17,9 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
+@Entity(name = "OrdersPedidoJpaEntity")
 @Table(name = "orders_pedido")
-public class PedidoJpaEntity extends AuditableJpaEntity {
+public class OrdersPedidoJpaEntity extends AuditableJpaEntity {
 
     @Id
     @Column(name = "id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
@@ -43,7 +43,7 @@ public class PedidoJpaEntity extends AuditableJpaEntity {
     private Long version;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LineaPedidoJpaEntity> lineas = new ArrayList<>();
+    private List<OrdersLineaPedidoJpaEntity> lineas = new ArrayList<>();
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -63,6 +63,6 @@ public class PedidoJpaEntity extends AuditableJpaEntity {
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
 
-    public List<LineaPedidoJpaEntity> getLineas() { return lineas; }
-    public void setLineas(List<LineaPedidoJpaEntity> lineas) { this.lineas = lineas; }
+    public List<OrdersLineaPedidoJpaEntity> getLineas() { return lineas; }
+    public void setLineas(List<OrdersLineaPedidoJpaEntity> lineas) { this.lineas = lineas; }
 }

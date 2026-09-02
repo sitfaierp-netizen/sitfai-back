@@ -19,7 +19,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
-@RestController
+@RestController("ordersPedidoController")
 @RequestMapping("/api/v1/pedidos")
 public class PedidoController {
 

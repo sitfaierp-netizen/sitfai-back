@@ -7,7 +7,7 @@ import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.PedidoId;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.ProductoId;
-import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.repository.PedidoJpaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.repository.OrdersPedidoJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +32,13 @@ class OrdersIntegrationTest {
     private PedidoJpaAdapter pedidoJpaAdapter;
 
     @Autowired
-    private PedidoJpaRepository pedidoJpaRepository;
+    private OrdersPedidoJpaRepository repository;
 
     private static final UUID EMPRESA_ID = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        pedidoJpaRepository.deleteAll();
+        repository.deleteAll();
     }
 
     @Test

@@ -6,17 +6,17 @@ import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.PedidoId;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.vo.ProductoId;
-import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.entity.LineaPedidoJpaEntity;
-import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.entity.PedidoJpaEntity;
+import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.entity.OrdersLineaPedidoJpaEntity;
+import com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence.entity.OrdersPedidoJpaEntity;
 
 import java.util.List;
 
 public class PedidoPersistenceMapper {
 
-    public static PedidoJpaEntity toEntity(Pedido domain) {
+    public static OrdersPedidoJpaEntity toEntity(Pedido domain) {
         if (domain == null) return null;
 
-        PedidoJpaEntity entity = new PedidoJpaEntity();
+        OrdersPedidoJpaEntity entity = new OrdersPedidoJpaEntity();
         entity.setId(domain.getId().value());
         entity.setEmpresaId(domain.getEmpresaId());
         entity.setClienteId(domain.getClienteId().value());
@@ -31,7 +31,7 @@ public class PedidoPersistenceMapper {
 
         if (domain.getLineas() != null) {
             domain.getLineas().forEach(lineaDomain -> {
-                LineaPedidoJpaEntity lineaEntity = new LineaPedidoJpaEntity();
+                OrdersLineaPedidoJpaEntity lineaEntity = new OrdersLineaPedidoJpaEntity();
                 lineaEntity.setId(lineaDomain.getId());
                 lineaEntity.setProductoId(lineaDomain.getProductoId().value());
                 lineaEntity.setCantidad(lineaDomain.getCantidad());
@@ -44,7 +44,7 @@ public class PedidoPersistenceMapper {
         return entity;
     }
 
-    public static Pedido toDomain(PedidoJpaEntity entity) {
+    public static Pedido toDomain(OrdersPedidoJpaEntity entity) {
         if (entity == null) return null;
 
         List<LineaPedido> lineasDomain = entity.getLineas().stream()
@@ -66,7 +66,7 @@ public class PedidoPersistenceMapper {
         );
     }
 
-    private static LineaPedido toLineaDomain(LineaPedidoJpaEntity entity) {
+    private static LineaPedido toLineaDomain(OrdersLineaPedidoJpaEntity entity) {
         return new LineaPedido(
                 entity.getId(),
                 new ProductoId(entity.getProductoId()),

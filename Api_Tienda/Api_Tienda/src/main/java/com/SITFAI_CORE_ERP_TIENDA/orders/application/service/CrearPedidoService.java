@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-@Service
+@Service("ordersCrearPedidoService")
 @Transactional
 public class CrearPedidoService {
 
