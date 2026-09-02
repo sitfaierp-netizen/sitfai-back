@@ -1,8 +1,16 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.SQLRestriction;
 import java.time.Instant;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.SQLRestriction;
 
 /**
  * Entidad JPA para la persistencia de Sucursal en la tabla `core_sucursal`.
@@ -40,6 +48,15 @@ public class SucursalJpaEntity {
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
+    @Column(name = "activo", nullable = false)
+    private boolean activo = true;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by", length = 36)
+    private String deletedBy;
+
     public SucursalJpaEntity() {
     }
 
@@ -59,6 +76,31 @@ public class SucursalJpaEntity {
         this.estado = estado;
         this.creadoEn = creadoEn;
         this.actualizadoEn = actualizadoEn;
+        this.activo = true;
+    }
+
+    public SucursalJpaEntity(
+            String id,
+            EmpresaJpaEntity empresa,
+            String codigo,
+            String nombre,
+            String estado,
+            Instant creadoEn,
+            Instant actualizadoEn,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy
+    ) {
+        this.id = id;
+        this.empresa = empresa;
+        this.codigo = codigo;
+        this.nombre = nombre;
+        this.estado = estado;
+        this.creadoEn = creadoEn;
+        this.actualizadoEn = actualizadoEn;
+        this.activo = activo;
+        this.deletedAt = deletedAt;
+        this.deletedBy = deletedBy;
     }
 
     // Getters and Setters
@@ -116,5 +158,29 @@ public class SucursalJpaEntity {
 
     public void setActualizadoEn(Instant actualizadoEn) {
         this.actualizadoEn = actualizadoEn;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
     }
 }

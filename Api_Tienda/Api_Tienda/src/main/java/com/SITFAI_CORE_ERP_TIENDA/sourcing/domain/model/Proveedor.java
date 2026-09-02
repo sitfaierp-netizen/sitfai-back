@@ -38,12 +38,23 @@ public class Proveedor {
     private String direccion;
     private EstadoProveedor estado;
     private Integer plazoEntregaDias;
+    private Instant actualizadoEn;
+    private boolean activo = true;
+    private Instant deletedAt;
+    private String deletedBy;
 
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     private Proveedor(ProveedorId proveedorId, EmpresaId empresaId, Ruc ruc,
                       String razonSocial, String emailContacto, String telefono,
                       String direccion, Integer plazoEntregaDias) {
+        this(proveedorId, empresaId, ruc, razonSocial, emailContacto, telefono, direccion, plazoEntregaDias, Instant.now(), Instant.now(), true, null, null);
+    }
+
+    private Proveedor(ProveedorId proveedorId, EmpresaId empresaId, Ruc ruc,
+                      String razonSocial, String emailContacto, String telefono,
+                      String direccion, Integer plazoEntregaDias, Instant creadoEn,
+                      Instant actualizadoEn, boolean activo, Instant deletedAt, String deletedBy) {
         this.proveedorId = Objects.requireNonNull(proveedorId, "ProveedorId no puede ser nulo.");
         this.empresaId = Objects.requireNonNull(empresaId, "EmpresaId no puede ser nulo (MT-01).");
         this.ruc = Objects.requireNonNull(ruc, "Ruc no puede ser nulo.");
@@ -61,7 +72,11 @@ public class Proveedor {
         this.direccion = direccion;
         this.plazoEntregaDias = plazoEntregaDias;
         this.estado = EstadoProveedor.ACTIVO;
-        this.creadoEn = Instant.now();
+        this.creadoEn = creadoEn;
+        this.actualizadoEn = actualizadoEn;
+        this.activo = activo;
+        this.deletedAt = deletedAt;
+        this.deletedBy = deletedBy;
     }
 
     public static Proveedor crear(ProveedorId proveedorId, EmpresaId empresaId, Ruc ruc,
@@ -74,11 +89,10 @@ public class Proveedor {
 
     public static Proveedor reconstituir(ProveedorId proveedorId, EmpresaId empresaId, Ruc ruc,
                                          String razonSocial, String emailContacto, String telefono,
-                                         String direccion, Integer plazoEntregaDias, EstadoProveedor estado, Instant creadoEn) {
-        Proveedor p = new Proveedor(proveedorId, empresaId, ruc, razonSocial, emailContacto, telefono, direccion, plazoEntregaDias);
+                                         String direccion, Integer plazoEntregaDias, EstadoProveedor estado,
+                                         Instant creadoEn, Instant actualizadoEn, boolean activo, Instant deletedAt, String deletedBy) {
+        Proveedor p = new Proveedor(proveedorId, empresaId, ruc, razonSocial, emailContacto, telefono, direccion, plazoEntregaDias, creadoEn, actualizadoEn, activo, deletedAt, deletedBy);
         p.estado = estado;
-        // Se preserva la fecha original si es necesario, aunque en reconstitución el constructor ya asignó Instant.now()
-        // Lo dejamos así para simplificar o podríamos tener un constructor interno que reciba creadoEn.
         return p;
     }
 
@@ -98,6 +112,21 @@ public class Proveedor {
 
     public void cambiarEstado(EstadoProveedor nuevoEstado) {
         this.estado = Objects.requireNonNull(nuevoEstado, "EstadoProveedor no puede ser nulo.");
+        this.actualizadoEn = Instant.now();
+    }
+
+    /**
+     * Da de baja lógicamente el Proveedor (Soft Delete).
+     */
+    public void darDeBaja(String actorId) {
+        if (!this.activo) {
+            return;
+        }
+        Objects.requireNonNull(actorId, "El actorId no puede ser null.");
+        this.activo = false;
+        this.deletedAt = Instant.now();
+        this.deletedBy = actorId;
+        this.actualizadoEn = Instant.now();
     }
 
     public List<DomainEvent> drenaEventos() {
@@ -116,5 +145,9 @@ public class Proveedor {
     public Integer getPlazoEntregaDias() { return plazoEntregaDias; }
     public EstadoProveedor getEstado() { return estado; }
     public Instant getCreadoEn() { return creadoEn; }
+    public Instant getActualizadoEn() { return actualizadoEn; }
+    public boolean isActivo() { return activo; }
+    public Instant getDeletedAt() { return deletedAt; }
+    public String getDeletedBy() { return deletedBy; }
     public List<DomainEvent> getDomainEvents() { return Collections.unmodifiableList(domainEvents); }
 }

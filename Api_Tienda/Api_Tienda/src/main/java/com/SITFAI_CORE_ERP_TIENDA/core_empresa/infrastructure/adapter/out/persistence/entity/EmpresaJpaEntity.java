@@ -1,18 +1,17 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity;
 
+import java.time.Instant;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.SQLRestriction;
-
-import java.time.Instant;
 
 @Entity
 @Table(name = "core_empresa")
 @SQLRestriction("estado != 'ELIMINADO'")
-public class EmpresaJpaEntity {
+public class EmpresaJpaEntity extends com.SITFAI_CORE_ERP_TIENDA.core.audit.infrastructure.persistence.entity.AuditableJpaEntity {
 
     @Id
     @Column(length = 36, nullable = false)
@@ -27,11 +26,18 @@ public class EmpresaJpaEntity {
     @Column(nullable = false, length = 50)
     private String estado;
 
-    @Column(name = "creado_en", nullable = false)
-    private Instant creadoEn;
+    @jakarta.persistence.Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
 
-    @Column(name = "actualizado_en", nullable = false)
-    private Instant actualizadoEn;
+    @Column(name = "activo", nullable = false)
+    private boolean activo = true;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by", length = 36)
+    private String deletedBy;
 
     public String getId() {
         return id;
@@ -65,19 +71,35 @@ public class EmpresaJpaEntity {
         this.estado = estado;
     }
 
-    public Instant getCreadoEn() {
-        return creadoEn;
+    public Long getVersion() {
+        return version;
     }
 
-    public void setCreadoEn(Instant creadoEn) {
-        this.creadoEn = creadoEn;
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
-    public Instant getActualizadoEn() {
-        return actualizadoEn;
+    public boolean isActivo() {
+        return activo;
     }
 
-    public void setActualizadoEn(Instant actualizadoEn) {
-        this.actualizadoEn = actualizadoEn;
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
     }
 }

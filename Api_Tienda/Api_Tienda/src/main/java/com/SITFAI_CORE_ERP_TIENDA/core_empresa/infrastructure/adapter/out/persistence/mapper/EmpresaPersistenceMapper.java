@@ -36,6 +36,10 @@ public final class EmpresaPersistenceMapper {
         entity.setEstado(domain.getEstado().name());
         entity.setCreadoEn(domain.getCreadoEn());
         entity.setActualizadoEn(domain.getActualizadoEn());
+        entity.setActivo(domain.isActivo());
+        entity.setDeletedAt(domain.getDeletedAt());
+        entity.setDeletedBy(domain.getDeletedBy());
+        entity.setVersion(domain.getVersion() != null ? domain.getVersion() : 0L);
 
         return entity;
     }
@@ -54,7 +58,11 @@ public final class EmpresaPersistenceMapper {
                 EstadoEmpresa.valueOf(jpa.getEstado()),
                 sucursales,
                 jpa.getCreadoEn(),
-                jpa.getActualizadoEn()
+                jpa.getActualizadoEn(),
+                jpa.getVersion(),
+                jpa.isActivo(),
+                jpa.getDeletedAt(),
+                jpa.getDeletedBy()
         );
     }
 

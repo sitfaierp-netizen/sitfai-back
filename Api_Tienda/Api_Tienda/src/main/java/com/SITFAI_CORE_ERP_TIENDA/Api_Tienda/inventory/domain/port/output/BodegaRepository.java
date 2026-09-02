@@ -66,6 +66,14 @@ public interface BodegaRepository {
     boolean existeCodigoEnSucursal(EmpresaId empresaId, String sucursalId, String codigoBodega);
 
     /**
+     * Verifica si ya existe una Bodega con el mismo código dentro de la Empresa.
+     * @param empresaId Tenant del contexto
+     * @param codigoBodega Código a verificar
+     * @return true si existe
+     */
+    boolean existeCodigoEnEmpresa(EmpresaId empresaId, String codigoBodega);
+
+    /**
      * Retorna todas las Bodegas de una Sucursal.
      *
      * @param empresaId Tenant del contexto.

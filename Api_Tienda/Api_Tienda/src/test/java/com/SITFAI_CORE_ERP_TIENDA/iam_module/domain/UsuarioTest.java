@@ -356,7 +356,10 @@ class UsuarioTest {
                     RolUsuario.SUPER_ADMIN,
                     EstadoUsuario.ACTIVO,
                     ahora,
-                    ahora
+                    ahora,
+                    true,
+                    null,
+                    null
             );
 
             assertThat(usuario.getId()).isEqualTo(usuarioId);

@@ -23,4 +23,9 @@ public interface SucursalJpaRepository extends JpaRepository<SucursalJpaEntity, 
      * Busca una Sucursal por su ID validando pertenencia a la Empresa (MT-02).
      */
     Optional<SucursalJpaEntity> findByIdAndEmpresa_Id(String sucursalId, String empresaId);
+
+    /**
+     * Verifica la existencia de una sucursal por código en un tenant específico.
+     */
+    boolean existsByEmpresa_IdAndCodigo(String empresaId, String codigo);
 }

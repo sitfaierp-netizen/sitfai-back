@@ -58,6 +58,9 @@ public class Producto {
     private String       codigoBarras;    // nullable
     private EstadoProducto estado;
     private Instant      actualizadoEn;
+    private boolean      activo = true;
+    private Instant      deletedAt;
+    private String       deletedBy;
 
     // -------------------------------------------------------------------------
     // Acumulador de Domain Events (drenado por el Application Service)
@@ -152,11 +155,15 @@ public class Producto {
                                          BigDecimal precioCompra, BigDecimal precioVenta,
                                          Impuesto impuesto, String codigoBarras,
                                          EstadoProducto estado, Instant creadoEn,
-                                         Instant actualizadoEn) {
+                                         Instant actualizadoEn, boolean activo,
+                                         Instant deletedAt, String deletedBy) {
         Producto p = new Producto(productoId, empresaId, sku, nombre, descripcion,
                 categoriaId, unidadMedida, precioCompra, precioVenta, impuesto, codigoBarras);
         p.estado        = estado;
         p.actualizadoEn = actualizadoEn;
+        p.activo        = activo;
+        p.deletedAt     = deletedAt;
+        p.deletedBy     = deletedBy;
         return p;
     }
 
@@ -208,6 +215,20 @@ public class Producto {
         this.actualizadoEn = Instant.now();
     }
 
+    /**
+     * Da de baja lógicamente el Producto (Soft Delete).
+     */
+    public void darDeBaja(String actorId) {
+        if (!this.activo) {
+            return;
+        }
+        Objects.requireNonNull(actorId, "El actorId no puede ser null.");
+        this.activo = false;
+        this.deletedAt = Instant.now();
+        this.deletedBy = actorId;
+        this.actualizadoEn = Instant.now();
+    }
+
     // -------------------------------------------------------------------------
     // Drenado de eventos — Application Service llama esto post-persistencia
     // -------------------------------------------------------------------------
@@ -244,5 +265,8 @@ public class Producto {
     public EstadoProducto getEstado()      { return estado; }
     public Instant      getCreadoEn()      { return creadoEn; }
     public Instant      getActualizadoEn() { return actualizadoEn; }
+    public boolean      isActivo()         { return activo; }
+    public Instant      getDeletedAt()     { return deletedAt; }
+    public String       getDeletedBy()     { return deletedBy; }
     public List<DomainEvent> getDomainEvents() { return Collections.unmodifiableList(domainEvents); }
 }

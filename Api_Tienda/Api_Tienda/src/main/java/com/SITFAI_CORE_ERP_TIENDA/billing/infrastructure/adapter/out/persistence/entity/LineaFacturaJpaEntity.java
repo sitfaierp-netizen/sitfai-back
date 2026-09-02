@@ -9,12 +9,8 @@ import java.util.UUID;
 public class LineaFacturaJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", columnDefinition = "VARCHAR(36)")
-    private String id;
-
-    @Column(name = "empresa_id", columnDefinition = "VARCHAR(36)", nullable = false)
-    private String empresaId;
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "factura_id", nullable = false)
@@ -23,43 +19,33 @@ public class LineaFacturaJpaEntity {
     @Column(name = "concepto", nullable = false)
     private String concepto;
 
-    @Column(name = "cantidad", precision = 19, scale = 4, nullable = false)
+    @Column(name = "cantidad", nullable = false, precision = 19, scale = 4)
     private BigDecimal cantidad;
 
-    @Column(name = "precio_unitario", precision = 19, scale = 4, nullable = false)
+    @Column(name = "precio_unitario", nullable = false, precision = 19, scale = 4)
     private BigDecimal precioUnitario;
 
-    @Column(name = "subtotal", precision = 19, scale = 4, nullable = false)
+    @Column(name = "subtotal", nullable = false, precision = 19, scale = 4)
     private BigDecimal subtotal;
 
-    @Column(name = "total_impuestos", precision = 19, scale = 4, nullable = false)
+    @Column(name = "total_impuestos", nullable = false, precision = 19, scale = 4)
     private BigDecimal totalImpuestos;
 
     public LineaFacturaJpaEntity() {}
 
-    // Getters y Setters
-    
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    
-    public String getEmpresaId() { return empresaId; }
-    public void setEmpresaId(String empresaId) { this.empresaId = empresaId; }
-
+    // Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public FacturaJpaEntity getFactura() { return factura; }
     public void setFactura(FacturaJpaEntity factura) { this.factura = factura; }
-
     public String getConcepto() { return concepto; }
     public void setConcepto(String concepto) { this.concepto = concepto; }
-
     public BigDecimal getCantidad() { return cantidad; }
     public void setCantidad(BigDecimal cantidad) { this.cantidad = cantidad; }
-
     public BigDecimal getPrecioUnitario() { return precioUnitario; }
     public void setPrecioUnitario(BigDecimal precioUnitario) { this.precioUnitario = precioUnitario; }
-
     public BigDecimal getSubtotal() { return subtotal; }
     public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
-
     public BigDecimal getTotalImpuestos() { return totalImpuestos; }
     public void setTotalImpuestos(BigDecimal totalImpuestos) { this.totalImpuestos = totalImpuestos; }
 }

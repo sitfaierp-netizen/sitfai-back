@@ -18,8 +18,24 @@ import java.time.Instant;
  * <p>
  * Implementa el estándar RFC 7807 (Problem Details) según la REGLA-5.
  */
+import com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.OptimisticConcurrencyException;
+
 @RestControllerAdvice(basePackages = "com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.in.web")
 public class CoreEmpresaExceptionHandler {
+
+    @ExceptionHandler(OptimisticConcurrencyException.class)
+    public ResponseEntity<ProblemDetail> handleOptimisticConcurrency(OptimisticConcurrencyException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                ex.getMessage()
+        );
+        problem.setTitle("Conflicto de Concurrencia (CONC-01)");
+        problem.setType(URI.create("urn:problem-type:optimistic-concurrency"));
+        problem.setProperty("codigoError", "CONCURRENCY_CONFLICT");
+        problem.setProperty("timestamp", Instant.now());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    }
 
     @ExceptionHandler(EmpresaNoEncontradaException.class)
     public ResponseEntity<ProblemDetail> handleEmpresaNoEncontrada(EmpresaNoEncontradaException ex) {

@@ -57,7 +57,7 @@ class MasterDataPersistenceTest {
         ProductoJpaEntity producto = new ProductoJpaEntity(
                 UUID.randomUUID().toString(), empresaId, "SKU-001", "Prod Nulo", "Desc",
                 UUID.randomUUID().toString(), "UNIDAD", null, new BigDecimal("100"),
-                "IVA_19", "CODE", "ACTIVO", Instant.now(), Instant.now()
+                "IVA_19", "CODE", "ACTIVO", Instant.now(), Instant.now(), true, null, null
         );
 
         ProductoJpaEntity saved = productoRepository.saveAndFlush(producto);
@@ -72,14 +72,14 @@ class MasterDataPersistenceTest {
         ProductoJpaEntity p1 = new ProductoJpaEntity(
                 UUID.randomUUID().toString(), empresaId, "SKU-UNIQUE", "P1", "D",
                 UUID.randomUUID().toString(), "UNIDAD", null, new BigDecimal("100"),
-                "IVA_19", "C", "ACTIVO", Instant.now(), Instant.now()
+                "IVA_19", "C", "ACTIVO", Instant.now(), Instant.now(), true, null, null
         );
         productoRepository.saveAndFlush(p1);
 
         ProductoJpaEntity p2 = new ProductoJpaEntity(
                 UUID.randomUUID().toString(), empresaId, "SKU-UNIQUE", "P2", "D",
                 UUID.randomUUID().toString(), "UNIDAD", null, new BigDecimal("100"),
-                "IVA_19", "C", "ACTIVO", Instant.now(), Instant.now()
+                "IVA_19", "C", "ACTIVO", Instant.now(), Instant.now(), true, null, null
         );
 
         assertThrows(DataIntegrityViolationException.class, () -> productoRepository.saveAndFlush(p2));
@@ -90,7 +90,7 @@ class MasterDataPersistenceTest {
         String empresaId = UUID.randomUUID().toString();
         ProveedorJpaEntity proveedor = new ProveedorJpaEntity(
                 UUID.randomUUID().toString(), empresaId, "123456789", "Razon", "correo@test.com",
-                "123", "Dir", 15, "ACTIVO", Instant.now()
+                "123", "Dir", 15, "ACTIVO", Instant.now(), Instant.now(), true, null, null
         );
 
         ProveedorJpaEntity saved = proveedorRepository.saveAndFlush(proveedor);
@@ -104,13 +104,13 @@ class MasterDataPersistenceTest {
         
         ProveedorJpaEntity p1 = new ProveedorJpaEntity(
                 UUID.randomUUID().toString(), empresaId, "RUC-UNIQUE", "P1", "correo@test.com",
-                "123", "Dir", 10, "ACTIVO", Instant.now()
+                "123", "Dir", 10, "ACTIVO", Instant.now(), Instant.now(), true, null, null
         );
         proveedorRepository.saveAndFlush(p1);
 
         ProveedorJpaEntity p2 = new ProveedorJpaEntity(
                 UUID.randomUUID().toString(), empresaId, "RUC-UNIQUE", "P2", "correo@test.com",
-                "123", "Dir", 10, "ACTIVO", Instant.now()
+                "123", "Dir", 10, "ACTIVO", Instant.now(), Instant.now(), true, null, null
         );
 
         assertThrows(DataIntegrityViolationException.class, () -> proveedorRepository.saveAndFlush(p2));

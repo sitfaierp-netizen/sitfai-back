@@ -117,6 +117,10 @@ public final class Bodega {
 
     private final Instant creadoEn;
     private Instant actualizadoEn;
+    private Long version;
+    private boolean activo = true;
+    private Instant deletedAt;
+    private String deletedBy;
 
     // ═════════════════════════════════════════════════════════════════════════
     // CONSTRUCTORES (privados — solo accesibles vía factory methods)
@@ -134,7 +138,8 @@ public final class Bodega {
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
-            Instant actualizadoEn) {
+            Instant actualizadoEn,
+            Long version) {
 
         this.id = id;
         this.empresaId = empresaId;
@@ -149,6 +154,44 @@ public final class Bodega {
         this.domainEvents = new ArrayList<>();
         this.creadoEn = creadoEn;
         this.actualizadoEn = actualizadoEn;
+        this.version = version;
+    }
+
+    private Bodega(
+            BodegaId id,
+            EmpresaId empresaId,
+            SucursalId sucursalId,
+            String codigo,
+            String nombre,
+            boolean activa,
+            TipoBodega tipo,
+            List<StockLote> lotes,
+            Map<ProductoId, PuntoReorden> puntosReorden,
+            List<MovimientoInventario> movimientos,
+            Instant creadoEn,
+            Instant actualizadoEn,
+            Long version,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy) {
+
+        this.id = id;
+        this.empresaId = empresaId;
+        this.sucursalId = sucursalId;
+        this.codigo = codigo;
+        this.nombre = nombre;
+        this.activa = activa;
+        this.tipo = tipo;
+        this.lotes = lotes != null ? new ArrayList<>(lotes) : new ArrayList<>();
+        this.puntosReorden = (puntosReorden != null) ? new HashMap<>(puntosReorden) : new HashMap<>();
+        this.movimientos = new ArrayList<>(movimientos);
+        this.domainEvents = new ArrayList<>();
+        this.creadoEn = creadoEn;
+        this.actualizadoEn = actualizadoEn;
+        this.version = version;
+        this.activo = activo;
+        this.deletedAt = deletedAt;
+        this.deletedBy = deletedBy;
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -205,29 +248,15 @@ public final class Bodega {
                 new HashMap<>(),
                 new ArrayList<>(),
                 ahora,
-                ahora
+                ahora,
+                0L,
+                true,
+                null,
+                null
         );
     }
 
-    /**
-     * Reconstituye una Bodega desde la base de datos.
-     * Usado EXCLUSIVAMENTE por los adaptadores JPA de la capa de Infraestructura.
-     * No genera un nuevo BodegaId ni timestamp — usa los persistidos.
-     */
-    public static Bodega reconstituir(
-            BodegaId id,
-            EmpresaId empresaId,
-            SucursalId sucursalId,
-            String codigo,
-            String nombre,
-            boolean activa,
-            List<StockLote> lotes,
-            Map<ProductoId, PuntoReorden> puntosReorden,
-            List<MovimientoInventario> movimientos,
-            Instant creadoEn,
-            Instant actualizadoEn) {
-        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, TipoBodega.VENTA, lotes, puntosReorden, movimientos, creadoEn, actualizadoEn);
-    }
+
 
     public static Bodega reconstituir(
             BodegaId id,
@@ -241,12 +270,16 @@ public final class Bodega {
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
-            Instant actualizadoEn) {
+            Instant actualizadoEn,
+            Long version,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy) {
         List<StockLote> lotesMigrados = new ArrayList<>();
         if (stock != null) {
             stock.forEach((k, v) -> lotesMigrados.add(new StockLote(k, LoteId.de("LEGACY"), v, null)));
         }
-        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, tipo, lotesMigrados, puntosReorden, movimientos, creadoEn, actualizadoEn);
+        return reconstituir(id, empresaId, sucursalId, codigo, nombre, activa, tipo, lotesMigrados, puntosReorden, movimientos, creadoEn, actualizadoEn, version, activo, deletedAt, deletedBy);
     }
 
     public static Bodega reconstituir(
@@ -261,14 +294,36 @@ public final class Bodega {
             Map<ProductoId, PuntoReorden> puntosReorden,
             List<MovimientoInventario> movimientos,
             Instant creadoEn,
-            Instant actualizadoEn) {
+            Instant actualizadoEn,
+            Long version,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy) {
 
         Objects.requireNonNull(id,           "Bodega.reconstituir: id es obligatorio.");
         validarCamposObligatorios(empresaId, sucursalId, codigo, nombre);
         Objects.requireNonNull(tipo,         "Bodega.reconstituir: tipo de bodega es obligatorio.");
 
         return new Bodega(id, empresaId, sucursalId, codigo, nombre, activa, tipo,
-                lotes, puntosReorden, movimientos, creadoEn, actualizadoEn);
+                lotes, puntosReorden, movimientos, creadoEn, actualizadoEn, version, activo, deletedAt, deletedBy);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // SOFT DELETE
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Aplica la baja lógica a la Bodega.
+     */
+    public void darDeBaja(String actorId) {
+        if (!this.activo) {
+            return;
+        }
+        Objects.requireNonNull(actorId, "El actorId no puede ser null.");
+        this.activo = false;
+        this.deletedAt = Instant.now();
+        this.deletedBy = actorId;
+        this.actualizadoEn = Instant.now();
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -284,6 +339,10 @@ public final class Bodega {
             LoteId loteId,
             Instant fechaCaducidad,
             DocumentoFuenteId documentoFuente) {
+
+        if (!this.activo) {
+            throw new IllegalStateException(String.format("La Bodega '%s' ha sido eliminada y no puede recibir movimientos.", this.id));
+        }
 
         if (!this.activa) {
             throw new IllegalStateException(String.format("La Bodega '%s' está inactiva y no puede recibir movimientos.", this.id));
@@ -491,6 +550,19 @@ public final class Bodega {
     public TipoBodega getTipo()                      { return tipo; }
     public Instant getCreadoEn()                     { return creadoEn; }
     public Instant getActualizadoEn()                { return actualizadoEn; }
+    public Long getVersion()                         { return version; }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
 
     /** Vista inmutable del stock actual (Legacy compatibility) */
     public Map<ProductoId, BigDecimal> getStock() {

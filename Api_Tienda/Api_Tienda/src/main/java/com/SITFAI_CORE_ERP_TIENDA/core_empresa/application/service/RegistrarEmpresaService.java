@@ -35,7 +35,7 @@ public class RegistrarEmpresaService implements RegistrarEmpresaUseCase {
         NombreEmpresa nombre = new NombreEmpresa(command.razonSocial());
 
         if (repository.existePorRuc(ruc)) {
-            throw new EmpresaInvalidaException("Ya existe una empresa registrada con el RUC " + ruc.valor());
+            throw new com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.RegistroDuplicadoException("Empresa", "ruc", ruc.valor());
         }
 
         EmpresaId nuevaEmpresaId = EmpresaId.generar();

@@ -41,6 +41,10 @@ public class Empresa {
     private final List<DomainEvent> domainEvents;
     private final Instant creadoEn;
     private Instant actualizadoEn;
+    private Long version;
+    private boolean activo = true;
+    private Instant deletedAt;
+    private String deletedBy;
 
     private Empresa(
             EmpresaId id,
@@ -49,7 +53,8 @@ public class Empresa {
             EstadoEmpresa estado,
             List<Sucursal> sucursales,
             Instant creadoEn,
-            Instant actualizadoEn
+            Instant actualizadoEn,
+            Long version
     ) {
         this.id = Objects.requireNonNull(id, "EmpresaId no puede ser null.");
         this.ruc = Objects.requireNonNull(ruc, "Ruc no puede ser null.");
@@ -59,6 +64,34 @@ public class Empresa {
         this.domainEvents = new ArrayList<>();
         this.creadoEn = Objects.requireNonNull(creadoEn, "creadoEn no puede ser null.");
         this.actualizadoEn = Objects.requireNonNull(actualizadoEn, "actualizadoEn no puede ser null.");
+        this.version = version;
+    }
+
+    private Empresa(
+            EmpresaId id,
+            Ruc ruc,
+            NombreEmpresa nombre,
+            EstadoEmpresa estado,
+            List<Sucursal> sucursales,
+            Instant creadoEn,
+            Instant actualizadoEn,
+            Long version,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy
+    ) {
+        this.id = Objects.requireNonNull(id, "EmpresaId no puede ser null.");
+        this.ruc = Objects.requireNonNull(ruc, "Ruc no puede ser null.");
+        this.nombre = Objects.requireNonNull(nombre, "NombreEmpresa no puede ser null.");
+        this.estado = Objects.requireNonNull(estado, "EstadoEmpresa no puede ser null.");
+        this.sucursales = new ArrayList<>(Objects.requireNonNull(sucursales, "sucursales no puede ser null."));
+        this.domainEvents = new ArrayList<>();
+        this.creadoEn = Objects.requireNonNull(creadoEn, "creadoEn no puede ser null.");
+        this.actualizadoEn = Objects.requireNonNull(actualizadoEn, "actualizadoEn no puede ser null.");
+        this.version = version;
+        this.activo = activo;
+        this.deletedAt = deletedAt;
+        this.deletedBy = deletedBy;
     }
 
     /**
@@ -87,7 +120,7 @@ public class Empresa {
         List<Sucursal> sucursalesIniciales = new ArrayList<>();
         sucursalesIniciales.add(principal);
 
-        Empresa empresa = new Empresa(id, ruc, nombre, EstadoEmpresa.ACTIVA, sucursalesIniciales, ahora, ahora);
+        Empresa empresa = new Empresa(id, ruc, nombre, EstadoEmpresa.ACTIVA, sucursalesIniciales, ahora, ahora, 0L);
 
         empresa.domainEvents.add(EmpresaCreadaEvent.ahora(
                 id,
@@ -110,9 +143,13 @@ public class Empresa {
             EstadoEmpresa estado,
             List<Sucursal> sucursales,
             Instant creadoEn,
-            Instant actualizadoEn
+            Instant actualizadoEn,
+            Long version,
+            boolean activo,
+            Instant deletedAt,
+            String deletedBy
     ) {
-        return new Empresa(id, ruc, nombre, estado, sucursales, creadoEn, actualizadoEn);
+        return new Empresa(id, ruc, nombre, estado, sucursales, creadoEn, actualizadoEn, version, activo, deletedAt, deletedBy);
     }
 
     /**
@@ -217,6 +254,21 @@ public class Empresa {
         this.actualizadoEn = Instant.now();
 
         this.domainEvents.add(EmpresaDadaDeBajaEvent.ahora(this.id, motivo.trim()));
+    }
+
+    /**
+     * Aplica el Soft Delete a la Empresa.
+     */
+    public void eliminar(String actorId) {
+        if (!this.activo) {
+            return;
+        }
+        Objects.requireNonNull(actorId, "El actorId no puede ser null.");
+        this.activo = false;
+        this.deletedAt = Instant.now();
+        this.deletedBy = actorId;
+        this.actualizadoEn = Instant.now();
+        this.sucursales.forEach(s -> s.eliminar(actorId));
     }
 
     /**
@@ -351,6 +403,22 @@ public class Empresa {
 
     public Instant getActualizadoEn() {
         return actualizadoEn;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
     }
 
     @Override
