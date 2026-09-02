@@ -33,6 +33,12 @@ public interface BodegaJpaRepository extends JpaRepository<BodegaJpaEntity, UUID
     boolean existsByEmpresaIdAndSucursalIdAndCodigo(UUID empresaId, UUID sucursalId, String codigo);
 
     /**
+     * Verifica si ya existe una Bodega con el mismo código para un tenant globalmente.
+     */
+    boolean existsByEmpresaIdAndCodigo(UUID empresaId, String codigo);
+
+
+    /**
      * Lista todas las Bodegas de una Sucursal específica (MT-01).
      */
     List<BodegaJpaEntity> findByEmpresaIdAndSucursalId(UUID empresaId, UUID sucursalId);

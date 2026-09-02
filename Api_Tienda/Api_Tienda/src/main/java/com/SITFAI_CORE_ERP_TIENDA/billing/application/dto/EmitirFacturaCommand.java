@@ -5,24 +5,27 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * DTO: Comando inmutable para emitir una factura.
- * Cero frameworks de validación.
+ * Comando para emitir una factura.
+ * El empresaId se incluye como campo para soportar flujos de evento (PedidoConfirmado),
+ * donde el tenant se extrae del evento mismo. En flujos REST, el controller lo inyecta
+ * desde @TenantId (MT-02 Zero Trust).
  */
 public record EmitirFacturaCommand(
-        UUID empresaId,
-        String nitEmisor,
-        String nitReceptor,
-        List<LineaFacturaDto> lineas
+        UUID empresaId,        // MT-01: obligatorio. En REST viene del JWT, en eventos del event payload
+        UUID clienteId,
+        UUID pedidoId,         // Opcional
+        String rucCliente,
+        List<LineaFacturaCommand> lineas
 ) {
-    public record LineaFacturaDto(
+    public record LineaFacturaCommand(
             String concepto,
             BigDecimal cantidad,
             BigDecimal precioUnitario,
             String moneda,
-            List<ImpuestoDto> impuestos
+            List<ImpuestoCommand> impuestos
     ) {}
 
-    public record ImpuestoDto(
+    public record ImpuestoCommand(
             String tipo,
             BigDecimal tarifa
     ) {}

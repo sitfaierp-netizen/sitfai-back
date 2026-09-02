@@ -29,13 +29,36 @@ public class EmpresaJpaAdapter implements EmpresaRepository {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public Empresa guardar(Empresa empresa) {
         EmpresaJpaEntity entity = toEntity(empresa);
-        EmpresaJpaEntity guardada = repository.save(entity);
-        return toDomain(guardada);
+        try {
+            EmpresaJpaEntity guardada = repository.saveAndFlush(entity);
+            return toDomain(guardada);
+        } catch (RuntimeException e) {
+            if (esErrorDeConcurrencia(e)) {
+                throw new com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.OptimisticConcurrencyException("Empresa", empresa.getId().valor());
+            }
+            throw e;
+        }
+    }
+
+    private boolean esErrorDeConcurrencia(Throwable e) {
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause instanceof org.springframework.dao.OptimisticLockingFailureException ||
+                cause instanceof jakarta.persistence.OptimisticLockException ||
+                cause instanceof org.hibernate.StaleObjectStateException ||
+                cause instanceof org.springframework.orm.jpa.JpaSystemException) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Optional<Empresa> buscarPorId(EmpresaId id) {
         return repository.findById(id.valor().toString())
                 .map(this::toDomain);
@@ -46,7 +69,9 @@ public class EmpresaJpaAdapter implements EmpresaRepository {
         return repository.existsById(id.valor().toString());
     }
 
+
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Optional<Empresa> buscarPorRuc(Ruc ruc) {
         return repository.findByRuc(ruc.valor()).map(this::toDomain);
     }
@@ -64,6 +89,7 @@ public class EmpresaJpaAdapter implements EmpresaRepository {
         entity.setEstado(domain.getEstado().name());
         entity.setCreadoEn(domain.getCreadoEn());
         entity.setActualizadoEn(domain.getActualizadoEn());
+        entity.setVersion(domain.getVersion() != null ? domain.getVersion() : 0L);
         return entity;
     }
 
@@ -75,7 +101,11 @@ public class EmpresaJpaAdapter implements EmpresaRepository {
                 EstadoEmpresa.valueOf(entity.getEstado()),
                 Collections.emptyList(), // En un caso real recuperaríamos sucursales si fuera necesario o se modela como aggregate separado
                 entity.getCreadoEn(),
-                entity.getActualizadoEn()
+                entity.getActualizadoEn(),
+                entity.getVersion(),
+                entity.isActivo(),
+                entity.getDeletedAt(),
+                entity.getDeletedBy()
         );
     }
 }

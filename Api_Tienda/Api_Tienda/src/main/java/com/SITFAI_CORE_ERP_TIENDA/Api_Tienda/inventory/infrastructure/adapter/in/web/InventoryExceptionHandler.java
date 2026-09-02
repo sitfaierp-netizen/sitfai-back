@@ -18,8 +18,24 @@ import java.time.Instant;
  * Implementa el estándar RFC 7807 (Problem Details) según la REGLA-5.
  * Traduce excepciones de Dominio a respuestas HTTP semánticamente ricas.
  */
+import com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.OptimisticConcurrencyException;
+
 @RestControllerAdvice(basePackages = "com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web")
 public class InventoryExceptionHandler {
+
+    @ExceptionHandler(OptimisticConcurrencyException.class)
+    public ResponseEntity<ProblemDetail> handleOptimisticConcurrency(OptimisticConcurrencyException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                ex.getMessage()
+        );
+        problem.setTitle("Conflicto de Concurrencia (CONC-01)");
+        problem.setType(URI.create("urn:problem-type:optimistic-concurrency"));
+        problem.setProperty("codigoError", "CONCURRENCY_CONFLICT");
+        problem.setProperty("timestamp", Instant.now());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    }
 
     @ExceptionHandler(StockInsuficienteException.class)
     public ResponseEntity<ProblemDetail> handleStockInsuficiente(StockInsuficienteException ex) {

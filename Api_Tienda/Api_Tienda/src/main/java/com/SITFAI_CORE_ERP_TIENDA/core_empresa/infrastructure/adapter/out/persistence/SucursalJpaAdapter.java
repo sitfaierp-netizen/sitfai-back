@@ -57,6 +57,11 @@ public class SucursalJpaAdapter implements SucursalRepository {
         return toDomain(guardada);
     }
 
+    @Override
+    public boolean existePorEmpresaIdYCodigo(EmpresaId empresaId, String codigo) {
+        return sucursalJpaRepository.existsByEmpresa_IdAndCodigo(empresaId.valor().toString(), codigo);
+    }
+
     // --- Mappers internos (dominio ↔ JPA) ---
 
     private Sucursal toDomain(SucursalJpaEntity entity) {
@@ -66,7 +71,10 @@ public class SucursalJpaAdapter implements SucursalRepository {
                 entity.getNombre(),
                 EstadoSucursal.valueOf(entity.getEstado()),
                 entity.getCreadoEn(),
-                entity.getActualizadoEn()
+                entity.getActualizadoEn(),
+                entity.isActivo(),
+                entity.getDeletedAt(),
+                entity.getDeletedBy()
         );
     }
 

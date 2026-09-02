@@ -116,7 +116,10 @@ class UsuarioJpaAdapterTest {
                     "CAJERO",
                     "ACTIVO",
                     ahora,
-                    ahora
+                    ahora,
+                    true,
+                    null,
+                    null
             );
 
             when(jpaRepository.findByEmpresaIdAndId(empresaUuid.toString(), usuarioUuid.toString()))
@@ -153,7 +156,10 @@ class UsuarioJpaAdapterTest {
                     "CAJERO",
                     "ACTIVO",
                     ahora,
-                    ahora
+                    ahora,
+                    true,
+                    null,
+                    null
             );
 
             when(jpaRepository.findByEmpresaId(empresaUuid.toString())).thenReturn(List.of(entity));
