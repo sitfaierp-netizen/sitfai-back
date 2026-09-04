@@ -198,6 +198,14 @@ public class Producto {
     }
 
     /**
+     * Vincula un código de barras al Producto.
+     */
+    public void vincularCodigoBarras(String codigoBarras) {
+        this.codigoBarras = codigoBarras;
+        this.actualizadoEn = Instant.now();
+    }
+
+    /**
      * Cambia el estado del Producto.
      * [INV-CAT-05] Prohíbe la transición DESCONTINUADO → ACTIVO.
      *

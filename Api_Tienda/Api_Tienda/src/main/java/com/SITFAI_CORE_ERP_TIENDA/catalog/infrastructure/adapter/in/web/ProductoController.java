@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.VincularCodigoBarrasUseCase;
+import jakarta.validation.Valid;
 import java.util.UUID;
 import java.util.List;
 import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.ConsultarProductosUseCase;
@@ -28,13 +30,16 @@ public class ProductoController {
     private final CrearProductoUseCase crearProductoUseCase;
     private final CambiarEstadoProductoUseCase cambiarEstadoProductoUseCase;
     private final ConsultarProductosUseCase consultarProductosUseCase;
+    private final VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase;
 
     public ProductoController(CrearProductoUseCase crearProductoUseCase,
                               CambiarEstadoProductoUseCase cambiarEstadoProductoUseCase,
-                              ConsultarProductosUseCase consultarProductosUseCase) {
+                              ConsultarProductosUseCase consultarProductosUseCase,
+                              VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase) {
         this.crearProductoUseCase = crearProductoUseCase;
         this.cambiarEstadoProductoUseCase = cambiarEstadoProductoUseCase;
         this.consultarProductosUseCase = consultarProductosUseCase;
+        this.vincularCodigoBarrasUseCase = vincularCodigoBarrasUseCase;
     }
 
     @GetMapping
@@ -60,5 +65,15 @@ public class ProductoController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{productoId}/barcode")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<ProductoResponse> actualizarCodigoBarras(
+            @PathVariable UUID productoId,
+            @Valid @RequestBody ActualizarCodigoBarrasRequest request) {
+        ProductoResponse response = vincularCodigoBarrasUseCase.vincularCodigoBarras(productoId, request.codigoBarras());
+        return ResponseEntity.ok(response);
+    }
+
     public record CambiarEstadoRequest(String estado) {}
+    public record ActualizarCodigoBarrasRequest(@jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 50) String codigoBarras) {}
 }

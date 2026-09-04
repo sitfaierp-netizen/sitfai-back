@@ -49,6 +49,11 @@ public class ProductoJpaAdapter implements ProductoRepository {
                 .stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public boolean existeCodigoBarras(String codigoBarras, EmpresaId empresaId, ProductoId excluyendoProductoId) {
+        return jpaRepository.existsByCodigoBarrasAndEmpresaIdAndIdNot(codigoBarras, empresaId.toString(), excluyendoProductoId.toString());
+    }
+
     // -------------------------------------------------------------------------
     // Mappers
     // -------------------------------------------------------------------------
