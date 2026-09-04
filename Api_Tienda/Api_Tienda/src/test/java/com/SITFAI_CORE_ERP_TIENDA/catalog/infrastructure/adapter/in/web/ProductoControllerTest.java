@@ -5,6 +5,7 @@ import com.SITFAI_CORE_ERP_TIENDA.catalog.application.dto.ProductoResponse;
 import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.CambiarEstadoProductoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.CrearProductoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.ConsultarProductosUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.VincularCodigoBarrasUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ class ProductoControllerTest {
     private CrearProductoUseCase crearProductoUseCase;
     private CambiarEstadoProductoUseCase cambiarEstadoProductoUseCase;
     private ConsultarProductosUseCase consultarProductosUseCase;
+    private VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase;
     private ProductoController productoController;
 
     @BeforeEach
@@ -33,7 +35,8 @@ class ProductoControllerTest {
         crearProductoUseCase = mock(CrearProductoUseCase.class);
         cambiarEstadoProductoUseCase = mock(CambiarEstadoProductoUseCase.class);
         consultarProductosUseCase = mock(ConsultarProductosUseCase.class);
-        productoController = new ProductoController(crearProductoUseCase, cambiarEstadoProductoUseCase, consultarProductosUseCase);
+        vincularCodigoBarrasUseCase = mock(VincularCodigoBarrasUseCase.class);
+        productoController = new ProductoController(crearProductoUseCase, cambiarEstadoProductoUseCase, consultarProductosUseCase, vincularCodigoBarrasUseCase);
     }
 
     @Test
