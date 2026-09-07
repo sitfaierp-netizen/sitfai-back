@@ -43,21 +43,21 @@ public class ProductoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<List<ProductoResponse>> listarProductos() {
         List<ProductoResponse> response = consultarProductosUseCase.listarProductos();
         return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<ProductoResponse> crear(@RequestBody CrearProductoCommand command) {
         ProductoResponse response = crearProductoUseCase.crear(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PatchMapping("/{productoId}/estado")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<ProductoResponse> cambiarEstado(
             @PathVariable UUID productoId,
             @RequestBody CambiarEstadoRequest request) {
@@ -66,7 +66,7 @@ public class ProductoController {
     }
 
     @PutMapping("/{productoId}/barcode")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<ProductoResponse> actualizarCodigoBarras(
             @PathVariable UUID productoId,
             @Valid @RequestBody ActualizarCodigoBarrasRequest request) {
