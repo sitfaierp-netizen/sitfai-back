@@ -34,7 +34,7 @@ public class OrdenCompraController {
         this.cambiarEstadoOrdenUseCase = cambiarEstadoOrdenUseCase;
     }
 
-    public record CrearOrdenRequest(UUID proveedorId) {}
+    public record CrearOrdenRequest(UUID proveedorId, UUID bodegaDestinoId) {}
     public record AgregarLineaRequest(UUID productoId, BigDecimal cantidad, BigDecimal costoUnitario) {}
     public record CambiarEstadoRequest(String nuevoEstado) {}
 
@@ -43,7 +43,7 @@ public class OrdenCompraController {
             @RequestAttribute("TenantId") UUID tenantId,
             @RequestBody CrearOrdenRequest request) {
 
-        CrearBorradorCommand command = new CrearBorradorCommand(tenantId, request.proveedorId());
+        CrearBorradorCommand command = new CrearBorradorCommand(tenantId, request.proveedorId(), request.bodegaDestinoId());
         OrdenCompraResponse response = crearOrdenUseCase.crearBorrador(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

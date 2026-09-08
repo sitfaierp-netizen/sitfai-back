@@ -24,11 +24,16 @@ public class CambiarEstadoOrdenService implements CambiarEstadoOrdenUseCase {
     private final OrdenCompraRepository repository;
     private final OrdenCompraEventPublisher eventPublisher;
     private final ActorProviderPort actorProviderPort;
+    private final com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarIngresoStockUseCase registrarIngresoStockUseCase;
 
-    public CambiarEstadoOrdenService(OrdenCompraRepository repository, OrdenCompraEventPublisher eventPublisher, ActorProviderPort actorProviderPort) {
+    public CambiarEstadoOrdenService(OrdenCompraRepository repository, 
+                                     OrdenCompraEventPublisher eventPublisher, 
+                                     ActorProviderPort actorProviderPort,
+                                     com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarIngresoStockUseCase registrarIngresoStockUseCase) {
         this.repository = repository;
         this.eventPublisher = eventPublisher;
         this.actorProviderPort = actorProviderPort;
+        this.registrarIngresoStockUseCase = registrarIngresoStockUseCase;
     }
 
     @Override
@@ -55,6 +60,24 @@ public class CambiarEstadoOrdenService implements CambiarEstadoOrdenUseCase {
 
         switch (command.nuevoEstado().toUpperCase()) {
             case "EMITIDA" -> orden.emitir();
+            case "APROBADA" -> orden.aprobar();
+            case "RECIBIDA" -> {
+                orden.recibir();
+                // Registrar ingreso en Kardex por cada línea
+                for (var linea : orden.getLineas()) {
+                    com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.RegistrarIngresoStockCommand ingresoCmd = 
+                        new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.RegistrarIngresoStockCommand(
+                            orden.getBodegaDestinoId(),
+                            linea.getProductoId().valor(),
+                            java.math.BigDecimal.valueOf(linea.getCantidad()),
+                            null, // Lote opcional
+                            null, // Fecha caducidad
+                            "ORDEN_COMPRA",
+                            orden.getId().valor().toString()
+                    );
+                    registrarIngresoStockUseCase.registrarIngreso(ingresoCmd);
+                }
+            }
             case "ANULADA" -> orden.anular(); // "CANCELADA" se reemplazó por "ANULADA" en DocumentoTransaccional
             default -> throw new IllegalArgumentException("Estado no soportado: " + command.nuevoEstado());
         }

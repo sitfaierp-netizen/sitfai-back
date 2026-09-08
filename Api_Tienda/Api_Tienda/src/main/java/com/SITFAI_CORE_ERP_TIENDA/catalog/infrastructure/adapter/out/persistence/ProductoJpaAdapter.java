@@ -54,6 +54,12 @@ public class ProductoJpaAdapter implements ProductoRepository {
         return jpaRepository.existsByCodigoBarrasAndEmpresaIdAndIdNot(codigoBarras, empresaId.toString(), excluyendoProductoId.toString());
     }
 
+    @Override
+    public void deleteById(ProductoId id) {
+        jpaRepository.deleteById(id.toString());
+        jpaRepository.flush(); // To trigger DataIntegrityViolationException immediately
+    }
+
     // -------------------------------------------------------------------------
     // Mappers
     // -------------------------------------------------------------------------

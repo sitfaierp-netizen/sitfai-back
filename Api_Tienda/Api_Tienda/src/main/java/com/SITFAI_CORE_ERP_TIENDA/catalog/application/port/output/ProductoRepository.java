@@ -16,4 +16,5 @@ public interface ProductoRepository {
     Optional<Producto> buscarPorIdYEmpresa(ProductoId id, EmpresaId empresaId);
     List<Producto> listarPorEmpresa(EmpresaId empresaId);
     boolean existeCodigoBarras(String codigoBarras, EmpresaId empresaId, ProductoId excluyendoProductoId);
+    void deleteById(ProductoId id);
 }

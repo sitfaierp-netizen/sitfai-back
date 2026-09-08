@@ -22,6 +22,7 @@ public class OrdenCompra implements DocumentoTransaccional {
     private final OrdenCompraId id;
     private final UUID empresaId;
     private final ProveedorId proveedorId;
+    private final UUID bodegaDestinoId;
     
     private final List<LineaOrdenCompra> lineas;
     private Dinero totalMonetario;
@@ -36,10 +37,11 @@ public class OrdenCompra implements DocumentoTransaccional {
 
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
-    private OrdenCompra(OrdenCompraId id, UUID empresaId, ProveedorId proveedorId, String createdBy) {
+    private OrdenCompra(OrdenCompraId id, UUID empresaId, ProveedorId proveedorId, UUID bodegaDestinoId, String createdBy) {
         this.id = Objects.requireNonNull(id, "El ID de OrdenCompra no puede ser nulo.");
         this.empresaId = Objects.requireNonNull(empresaId, "El empresaId no puede ser nulo.");
         this.proveedorId = Objects.requireNonNull(proveedorId, "El proveedorId no puede ser nulo.");
+        this.bodegaDestinoId = Objects.requireNonNull(bodegaDestinoId, "La bodegaDestinoId no puede ser nula.");
         this.lineas = new ArrayList<>();
         this.totalMonetario = Dinero.CERO;
         this.estado = DocumentStatus.BORRADOR;
@@ -50,8 +52,8 @@ public class OrdenCompra implements DocumentoTransaccional {
         this.updatedBy = this.createdBy;
     }
 
-    public static OrdenCompra crear(OrdenCompraId id, UUID empresaId, ProveedorId proveedorId, String createdBy) {
-        OrdenCompra orden = new OrdenCompra(id, empresaId, proveedorId, createdBy);
+    public static OrdenCompra crear(OrdenCompraId id, UUID empresaId, ProveedorId proveedorId, UUID bodegaDestinoId, String createdBy) {
+        OrdenCompra orden = new OrdenCompra(id, empresaId, proveedorId, bodegaDestinoId, createdBy);
         orden.addDomainEvent(OrdenCompraCreadaEvent.ahora(empresaId, id));
         return orden;
     }
@@ -102,6 +104,22 @@ public class OrdenCompra implements DocumentoTransaccional {
         addDomainEvent(OrdenCompraEmitidaEvent.ahora(this.empresaId, this.id));
     }
 
+    public void aprobar() {
+        if (this.estado != DocumentStatus.EMITIDO) {
+            throw new DocumentStateException("Sólo se puede aprobar una orden EMITIDA.");
+        }
+        this.estado = DocumentStatus.APROBADO;
+        actualizarAuditoria();
+    }
+
+    public void recibir() {
+        if (this.estado != DocumentStatus.APROBADO) {
+            throw new DocumentStateException("Sólo se puede recibir una orden APROBADA.");
+        }
+        this.estado = DocumentStatus.RECIBIDO;
+        actualizarAuditoria();
+    }
+
     private void actualizarAuditoria() {
         this.updatedAt = Instant.now();
     }
@@ -123,6 +141,7 @@ public class OrdenCompra implements DocumentoTransaccional {
     public OrdenCompraId getId() { return id; }
     public UUID getEmpresaId() { return empresaId; }
     public ProveedorId getProveedorId() { return proveedorId; }
+    public UUID getBodegaDestinoId() { return bodegaDestinoId; }
     public List<LineaOrdenCompra> getLineas() { return Collections.unmodifiableList(lineas); }
     public Dinero getTotalMonetario() { return totalMonetario; }
     public Long getVersion() { return version; }

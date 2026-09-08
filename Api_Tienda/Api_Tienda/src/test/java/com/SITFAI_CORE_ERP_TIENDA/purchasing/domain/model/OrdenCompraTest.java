@@ -16,6 +16,7 @@ class OrdenCompraTest {
     private OrdenCompraId ordenId;
     private UUID empresaId;
     private ProveedorId proveedorId;
+    private UUID bodegaDestinoId;
     private String createdBy;
 
     @BeforeEach
@@ -23,12 +24,13 @@ class OrdenCompraTest {
         ordenId = OrdenCompraId.generar();
         empresaId = UUID.randomUUID();
         proveedorId = new ProveedorId(UUID.randomUUID());
+        bodegaDestinoId = UUID.randomUUID();
         createdBy = "user123";
     }
 
     @Test
     void dadoDatosValidos_cuandoCrear_entoncesOrdenEstadoBorradorYTotalCero() {
-        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, createdBy);
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
 
         assertEquals(DocumentStatus.BORRADOR, orden.getEstado());
         assertEquals(0, BigDecimal.ZERO.compareTo(orden.getTotalMonetario().monto()));
@@ -38,7 +40,7 @@ class OrdenCompraTest {
 
     @Test
     void dadoOrdenEnBorrador_cuandoAgregarLinea_entoncesSumaAlCostoTotalConCuatroDecimales() {
-        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, createdBy);
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
         orden.pullDomainEvents(); // Clear initial event
 
         ProductoId prod1 = new ProductoId(UUID.randomUUID());
@@ -52,14 +54,14 @@ class OrdenCompraTest {
 
     @Test
     void dadoOrdenSinLineas_cuandoEmitir_entoncesLanzaDocumentStateException() {
-        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, createdBy);
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
 
         assertThrows(DocumentStateException.class, orden::emitir);
     }
 
     @Test
     void dadoOrdenConLineas_cuandoEmitir_entoncesCambiaEstado() {
-        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, createdBy);
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
         orden.agregarLinea(new LineaOrdenCompra(UUID.randomUUID(), new ProductoId(UUID.randomUUID()), 1, new Dinero(BigDecimal.TEN)));
         
         orden.emitir();
@@ -69,7 +71,7 @@ class OrdenCompraTest {
 
     @Test
     void dadoOrdenEmitida_cuandoAgregarLinea_entoncesLanzaDocumentStateException() {
-        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, createdBy);
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
         orden.agregarLinea(new LineaOrdenCompra(UUID.randomUUID(), new ProductoId(UUID.randomUUID()), 1, new Dinero(BigDecimal.TEN)));
         orden.emitir();
 

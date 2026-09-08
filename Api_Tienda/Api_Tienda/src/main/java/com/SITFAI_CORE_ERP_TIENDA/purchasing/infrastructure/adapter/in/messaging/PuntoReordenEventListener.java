@@ -34,9 +34,10 @@ public class PuntoReordenEventListener {
 
         UUID empresaId = event.empresaId().valor();
         UUID productoId = event.productoId().valor();
+        UUID bodegaDestinoId = event.bodegaId().valor();
 
         // 1. Crear Orden de Compra (Borrador)
-        CrearBorradorCommand crearCommand = new CrearBorradorCommand(empresaId, PROVEEDOR_DEFAULT);
+        CrearBorradorCommand crearCommand = new CrearBorradorCommand(empresaId, PROVEEDOR_DEFAULT, bodegaDestinoId);
         var ordenResponse = crearOrdenUseCase.crearBorrador(crearCommand);
         UUID ordenId = ordenResponse.id();
 

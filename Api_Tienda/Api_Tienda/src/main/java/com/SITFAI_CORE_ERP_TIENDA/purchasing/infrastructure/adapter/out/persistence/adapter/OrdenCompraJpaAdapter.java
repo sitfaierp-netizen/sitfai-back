@@ -68,6 +68,7 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
                 dominio.getId().valor().toString(),
                 dominio.getEmpresaId().toString(),
                 dominio.getProveedorId().valor().toString(),
+                dominio.getBodegaDestinoId().toString(),
                 dominio.getEstado().name(),
                 dominio.getTotalMonetario().monto(),
                 dominio.getVersion()
@@ -92,6 +93,7 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
                 new OrdenCompraId(UUID.fromString(entity.getId())),
                 UUID.fromString(entity.getEmpresaId()),
                 new ProveedorId(UUID.fromString(entity.getProveedorId())),
+                UUID.fromString(entity.getBodegaDestinoId()),
                 entity.getCreadoPor() != null ? entity.getCreadoPor() : "system"
         );
 

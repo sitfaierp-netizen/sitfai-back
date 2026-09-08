@@ -47,10 +47,11 @@ public class CrearOrdenService implements CrearOrdenUseCase {
         String createdBy = actorProviderPort.getCurrentActorId();
 
         OrdenCompra orden = OrdenCompra.crear(
-                OrdenCompraId.generar(),
-                empresaId,
+                new OrdenCompraId(UUID.randomUUID()),
+                command.empresaId(),
                 new ProveedorId(command.proveedorId()),
-                createdBy
+                command.bodegaDestinoId(),
+                actorProviderPort.getCurrentActorId()
         );
 
         repository.guardar(orden);

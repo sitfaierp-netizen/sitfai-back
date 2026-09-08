@@ -31,15 +31,18 @@ public class ProductoController {
     private final CambiarEstadoProductoUseCase cambiarEstadoProductoUseCase;
     private final ConsultarProductosUseCase consultarProductosUseCase;
     private final VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase;
+    private final com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.EliminarProductoUseCase eliminarProductoUseCase;
 
     public ProductoController(CrearProductoUseCase crearProductoUseCase,
                               CambiarEstadoProductoUseCase cambiarEstadoProductoUseCase,
                               ConsultarProductosUseCase consultarProductosUseCase,
-                              VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase) {
+                              VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase,
+                              com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.EliminarProductoUseCase eliminarProductoUseCase) {
         this.crearProductoUseCase = crearProductoUseCase;
         this.cambiarEstadoProductoUseCase = cambiarEstadoProductoUseCase;
         this.consultarProductosUseCase = consultarProductosUseCase;
         this.vincularCodigoBarrasUseCase = vincularCodigoBarrasUseCase;
+        this.eliminarProductoUseCase = eliminarProductoUseCase;
     }
 
     @GetMapping
@@ -72,6 +75,14 @@ public class ProductoController {
             @Valid @RequestBody ActualizarCodigoBarrasRequest request) {
         ProductoResponse response = vincularCodigoBarrasUseCase.vincularCodigoBarras(productoId, request.codigoBarras());
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{productoId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<Void> eliminar(
+            @PathVariable UUID productoId) {
+        eliminarProductoUseCase.eliminar(productoId);
+        return ResponseEntity.noContent().build();
     }
 
     public record CambiarEstadoRequest(String estado) {}

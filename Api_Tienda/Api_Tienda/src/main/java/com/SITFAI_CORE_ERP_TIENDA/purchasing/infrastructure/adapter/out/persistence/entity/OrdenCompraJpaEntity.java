@@ -23,6 +23,9 @@ public class OrdenCompraJpaEntity extends AuditableJpaEntity {
     @Column(name = "proveedor_id", length = 36, nullable = false)
     private String proveedorId;
 
+    @Column(name = "bodega_destino_id", length = 36, nullable = false)
+    private String bodegaDestinoId;
+
     @Column(name = "estado", length = 50, nullable = false)
     private String estado;
 
@@ -38,10 +41,11 @@ public class OrdenCompraJpaEntity extends AuditableJpaEntity {
 
     protected OrdenCompraJpaEntity() {}
 
-    public OrdenCompraJpaEntity(String id, String empresaId, String proveedorId, String estado, BigDecimal costoTotal, Long version) {
+    public OrdenCompraJpaEntity(String id, String empresaId, String proveedorId, String bodegaDestinoId, String estado, BigDecimal costoTotal, Long version) {
         this.id = id;
         this.empresaId = empresaId;
         this.proveedorId = proveedorId;
+        this.bodegaDestinoId = bodegaDestinoId;
         this.estado = estado;
         this.costoTotal = costoTotal;
         this.version = version;
@@ -59,6 +63,8 @@ public class OrdenCompraJpaEntity extends AuditableJpaEntity {
     public void setEmpresaId(String empresaId) { this.empresaId = empresaId; }
     public String getProveedorId() { return proveedorId; }
     public void setProveedorId(String proveedorId) { this.proveedorId = proveedorId; }
+    public String getBodegaDestinoId() { return bodegaDestinoId; }
+    public void setBodegaDestinoId(String bodegaDestinoId) { this.bodegaDestinoId = bodegaDestinoId; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
     public BigDecimal getCostoTotal() { return costoTotal; }
