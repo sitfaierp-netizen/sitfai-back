@@ -63,6 +63,12 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
                 .map(this::toDomain);
     }
 
+    @Override
+    public org.springframework.data.domain.Page<OrdenCompra> listarOrdenes(UUID empresaId, org.springframework.data.domain.Pageable pageable) {
+        return repository.findByEmpresaId(empresaId.toString(), pageable)
+                .map(this::toDomain);
+    }
+
     private OrdenCompraJpaEntity toEntity(OrdenCompra dominio) {
         OrdenCompraJpaEntity entity = new OrdenCompraJpaEntity(
                 dominio.getId().valor().toString(),

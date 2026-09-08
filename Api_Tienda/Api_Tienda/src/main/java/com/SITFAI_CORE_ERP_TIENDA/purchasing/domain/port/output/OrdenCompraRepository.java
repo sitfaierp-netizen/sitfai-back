@@ -12,4 +12,6 @@ public interface OrdenCompraRepository {
 
     Optional<OrdenCompra> buscarPorIdYEmpresaId(OrdenCompraId id, UUID empresaId);
 
+    org.springframework.data.domain.Page<OrdenCompra> listarOrdenes(UUID empresaId, org.springframework.data.domain.Pageable pageable);
+
 }

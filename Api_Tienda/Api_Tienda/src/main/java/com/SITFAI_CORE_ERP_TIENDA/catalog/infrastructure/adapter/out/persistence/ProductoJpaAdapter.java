@@ -44,9 +44,14 @@ public class ProductoJpaAdapter implements ProductoRepository {
     }
 
     @Override
-    public org.springframework.data.domain.Page<Producto> listarPorEmpresa(EmpresaId empresaId, org.springframework.data.domain.Pageable pageable) {
-        return jpaRepository.findAllByEmpresaId(empresaId.toString(), pageable)
-                .map(this::toDomain);
+    public org.springframework.data.domain.Page<Producto> listarPorEmpresa(EmpresaId empresaId, String search, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<ProductoJpaEntity> resultPage;
+        if (search == null || search.trim().isEmpty()) {
+            resultPage = jpaRepository.findAllByEmpresaId(empresaId.toString(), pageable);
+        } else {
+            resultPage = jpaRepository.searchByEmpresaIdAndKeyword(empresaId.toString(), search.trim(), pageable);
+        }
+        return resultPage.map(this::toDomain);
     }
 
     @Override

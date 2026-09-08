@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface ProveedorJpaRepository extends JpaRepository<ProveedorJpaEntity, String> {
     Optional<ProveedorJpaEntity> findByIdAndEmpresaId(String id, String empresaId);
+    boolean existsByEmpresaIdAndRuc(String empresaId, String ruc);
+    java.util.List<ProveedorJpaEntity> findByEmpresaId(String empresaId);
 }

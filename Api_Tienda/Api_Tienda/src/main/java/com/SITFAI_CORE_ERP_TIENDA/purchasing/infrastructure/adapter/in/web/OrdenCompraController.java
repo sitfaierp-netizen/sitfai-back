@@ -7,6 +7,10 @@ import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.OrdenCompraResponse
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.CambiarEstadoOrdenUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.CrearOrdenUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.GestionarLineasUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.ListarOrdenesCompraUseCase;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,18 +29,32 @@ public class OrdenCompraController {
     private final CrearOrdenUseCase crearOrdenUseCase;
     private final GestionarLineasUseCase gestionarLineasUseCase;
     private final CambiarEstadoOrdenUseCase cambiarEstadoOrdenUseCase;
+    private final ListarOrdenesCompraUseCase listarOrdenesCompraUseCase;
 
     public OrdenCompraController(CrearOrdenUseCase crearOrdenUseCase,
                                  GestionarLineasUseCase gestionarLineasUseCase,
-                                 CambiarEstadoOrdenUseCase cambiarEstadoOrdenUseCase) {
+                                 CambiarEstadoOrdenUseCase cambiarEstadoOrdenUseCase,
+                                 ListarOrdenesCompraUseCase listarOrdenesCompraUseCase) {
         this.crearOrdenUseCase = crearOrdenUseCase;
         this.gestionarLineasUseCase = gestionarLineasUseCase;
         this.cambiarEstadoOrdenUseCase = cambiarEstadoOrdenUseCase;
+        this.listarOrdenesCompraUseCase = listarOrdenesCompraUseCase;
     }
 
     public record CrearOrdenRequest(UUID proveedorId, UUID bodegaDestinoId) {}
     public record AgregarLineaRequest(UUID productoId, BigDecimal cantidad, BigDecimal costoUnitario) {}
     public record CambiarEstadoRequest(String nuevoEstado) {}
+
+    @GetMapping
+    public ResponseEntity<Page<OrdenCompraResponse>> listarOrdenes(
+            @RequestAttribute("TenantId") UUID tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<OrdenCompraResponse> response = listarOrdenesCompraUseCase.listarOrdenes(tenantId, pageable);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     public ResponseEntity<OrdenCompraResponse> crearBorrador(
