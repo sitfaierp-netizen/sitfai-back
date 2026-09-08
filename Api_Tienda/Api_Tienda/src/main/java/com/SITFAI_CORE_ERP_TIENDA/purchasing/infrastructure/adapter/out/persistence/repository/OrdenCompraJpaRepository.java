@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface OrdenCompraJpaRepository extends JpaRepository<OrdenCompraJpaEntity, String> {
     Optional<OrdenCompraJpaEntity> findByIdAndEmpresaId(String id, String empresaId);
+    org.springframework.data.domain.Page<OrdenCompraJpaEntity> findByEmpresaId(String empresaId, org.springframework.data.domain.Pageable pageable);
 }
