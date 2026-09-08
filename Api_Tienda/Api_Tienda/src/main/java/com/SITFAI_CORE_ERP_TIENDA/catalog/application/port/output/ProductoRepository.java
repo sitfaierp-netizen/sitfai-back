@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface ProductoRepository {
     void guardar(Producto producto);
     java.util.Optional<Producto> buscarPorIdYEmpresa(ProductoId id, EmpresaId empresaId);
-    org.springframework.data.domain.Page<Producto> listarPorEmpresa(EmpresaId empresaId, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<Producto> listarPorEmpresa(EmpresaId empresaId, String search, org.springframework.data.domain.Pageable pageable);
     boolean existeCodigoBarras(String codigoBarras, EmpresaId empresaId, ProductoId excluyendoProductoId);
     void deleteById(ProductoId id);
 }

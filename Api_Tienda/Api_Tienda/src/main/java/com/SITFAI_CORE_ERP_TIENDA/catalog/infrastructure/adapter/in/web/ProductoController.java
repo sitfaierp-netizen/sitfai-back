@@ -48,9 +48,10 @@ public class ProductoController {
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<org.springframework.data.domain.Page<ProductoResponse>> listarProductos(
+            @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        org.springframework.data.domain.Page<ProductoResponse> response = consultarProductosUseCase.listarProductos(org.springframework.data.domain.PageRequest.of(page, size));
+        org.springframework.data.domain.Page<ProductoResponse> response = consultarProductosUseCase.listarProductos(search, org.springframework.data.domain.PageRequest.of(page, size));
         return ResponseEntity.ok(response);
     }
 

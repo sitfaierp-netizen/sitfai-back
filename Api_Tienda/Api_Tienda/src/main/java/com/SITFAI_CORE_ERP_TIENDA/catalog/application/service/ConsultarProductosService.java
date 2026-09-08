@@ -23,9 +23,9 @@ public class ConsultarProductosService implements ConsultarProductosUseCase {
     }
 
     @Override
-    public org.springframework.data.domain.Page<ProductoResponse> listarProductos(org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<ProductoResponse> listarProductos(String search, org.springframework.data.domain.Pageable pageable) {
         EmpresaId empresaId = EmpresaId.de(tenantProvider.obtenerEmpresaIdActual());
-        return productoRepository.listarPorEmpresa(empresaId, pageable)
+        return productoRepository.listarPorEmpresa(empresaId, search, pageable)
                 .map(this::mapToResponse);
     }
 
