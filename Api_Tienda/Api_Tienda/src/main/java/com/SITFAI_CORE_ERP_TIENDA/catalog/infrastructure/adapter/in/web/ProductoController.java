@@ -47,8 +47,10 @@ public class ProductoController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
-    public ResponseEntity<List<ProductoResponse>> listarProductos() {
-        List<ProductoResponse> response = consultarProductosUseCase.listarProductos();
+    public ResponseEntity<org.springframework.data.domain.Page<ProductoResponse>> listarProductos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        org.springframework.data.domain.Page<ProductoResponse> response = consultarProductosUseCase.listarProductos(org.springframework.data.domain.PageRequest.of(page, size));
         return ResponseEntity.ok(response);
     }
 

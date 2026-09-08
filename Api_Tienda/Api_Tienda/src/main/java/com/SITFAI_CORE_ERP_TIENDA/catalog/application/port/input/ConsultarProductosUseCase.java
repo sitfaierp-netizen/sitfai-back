@@ -4,5 +4,5 @@ import com.SITFAI_CORE_ERP_TIENDA.catalog.application.dto.ProductoResponse;
 import java.util.List;
 
 public interface ConsultarProductosUseCase {
-    List<ProductoResponse> listarProductos();
+    org.springframework.data.domain.Page<ProductoResponse> listarProductos(org.springframework.data.domain.Pageable pageable);
 }

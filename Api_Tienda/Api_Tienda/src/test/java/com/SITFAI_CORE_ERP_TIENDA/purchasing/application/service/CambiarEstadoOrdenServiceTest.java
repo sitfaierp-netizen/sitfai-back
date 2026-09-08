@@ -41,6 +41,9 @@ class CambiarEstadoOrdenServiceTest {
     @Mock
     private ActorProviderPort actorProviderPort;
 
+    @Mock
+    private com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarIngresoStockUseCase registrarIngresoStockUseCase;
+
     @InjectMocks
     private CambiarEstadoOrdenService service;
 
@@ -52,7 +55,7 @@ class CambiarEstadoOrdenServiceTest {
     void setUp() {
         empresaId = UUID.randomUUID();
         ordenId = UUID.randomUUID();
-        ordenSimulada = OrdenCompra.crear(new OrdenCompraId(ordenId), empresaId, new ProveedorId(UUID.randomUUID()), "user1");
+        ordenSimulada = OrdenCompra.crear(new OrdenCompraId(ordenId), empresaId, new ProveedorId(UUID.randomUUID()), UUID.randomUUID(), "user1");
         ordenSimulada.pullDomainEvents();
         ordenSimulada.agregarLinea(new LineaOrdenCompra(UUID.randomUUID(), new ProductoId(UUID.randomUUID()), 1, new Dinero(BigDecimal.TEN)));
     }

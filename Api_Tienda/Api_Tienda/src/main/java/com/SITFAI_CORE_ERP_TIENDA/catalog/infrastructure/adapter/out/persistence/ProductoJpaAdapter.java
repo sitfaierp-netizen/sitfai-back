@@ -44,9 +44,9 @@ public class ProductoJpaAdapter implements ProductoRepository {
     }
 
     @Override
-    public List<Producto> listarPorEmpresa(EmpresaId empresaId) {
-        return jpaRepository.findAllByEmpresaId(empresaId.toString())
-                .stream().map(this::toDomain).toList();
+    public org.springframework.data.domain.Page<Producto> listarPorEmpresa(EmpresaId empresaId, org.springframework.data.domain.Pageable pageable) {
+        return jpaRepository.findAllByEmpresaId(empresaId.toString(), pageable)
+                .map(this::toDomain);
     }
 
     @Override
