@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController("purchasingProveedorController")
-@RequestMapping("/api/v1/purchasing/proveedores")
+@RequestMapping("/purchasing/proveedores")
 public class ProveedorController {
 
     private final CrearProveedorUseCase crearProveedorUseCase;

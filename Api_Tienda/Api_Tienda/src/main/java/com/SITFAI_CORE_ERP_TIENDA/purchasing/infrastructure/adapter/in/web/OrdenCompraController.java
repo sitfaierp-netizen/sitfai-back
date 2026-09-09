@@ -23,7 +23,7 @@ import java.util.UUID;
  * Obligatoriedad de @TenantId en todos los métodos.
  */
 @RestController
-@RequestMapping("/api/v1/purchasing/ordenes")
+@RequestMapping("/purchasing/ordenes")
 public class OrdenCompraController {
 
     private final CrearOrdenUseCase crearOrdenUseCase;

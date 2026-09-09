@@ -140,6 +140,7 @@ services:
       BILLING_SERVICE_URL: http://sitfai-backend:8085
       POS_SERVICE_URL: http://sitfai-backend:8085
       IAM_SERVICE_URL: http://sitfai-backend:8085
+      PURCHASING_SERVICE_URL: http://sitfai-backend:8085
     depends_on:
       sitfai-backend:
         condition: service_started
