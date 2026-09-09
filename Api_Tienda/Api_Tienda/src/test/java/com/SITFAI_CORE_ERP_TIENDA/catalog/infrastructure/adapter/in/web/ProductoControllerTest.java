@@ -29,6 +29,7 @@ class ProductoControllerTest {
     private ConsultarProductosUseCase consultarProductosUseCase;
     private VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase;
     private com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.EliminarProductoUseCase eliminarProductoUseCase;
+    private com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.ActualizarProductoUseCase actualizarProductoUseCase;
     private ProductoController productoController;
 
     @BeforeEach
@@ -38,7 +39,8 @@ class ProductoControllerTest {
         consultarProductosUseCase = mock(ConsultarProductosUseCase.class);
         vincularCodigoBarrasUseCase = mock(VincularCodigoBarrasUseCase.class);
         eliminarProductoUseCase = mock(com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.EliminarProductoUseCase.class);
-        productoController = new ProductoController(crearProductoUseCase, cambiarEstadoProductoUseCase, consultarProductosUseCase, vincularCodigoBarrasUseCase, eliminarProductoUseCase);
+        actualizarProductoUseCase = mock(com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.ActualizarProductoUseCase.class);
+        productoController = new ProductoController(crearProductoUseCase, cambiarEstadoProductoUseCase, consultarProductosUseCase, vincularCodigoBarrasUseCase, eliminarProductoUseCase, actualizarProductoUseCase);
     }
 
     @Test

@@ -32,17 +32,20 @@ public class ProductoController {
     private final ConsultarProductosUseCase consultarProductosUseCase;
     private final VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase;
     private final com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.EliminarProductoUseCase eliminarProductoUseCase;
+    private final com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.ActualizarProductoUseCase actualizarProductoUseCase;
 
     public ProductoController(CrearProductoUseCase crearProductoUseCase,
                               CambiarEstadoProductoUseCase cambiarEstadoProductoUseCase,
                               ConsultarProductosUseCase consultarProductosUseCase,
                               VincularCodigoBarrasUseCase vincularCodigoBarrasUseCase,
-                              com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.EliminarProductoUseCase eliminarProductoUseCase) {
+                              com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.EliminarProductoUseCase eliminarProductoUseCase,
+                              com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.ActualizarProductoUseCase actualizarProductoUseCase) {
         this.crearProductoUseCase = crearProductoUseCase;
         this.cambiarEstadoProductoUseCase = cambiarEstadoProductoUseCase;
         this.consultarProductosUseCase = consultarProductosUseCase;
         this.vincularCodigoBarrasUseCase = vincularCodigoBarrasUseCase;
         this.eliminarProductoUseCase = eliminarProductoUseCase;
+        this.actualizarProductoUseCase = actualizarProductoUseCase;
     }
 
     @GetMapping
@@ -86,6 +89,15 @@ public class ProductoController {
             @PathVariable UUID productoId) {
         eliminarProductoUseCase.eliminar(productoId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
+    public ResponseEntity<Void> actualizarProducto(
+            @PathVariable UUID id, 
+            @RequestBody @Valid com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.input.ActualizarProductoRequest request) {
+        actualizarProductoUseCase.actualizarProducto(id, request);
+        return ResponseEntity.ok().build();
     }
 
     public record CambiarEstadoRequest(String estado) {}
