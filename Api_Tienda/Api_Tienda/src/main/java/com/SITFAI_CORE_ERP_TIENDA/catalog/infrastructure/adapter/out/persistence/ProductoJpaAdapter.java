@@ -44,9 +44,25 @@ public class ProductoJpaAdapter implements ProductoRepository {
     }
 
     @Override
-    public List<Producto> listarPorEmpresa(EmpresaId empresaId) {
-        return jpaRepository.findAllByEmpresaId(empresaId.toString())
-                .stream().map(this::toDomain).toList();
+    public org.springframework.data.domain.Page<Producto> listarPorEmpresa(EmpresaId empresaId, String search, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<ProductoJpaEntity> resultPage;
+        if (search == null || search.trim().isEmpty()) {
+            resultPage = jpaRepository.findAllByEmpresaId(empresaId.toString(), pageable);
+        } else {
+            resultPage = jpaRepository.searchByEmpresaIdAndKeyword(empresaId.toString(), search.trim(), pageable);
+        }
+        return resultPage.map(this::toDomain);
+    }
+
+    @Override
+    public boolean existeCodigoBarras(String codigoBarras, EmpresaId empresaId, ProductoId excluyendoProductoId) {
+        return jpaRepository.existsByCodigoBarrasAndEmpresaIdAndIdNot(codigoBarras, empresaId.toString(), excluyendoProductoId.toString());
+    }
+
+    @Override
+    public void deleteById(ProductoId id) {
+        jpaRepository.deleteById(id.toString());
+        jpaRepository.flush(); // To trigger DataIntegrityViolationException immediately
     }
 
     // -------------------------------------------------------------------------

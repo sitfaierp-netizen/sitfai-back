@@ -1,27 +1,23 @@
 package com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.adapter;
 
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.OrdenCompraRepository;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.EstadoOrden;
+import com.SITFAI_CORE_ERP_TIENDA.core.document.domain.model.enums.DocumentStatus;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.port.output.OrdenCompraRepository;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaOrdenCompra;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.OrdenCompraId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.ProductoId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.ProveedorId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProveedorId;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.entity.LineaOrdenCompraJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.entity.OrdenCompraJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.repository.OrdenCompraJpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Adaptador de Salida JPA para OrdenCompra (Hexagonal).
- * Implementa OrdenCompraRepository usando las firmas corretas (.valor()).
- */
 @Repository
 public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
 
@@ -32,50 +28,65 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
     }
 
     @Override
-    public void guardar(OrdenCompra ordenCompra) {
+    public OrdenCompra guardar(OrdenCompra ordenCompra) {
         OrdenCompraJpaEntity entity = toEntity(ordenCompra);
 
         Optional<OrdenCompraJpaEntity> existing = repository.findById(entity.getId());
+        OrdenCompraJpaEntity savedEntity;
         if (existing.isPresent()) {
             OrdenCompraJpaEntity e = existing.get();
             e.setEstado(entity.getEstado());
             e.setCostoTotal(entity.getCostoTotal());
+            e.setVersion(entity.getVersion());
+            e.setActualizadoEn(ordenCompra.getUpdatedAt());
+            e.setActualizadoPor(ordenCompra.getUpdatedBy());
             e.getLineas().clear();
             entity.getLineas().forEach(l -> {
                 l.setOrdenCompra(e);
                 e.getLineas().add(l);
             });
-            repository.save(e);
+            savedEntity = repository.save(e);
         } else {
-            repository.save(entity);
+            entity.setCreadoEn(ordenCompra.getCreatedAt());
+            entity.setCreadoPor(ordenCompra.getCreatedBy());
+            entity.setActualizadoEn(ordenCompra.getUpdatedAt());
+            entity.setActualizadoPor(ordenCompra.getUpdatedBy());
+            savedEntity = repository.save(entity);
         }
+        
+        return toDomain(savedEntity);
     }
 
     @Override
-    public Optional<OrdenCompra> buscarPorId(OrdenCompraId id, EmpresaId empresaId) {
-        return repository.findByIdAndEmpresaId(id.valor().toString(), empresaId.valor().toString())
+    public Optional<OrdenCompra> buscarPorIdYEmpresaId(OrdenCompraId id, UUID empresaId) {
+        return repository.findByIdAndEmpresaId(id.valor().toString(), empresaId.toString())
                 .map(this::toDomain);
     }
 
-    // ─── Mapper Interno (evita deuda técnica de paquete) ───────────────────────
+    @Override
+    public org.springframework.data.domain.Page<OrdenCompra> listarOrdenes(UUID empresaId, org.springframework.data.domain.Pageable pageable) {
+        return repository.findByEmpresaId(empresaId.toString(), pageable)
+                .map(this::toDomain);
+    }
 
     private OrdenCompraJpaEntity toEntity(OrdenCompra dominio) {
         OrdenCompraJpaEntity entity = new OrdenCompraJpaEntity(
                 dominio.getId().valor().toString(),
-                dominio.getEmpresaId().valor().toString(),
+                dominio.getEmpresaId().toString(),
                 dominio.getProveedorId().valor().toString(),
-                dominio.getFechaCreacion(),
+                dominio.getBodegaDestinoId().toString(),
                 dominio.getEstado().name(),
-                dominio.getCostoTotal().monto()
+                dominio.getTotalMonetario().monto(),
+                dominio.getVersion()
         );
 
         dominio.getLineas().forEach(linea -> {
             LineaOrdenCompraJpaEntity lineaEntity = new LineaOrdenCompraJpaEntity(
-                    dominio.getEmpresaId().valor().toString(),
+                    dominio.getEmpresaId().toString(),
                     linea.getProductoId().valor().toString(),
-                    linea.getCantidadSolicitada(),
-                    linea.getCostoUnitarioPactado().monto(),
-                    linea.calcularSubtotal().monto()
+                    BigDecimal.valueOf(linea.getCantidad()),
+                    linea.getPrecioUnitario().monto(),
+                    linea.getSubtotal().monto()
             );
             entity.addLinea(lineaEntity);
         });
@@ -84,22 +95,28 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
     }
 
     private OrdenCompra toDomain(OrdenCompraJpaEntity entity) {
-        OrdenCompra orden = OrdenCompra.crearBorrador(
+        OrdenCompra orden = OrdenCompra.crear(
                 new OrdenCompraId(UUID.fromString(entity.getId())),
-                new EmpresaId(UUID.fromString(entity.getEmpresaId())),
-                new ProveedorId(UUID.fromString(entity.getProveedorId()))
+                UUID.fromString(entity.getEmpresaId()),
+                new ProveedorId(UUID.fromString(entity.getProveedorId())),
+                UUID.fromString(entity.getBodegaDestinoId()),
+                entity.getCreadoPor() != null ? entity.getCreadoPor() : "system"
         );
 
         try {
-            setField(orden, "estado", EstadoOrden.valueOf(entity.getEstado()));
-            setField(orden, "fechaCreacion", entity.getFechaCreacion());
+            setField(orden, "estado", DocumentStatus.valueOf(entity.getEstado()));
+            setField(orden, "version", entity.getVersion() != null ? entity.getVersion() : 0L);
+            setField(orden, "createdAt", entity.getCreadoEn() != null ? entity.getCreadoEn() : Instant.now());
+            setField(orden, "updatedAt", entity.getActualizadoEn() != null ? entity.getActualizadoEn() : Instant.now());
+            setField(orden, "updatedBy", entity.getActualizadoPor() != null ? entity.getActualizadoPor() : "system");
 
             entity.getLineas().forEach(l -> {
                 try {
                     LineaOrdenCompra linea = new LineaOrdenCompra(
+                            UUID.randomUUID(), // Or extract from DB if it had a UUID
                             new ProductoId(UUID.fromString(l.getProductoId())),
-                            l.getCantidadSolicitada(),
-                            new Dinero(l.getCostoUnitarioEsperado(), "COP")
+                            l.getCantidadSolicitada().intValue(),
+                            new Dinero(l.getCostoUnitarioEsperado())
                     );
                     @SuppressWarnings("unchecked")
                     java.util.List<LineaOrdenCompra> lineas = (java.util.List<LineaOrdenCompra>) getField(orden, "lineas");
@@ -109,10 +126,12 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
                 }
             });
 
-            // Recalcular total
-            java.lang.reflect.Method recalc = OrdenCompra.class.getDeclaredMethod("recalcularCostoTotal");
+            java.lang.reflect.Method recalc = OrdenCompra.class.getDeclaredMethod("recalcularTotal");
             recalc.setAccessible(true);
             recalc.invoke(orden);
+            
+            // Limpiar eventos generados por la hidratación (ya que creamos con .crear())
+            orden.pullDomainEvents();
 
         } catch (Exception e) {
             throw new RuntimeException("Error reconstruyendo OrdenCompra desde JPA", e);

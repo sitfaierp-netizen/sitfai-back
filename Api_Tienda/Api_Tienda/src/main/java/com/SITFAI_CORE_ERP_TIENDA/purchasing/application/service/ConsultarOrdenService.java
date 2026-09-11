@@ -3,11 +3,11 @@ package com.SITFAI_CORE_ERP_TIENDA.purchasing.application.service;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.OrdenCompraResponse;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.mapper.OrdenCompraApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.ConsultarOrdenUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.OrdenCompraRepository;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.port.output.OrdenCompraRepository;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.exception.OrdenCompraNoEncontradaException;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.OrdenCompraId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +36,7 @@ public class ConsultarOrdenService implements ConsultarOrdenUseCase {
         OrdenCompraId id = new OrdenCompraId(ordenCompraId);
         EmpresaId empId = new EmpresaId(empresaId);
 
-        OrdenCompra orden = repository.buscarPorId(id, empId)
+        OrdenCompra orden = repository.buscarPorIdYEmpresaId(id, empresaId)
                 .orElseThrow(() -> new OrdenCompraNoEncontradaException(id, empId));
 
         return OrdenCompraApplicationMapper.aResponse(orden);

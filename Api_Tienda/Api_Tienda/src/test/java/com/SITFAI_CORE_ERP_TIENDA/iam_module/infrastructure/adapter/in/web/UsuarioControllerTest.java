@@ -103,7 +103,7 @@ class UsuarioControllerTest {
 
             when(registrarUsuarioUseCase.ejecutar(any(RegistrarUsuarioCommand.class))).thenReturn(mockResponse);
 
-            ResponseEntity<UsuarioResponse> response = controller.registrar(request);
+            ResponseEntity<UsuarioResponse> response = controller.registrar(empresaId, request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
@@ -131,7 +131,7 @@ class UsuarioControllerTest {
 
             when(desactivarUsuarioUseCase.ejecutar(any(DesactivarUsuarioCommand.class))).thenReturn(mockResponse);
 
-            ResponseEntity<UsuarioResponse> response = controller.desactivar(usuarioId, request);
+            ResponseEntity<UsuarioResponse> response = controller.desactivar(empresaId, usuarioId, request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -157,7 +157,7 @@ class UsuarioControllerTest {
 
             when(reactivarUsuarioUseCase.ejecutar(any(ReactivarUsuarioCommand.class))).thenReturn(mockResponse);
 
-            ResponseEntity<UsuarioResponse> response = controller.reactivar(usuarioId, request);
+            ResponseEntity<UsuarioResponse> response = controller.reactivar(empresaId, usuarioId, request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -183,7 +183,7 @@ class UsuarioControllerTest {
 
             when(cambiarRolUsuarioUseCase.ejecutar(any(CambiarRolUsuarioCommand.class))).thenReturn(mockResponse);
 
-            ResponseEntity<UsuarioResponse> response = controller.cambiarRol(usuarioId, request);
+            ResponseEntity<UsuarioResponse> response = controller.cambiarRol(empresaId, usuarioId, request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();

@@ -24,10 +24,15 @@ public class AgregarSucursalService implements AgregarSucursalUseCase {
 
     private final EmpresaRepository empresaRepository;
     private final EmpresaEventPublisher eventPublisher;
+    private final com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.output.SucursalRepository sucursalRepository;
 
-    public AgregarSucursalService(EmpresaRepository empresaRepository, EmpresaEventPublisher eventPublisher) {
+    public AgregarSucursalService(
+            EmpresaRepository empresaRepository, 
+            EmpresaEventPublisher eventPublisher,
+            com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.output.SucursalRepository sucursalRepository) {
         this.empresaRepository = Objects.requireNonNull(empresaRepository, "empresaRepository no puede ser null.");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher no puede ser null.");
+        this.sucursalRepository = Objects.requireNonNull(sucursalRepository, "sucursalRepository no puede ser null.");
     }
 
     @Override
@@ -35,14 +40,23 @@ public class AgregarSucursalService implements AgregarSucursalUseCase {
         Objects.requireNonNull(command, "command no puede ser null.");
 
         EmpresaId empresaId = EmpresaId.de(command.empresaId());
+        
+        if (sucursalRepository.existePorEmpresaIdYCodigo(empresaId, command.codigo().trim().toUpperCase())) {
+            throw new com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.RegistroDuplicadoException("Sucursal", "codigo", command.codigo());
+        }
+        
         Empresa empresa = empresaRepository.buscarPorId(empresaId)
                 .orElseThrow(() -> new EmpresaNoEncontradaException(empresaId));
 
         Sucursal nuevaSucursal = empresa.agregarSucursal(command.codigo(), command.nombre());
 
-        empresaRepository.guardar(empresa);
+        // La persistencia es responsabilidad del Aggregate (o deberíamos llamar a sucursalRepository.guardar(nuevaSucursal)?)
+        // Como EmpresaJpaAdapter devuelve empty list de sucursales, no persiste en cascada, 
+        // necesitamos persistir la sucursal explícitamente!
+        Sucursal guardada = sucursalRepository.guardar(nuevaSucursal, empresaId);
+        
         eventPublisher.publicarTodos(empresa.pullDomainEvents());
 
-        return EmpresaApplicationMapper.toResponse(nuevaSucursal);
+        return EmpresaApplicationMapper.toResponse(guardada);
     }
 }

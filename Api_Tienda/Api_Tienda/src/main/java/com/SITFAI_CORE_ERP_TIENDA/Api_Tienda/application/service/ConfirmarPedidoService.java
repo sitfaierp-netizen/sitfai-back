@@ -34,7 +34,7 @@ import java.util.Objects;
  * <p>
  * Cero lógica de negocio propia: toda regla de invariante pertenece al agregado {@link Pedido}.
  */
-@Service
+@Service("apiTiendaConfirmarPedidoService")
 public class ConfirmarPedidoService implements ConfirmarPedidoUseCase {
 
     private final PedidoRepository pedidoRepository;

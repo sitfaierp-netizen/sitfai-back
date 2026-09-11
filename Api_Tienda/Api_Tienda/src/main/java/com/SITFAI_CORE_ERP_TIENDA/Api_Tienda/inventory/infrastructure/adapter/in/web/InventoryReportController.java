@@ -3,6 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.i
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.StockQueryRepository;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.query.ConsultarStockConsolidadoQuery;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.query.StockConsolidadoView;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,21 +27,28 @@ public class InventoryReportController {
         this.queryRepository = queryRepository;
     }
 
-    /**
-     * Endpoint de solo lectura (CQRS) para consultar el stock consolidado.
-     * ZERO TRUST: Extrae el empresa_id del token JWT para asegurar el aislamiento (MT-01, MT-04).
-     */
     @GetMapping("/stock-consolidado")
-    @PreAuthorize("hasRole('BODEGA_OPERATOR') or hasRole('SUCURSAL_MANAGER') or hasRole('EMPRESA_ADMIN')")
+    @PreAuthorize(
+        "hasRole('SUPER_ADMIN') or hasRole('EMPRESA_ADMIN') or " +
+        "hasRole('BODEGA_OPERATOR') or hasRole('SUCURSAL_MANAGER')")
     public ResponseEntity<List<StockConsolidadoView>> getStockConsolidado(
             @RequestParam UUID bodegaId,
             @AuthenticationPrincipal Jwt jwt) {
 
-        UUID empresaId = UUID.fromString(jwt.getClaimAsString("empresa_id"));
-
+        String empresaIdStr = jwt.getClaimAsString("empresa_id");
+        if (empresaIdStr == null || empresaIdStr.isBlank()) {
+            empresaIdStr = jwt.getClaimAsString("empresaId");
+        }
+        if (empresaIdStr == null || empresaIdStr.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JWT sin claim empresa_id. Configure Protocol Mapper en Keycloak.");
+        }
+        UUID empresaId;
+        try {
+            empresaId = UUID.fromString(empresaIdStr.trim());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "empresa_id invalido: " + empresaIdStr);
+        }
         ConsultarStockConsolidadoQuery query = new ConsultarStockConsolidadoQuery(empresaId, bodegaId, null);
-        List<StockConsolidadoView> result = queryRepository.consultarStockConsolidado(query);
-
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(queryRepository.consultarStockConsolidado(query));
     }
 }

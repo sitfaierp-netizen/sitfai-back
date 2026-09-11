@@ -198,6 +198,14 @@ public class Producto {
     }
 
     /**
+     * Vincula un código de barras al Producto.
+     */
+    public void vincularCodigoBarras(String codigoBarras) {
+        this.codigoBarras = codigoBarras;
+        this.actualizadoEn = Instant.now();
+    }
+
+    /**
      * Cambia el estado del Producto.
      * [INV-CAT-05] Prohíbe la transición DESCONTINUADO → ACTIVO.
      *
@@ -242,9 +250,9 @@ public class Producto {
     // Validación privada reutilizable
     // -------------------------------------------------------------------------
     private void validarPrecioVenta(BigDecimal precio) {
-        if (precio == null || precio.compareTo(BigDecimal.ZERO) <= 0) {
+        if (precio == null || precio.compareTo(BigDecimal.ZERO) < 0) {
             throw new DomainException(
-                    "[INV-CAT-03] El precioVenta debe ser mayor a cero. Recibido: " + precio);
+                    "[INV-CAT-03] El precioVenta no puede ser negativo. Recibido: " + precio);
         }
     }
 

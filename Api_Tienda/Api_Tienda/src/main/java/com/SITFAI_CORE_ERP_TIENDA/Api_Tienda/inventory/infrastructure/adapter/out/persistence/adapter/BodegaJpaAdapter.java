@@ -103,6 +103,17 @@ public class BodegaJpaAdapter implements BodegaRepository {
     }
 
     @Override
+    public boolean existeCodigoEnEmpresa(EmpresaId empresaId, String codigoBodega) {
+        Objects.requireNonNull(empresaId, "empresaId no puede ser null (MT-01)");
+        Objects.requireNonNull(codigoBodega, "codigoBodega no puede ser null");
+
+        return bodegaJpaRepository.existsByEmpresaIdAndCodigo(
+                empresaId.valor(),
+                codigoBodega.trim().toUpperCase()
+        );
+    }
+
+    @Override
     public List<Bodega> listarPorSucursal(EmpresaId empresaId, String sucursalId) {
         Objects.requireNonNull(empresaId, "empresaId no puede ser null (MT-01)");
         Objects.requireNonNull(sucursalId, "sucursalId no puede ser null");

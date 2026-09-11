@@ -1,35 +1,51 @@
 package com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model;
 
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProductoId;
 
-import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.UUID;
 
-/**
- * Entidad local dentro del Agregado OrdenCompra.
- */
 public class LineaOrdenCompra {
-    
+
+    private final UUID id;
     private final ProductoId productoId;
-    private final BigDecimal cantidadSolicitada;
-    private final Dinero costoUnitarioPactado;
+    private final int cantidad;
+    private final Dinero precioUnitario;
+    private final Dinero subtotal;
 
-    public LineaOrdenCompra(ProductoId productoId, BigDecimal cantidadSolicitada, Dinero costoUnitarioPactado) {
-        this.productoId = Objects.requireNonNull(productoId, "El ProductoId es obligatorio");
-        this.cantidadSolicitada = Objects.requireNonNull(cantidadSolicitada, "La cantidad solicitada es obligatoria");
-        this.costoUnitarioPactado = Objects.requireNonNull(costoUnitarioPactado, "El costo unitario es obligatorio");
-        
-        if (this.cantidadSolicitada.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("La cantidad solicitada debe ser mayor a cero");
+    public LineaOrdenCompra(UUID id, ProductoId productoId, int cantidad, Dinero precioUnitario) {
+        this.id = Objects.requireNonNull(id, "El ID de la línea no puede ser nulo.");
+        this.productoId = Objects.requireNonNull(productoId, "El productoId no puede ser nulo.");
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad debe ser mayor a cero.");
         }
+        this.cantidad = cantidad;
+        this.precioUnitario = Objects.requireNonNull(precioUnitario, "El precio unitario no puede ser nulo.");
+        this.subtotal = this.precioUnitario.multiplicar(this.cantidad);
     }
 
-    public Dinero calcularSubtotal() {
-        return costoUnitarioPactado.multiplicar(cantidadSolicitada);
+    static LineaOrdenCompra crear(ProductoId productoId, int cantidad, Dinero precioUnitario) {
+        return new LineaOrdenCompra(UUID.randomUUID(), productoId, cantidad, precioUnitario);
     }
 
-    public ProductoId getProductoId() { return productoId; }
-    public BigDecimal getCantidadSolicitada() { return cantidadSolicitada; }
-    public Dinero getCostoUnitarioPactado() { return costoUnitarioPactado; }
+    public UUID getId() {
+        return id;
+    }
+
+    public ProductoId getProductoId() {
+        return productoId;
+    }
+
+    public int getCantidad() {
+        return cantidad;
+    }
+
+    public Dinero getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    public Dinero getSubtotal() {
+        return subtotal;
+    }
 }

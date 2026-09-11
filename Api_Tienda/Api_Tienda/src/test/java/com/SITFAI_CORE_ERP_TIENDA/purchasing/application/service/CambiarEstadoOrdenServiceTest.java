@@ -1,17 +1,17 @@
 package com.SITFAI_CORE_ERP_TIENDA.purchasing.application.service;
 
+import com.SITFAI_CORE_ERP_TIENDA.core.audit.domain.port.ActorProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.CambiarEstadoCommand;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.OrdenCompraResponse;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.OrdenCompraEventPublisher;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.OrdenCompraRepository;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.event.OrdenCompraRecibidaEvent;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.port.output.OrdenCompraRepository;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.event.OrdenCompraEmitidaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaOrdenCompra;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.OrdenCompraId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.ProductoId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.ProveedorId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProveedorId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +38,12 @@ class CambiarEstadoOrdenServiceTest {
     @Mock
     private OrdenCompraEventPublisher eventPublisher;
 
+    @Mock
+    private ActorProviderPort actorProviderPort;
+
+    @Mock
+    private com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarIngresoStockUseCase registrarIngresoStockUseCase;
+
     @InjectMocks
     private CambiarEstadoOrdenService service;
 
@@ -49,22 +55,23 @@ class CambiarEstadoOrdenServiceTest {
     void setUp() {
         empresaId = UUID.randomUUID();
         ordenId = UUID.randomUUID();
-        ordenSimulada = OrdenCompra.crearBorrador(new OrdenCompraId(ordenId), new EmpresaId(empresaId), new ProveedorId(UUID.randomUUID()));
-        ordenSimulada.agregarLinea(new LineaOrdenCompra(new ProductoId(UUID.randomUUID()), BigDecimal.ONE, Dinero.de(10)));
-        ordenSimulada.emitir(); // Para que pueda ser RECIBIDA
+        ordenSimulada = OrdenCompra.crear(new OrdenCompraId(ordenId), empresaId, new ProveedorId(UUID.randomUUID()), UUID.randomUUID(), "user1");
+        ordenSimulada.pullDomainEvents();
+        ordenSimulada.agregarLinea(new LineaOrdenCompra(UUID.randomUUID(), new ProductoId(UUID.randomUUID()), 1, new Dinero(BigDecimal.TEN)));
     }
 
     @Test
-    void dadoOrdenEmitida_cuandoTransicionaARecibida_entoncesGuardaYPublicaEvento() {
-        CambiarEstadoCommand command = new CambiarEstadoCommand(ordenId, empresaId, "RECIBIDA");
+    void dadoOrdenBorrador_cuandoTransicionaAEmitida_entoncesGuardaYPublicaEvento() {
+        CambiarEstadoCommand command = new CambiarEstadoCommand(ordenId, empresaId, "EMITIDA");
 
-        when(repository.buscarPorId(any(OrdenCompraId.class), any(EmpresaId.class))).thenReturn(Optional.of(ordenSimulada));
+        when(repository.buscarPorIdYEmpresaId(any(OrdenCompraId.class), any(UUID.class))).thenReturn(Optional.of(ordenSimulada));
+        when(actorProviderPort.getCurrentActorId()).thenReturn("user2");
 
         OrdenCompraResponse response = service.cambiarEstado(command);
 
         assertNotNull(response);
-        assertEquals("RECIBIDA", response.estado());
+        assertEquals("EMITIDO", response.estado());
         verify(repository).guardar(any(OrdenCompra.class));
-        verify(eventPublisher).publicar(any(OrdenCompraRecibidaEvent.class)); // Se emite al marcar como recibida
+        verify(eventPublisher).publicar(any(OrdenCompraEmitidaEvent.class));
     }
 }

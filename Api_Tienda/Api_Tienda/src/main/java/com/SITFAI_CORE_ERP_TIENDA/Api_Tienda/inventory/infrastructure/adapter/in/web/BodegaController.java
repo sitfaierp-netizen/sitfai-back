@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import java.util.Objects;
 
 /**
@@ -77,7 +78,7 @@ public class BodegaController {
     public ResponseEntity<MovimientoWebResponse> registrarMovimiento(
             @PathVariable("id") String bodegaId,
             @RequestHeader(value = "X-Empresa-Id", required = true) String empresaId,
-            @RequestBody RegistrarMovimientoWebRequest request) {
+            @Valid @RequestBody RegistrarMovimientoWebRequest request) {
 
         MovimientoResponse response = registrarMovimientoUseCase.ejecutar(webMapper.toCommand(empresaId, bodegaId, request));
         return ResponseEntity.status(HttpStatus.CREATED).body(webMapper.toWebResponse(response));

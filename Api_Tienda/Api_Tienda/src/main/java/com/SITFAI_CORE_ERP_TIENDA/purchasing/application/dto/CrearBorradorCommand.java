@@ -4,7 +4,8 @@ import java.util.UUID;
 
 public record CrearBorradorCommand(
         UUID empresaId,
-        UUID proveedorId
+        UUID proveedorId,
+        UUID bodegaDestinoId
 ) {
     public CrearBorradorCommand {
         if (empresaId == null) {
@@ -12,6 +13,9 @@ public record CrearBorradorCommand(
         }
         if (proveedorId == null) {
             throw new IllegalArgumentException("El ProveedorId es obligatorio.");
+        }
+        if (bodegaDestinoId == null) {
+            throw new IllegalArgumentException("La BodegaDestinoId es obligatoria.");
         }
     }
 }

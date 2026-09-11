@@ -2,21 +2,17 @@ package com.SITFAI_CORE_ERP_TIENDA.billing.application.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
-/**
- * DTO: Respuesta plana de una Factura Electrónica.
- */
 public record FacturaResponse(
-        UUID facturaId,
-        UUID empresaId,
-        String nitEmisor,
-        String nitReceptor,
-        String estado,
-        String cufe,
+        String id,
+        String empresaId,
+        String clienteId,
+        String pedidoId,
+        String rucCliente,
         BigDecimal subtotal,
         BigDecimal totalImpuestos,
         BigDecimal totalGeneral,
+        String estado,
         List<LineaFacturaResponse> lineas
 ) {
     public record LineaFacturaResponse(

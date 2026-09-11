@@ -38,7 +38,7 @@ public class InventoryController {
     }
 
     @PostMapping("/bodegas/{bodegaId}/ingresos")
-    @PreAuthorize("hasRole('BODEGA_OPERATOR') or hasRole('EMPRESA_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BODEGA_OPERATOR')")
     public ResponseEntity<Void> registrarIngreso(
             @PathVariable UUID bodegaId,
             @Valid @RequestBody RegistrarIngresoStockRequest request) {
@@ -58,7 +58,7 @@ public class InventoryController {
     }
 
     @PostMapping("/bodegas/{bodegaId}/egresos")
-    @PreAuthorize("hasRole('BODEGA_OPERATOR') or hasRole('EMPRESA_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BODEGA_OPERATOR')")
     public ResponseEntity<Void> descontarStock(
             @PathVariable UUID bodegaId,
             @Valid @RequestBody DescontarStockRequest request) {

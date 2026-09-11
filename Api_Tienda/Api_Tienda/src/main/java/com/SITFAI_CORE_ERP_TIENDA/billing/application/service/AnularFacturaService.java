@@ -2,58 +2,50 @@ package com.SITFAI_CORE_ERP_TIENDA.billing.application.service;
 
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.AnularFacturaCommand;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.FacturaResponse;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.mapper.FacturaApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.input.AnularFacturaUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaEventPublisher;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaRepository;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.exception.FacturaNoEncontradaException;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.FacturaElectronica;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.valueobject.FacturaId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.Factura;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.FacturaId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.port.output.FacturaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
+import java.util.UUID;
 
-/**
- * APPLICATION SERVICE: Anular Factura.
- * Orquesta la anulación de una FacturaElectronica respetando MT-01.
- */
 @Service
 public class AnularFacturaService implements AnularFacturaUseCase {
 
     private final FacturaRepository facturaRepository;
-    private final FacturaEventPublisher eventPublisher;
 
-    public AnularFacturaService(
-            FacturaRepository facturaRepository,
-            FacturaEventPublisher eventPublisher) {
-        this.facturaRepository = Objects.requireNonNull(facturaRepository, "facturaRepository es obligatorio.");
-        this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher es obligatorio.");
+    public AnularFacturaService(FacturaRepository facturaRepository) {
+        this.facturaRepository = Objects.requireNonNull(facturaRepository);
     }
 
     @Override
     @Transactional
     public FacturaResponse ejecutar(AnularFacturaCommand command) {
-        Objects.requireNonNull(command, "AnularFacturaCommand no puede ser null.");
+        Objects.requireNonNull(command);
 
-        EmpresaId empresaId = EmpresaId.de(command.empresaId());
-        FacturaId facturaId = FacturaId.de(command.facturaId());
+        FacturaId facturaId = new FacturaId(command.facturaId());
+        UUID empresaId = command.empresaId();
 
-        // 1. Recuperación con aislamiento de Tenant (MT-01)
-        FacturaElectronica factura = facturaRepository.buscarPorId(facturaId, empresaId)
-                .orElseThrow(() -> new FacturaNoEncontradaException(facturaId, empresaId));
+        Factura factura = facturaRepository.findByIdAndEmpresaId(facturaId, empresaId)
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada: " + command.facturaId()));
 
-        // 2. Delegar lógica de transición al Dominio (REGLA-1)
-        factura.anular(command.motivo());
+        factura.anular();
+        facturaRepository.save(factura);
 
-        // 3. Persistir
-        facturaRepository.guardar(factura);
-
-        // 4. Publicar Domain Events
-        factura.getDomainEvents().forEach(eventPublisher::publicar);
-
-        // 5. Retornar DTO
-        return FacturaApplicationMapper.aResponse(factura);
+        return new FacturaResponse(
+                factura.getId().value().toString(),
+                factura.getEmpresaId().toString(),
+                factura.getClienteId().value().toString(),
+                factura.getPedidoId() != null ? factura.getPedidoId().value().toString() : null,
+                factura.getRucCliente().valor(),
+                factura.getSubtotal().monto(),
+                factura.getTotalImpuestos().monto(),
+                factura.getTotalGeneral().monto(),
+                factura.getEstado().name(),
+                java.util.Collections.emptyList()
+        );
     }
 }

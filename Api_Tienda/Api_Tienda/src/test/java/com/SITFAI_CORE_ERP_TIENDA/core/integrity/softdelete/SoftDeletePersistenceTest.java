@@ -13,8 +13,12 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
+import org.springframework.context.annotation.Import;
+
 @SpringBootTest(classes = com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication.class)
 @ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
 class SoftDeletePersistenceTest {
 
     @Autowired

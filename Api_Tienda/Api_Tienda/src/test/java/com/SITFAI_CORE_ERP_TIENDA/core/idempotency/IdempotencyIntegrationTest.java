@@ -33,10 +33,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
+import org.springframework.context.annotation.Import;
 
 @SpringBootTest(classes = com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
 class IdempotencyIntegrationTest {
 
     @Autowired

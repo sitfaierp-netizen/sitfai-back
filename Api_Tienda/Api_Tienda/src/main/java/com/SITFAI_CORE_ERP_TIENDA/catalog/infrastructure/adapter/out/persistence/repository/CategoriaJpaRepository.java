@@ -2,6 +2,8 @@ package com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.persistenc
 
 import com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.persistence.entity.CategoriaJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -9,4 +11,5 @@ import java.util.Optional;
  */
 public interface CategoriaJpaRepository extends JpaRepository<CategoriaJpaEntity, String> {
     Optional<CategoriaJpaEntity> findByIdAndEmpresaId(String id, String empresaId);
+    List<CategoriaJpaEntity> findByEmpresaId(String empresaId);
 }

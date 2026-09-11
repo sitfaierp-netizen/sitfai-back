@@ -4,86 +4,81 @@ import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.EmitirFacturaCommand;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.FacturaResponse;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.mapper.FacturaApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.input.EmitirFacturaUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.Factura;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.FacturaId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.Ruc;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.port.output.FacturaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.valueobject.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.core.audit.domain.port.ActorProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaEventPublisher;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaRepository;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.ResolucionRepository;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.FacturaElectronica;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.LineaFactura;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.valueobject.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * Application Service: Orquestador del caso de uso de emitir factura.
- * Cero lógica tributaria, solo coordina la transacción.
- */
 @Service
 public class EmitirFacturaService implements EmitirFacturaUseCase {
 
     private final FacturaRepository facturaRepository;
-    private final ResolucionRepository resolucionRepository;
+    private final ActorProviderPort actorProvider;
     private final FacturaEventPublisher eventPublisher;
 
     public EmitirFacturaService(FacturaRepository facturaRepository,
-                                ResolucionRepository resolucionRepository,
+                                ActorProviderPort actorProvider,
                                 FacturaEventPublisher eventPublisher) {
         this.facturaRepository = facturaRepository;
-        this.resolucionRepository = resolucionRepository;
+        this.actorProvider = actorProvider;
         this.eventPublisher = eventPublisher;
     }
 
     @Override
     @Transactional
     public FacturaResponse emitirFactura(EmitirFacturaCommand command) {
-        // 1. Validar EmpresaId (MT-01)
-        if (command.empresaId() == null) {
-            throw new IllegalArgumentException("EmpresaId es obligatorio por política Zero Trust (MT-01)");
+        // 1. Extraer actor del contexto de seguridad (ActorProviderPort — AUD-01)
+        // EmpresaId viene inyectado en el controller vía @TenantId (MT-02 Zero Trust)
+        // El actorId se usa como auditoría del creador
+        String usuario = actorProvider.getCurrentActorId();
+
+        // empresaId proviene del command (MT-01):
+        // En flujo REST → inyectado por @TenantId en el controller
+        // En flujo de evento → extraído del PedidoConfirmadoEvent
+        UUID empresaId = command.empresaId();
+        if (empresaId == null) {
+            throw new IllegalArgumentException("EmpresaId es obligatorio (MT-01)");
         }
-        EmpresaId empresaId = new EmpresaId(command.empresaId());
+
         FacturaId facturaId = new FacturaId(UUID.randomUUID());
+        ClienteId clienteId = new ClienteId(command.clienteId());
+        PedidoId pedidoId = command.pedidoId() != null ? new PedidoId(command.pedidoId()) : null;
+        Ruc rucCliente = new Ruc(command.rucCliente());
 
-        // 2. Obtener Resolución Activa (Delegado a puerto de salida)
-        ResolucionDian resolucionDian = resolucionRepository.obtenerActiva(empresaId)
-                .orElseThrow(() -> new IllegalStateException("No hay resolución DIAN activa para la empresa"));
+        // 2. Instanciar agregado Factura
+        Factura factura = Factura.crear(facturaId, empresaId, clienteId, pedidoId, rucCliente, usuario);
 
-        // 3. Instanciar agregado mediante factory method
-        FacturaElectronica factura = FacturaElectronica.generarBorrador(
-                facturaId,
-                empresaId,
-                new Nit(command.nitEmisor()),
-                new Nit(command.nitReceptor()),
-                resolucionDian
-        );
-
-        // 4. Añadir líneas de detalle iterando sobre el comando
-        for (EmitirFacturaCommand.LineaFacturaDto lineaDto : command.lineas()) {
-            LineaFactura linea = new LineaFactura(
-                    lineaDto.concepto(),
-                    lineaDto.cantidad(),
-                    Dinero.de(lineaDto.precioUnitario(), lineaDto.moneda())
-            );
+        // 3. Añadir líneas e impuestos
+        for (EmitirFacturaCommand.LineaFacturaCommand lineaDto : command.lineas()) {
+            Dinero precioUnitario = Dinero.de(lineaDto.precioUnitario(), lineaDto.moneda());
+            factura.agregarLinea(lineaDto.concepto(), lineaDto.cantidad(), precioUnitario);
             
-            // Añadir impuestos a la línea
-            for (EmitirFacturaCommand.ImpuestoDto impuestoDto : lineaDto.impuestos()) {
-                linea.agregarImpuesto(impuestoDto.tipo(), impuestoDto.tarifa());
+            if (lineaDto.impuestos() != null) {
+                for (EmitirFacturaCommand.ImpuestoCommand impuestoDto : lineaDto.impuestos()) {
+                    factura.aplicarImpuesto(impuestoDto.tipo(), impuestoDto.tarifa());
+                }
             }
-            
-            factura.agregarLinea(linea);
         }
 
-        // 5. Invocar cálculos en el agregado (La matemática tributaria se ejecuta aquí)
-        // Nota: agregarLinea() ya llama a calcularTotales(), pero lo llamamos explícitamente para cumplir la instrucción
-        factura.calcularTotales();
+        // 4. Emitir factura (cambia estado a EMITIDO y genera FacturaEmitidaEvent)
+        factura.emitir();
 
-        // 6. Persistir el agregado
-        facturaRepository.guardar(factura);
+        // 5. Persistir agregado
+        facturaRepository.save(factura);
 
-        // 7. Publicar eventos de dominio extraídos (Si la hubiéramos firmado aquí, habría eventos)
-        factura.getDomainEvents().forEach(eventPublisher::publicar);
+        // 6. Publicar eventos de dominio
+        factura.pullDomainEvents().forEach(eventPublisher::publicar);
 
-        // 8. Retornar DTO de respuesta
-        return FacturaApplicationMapper.aResponse(factura);
+        // 7. Retornar DTO
+        return FacturaApplicationMapper.toResponse(factura);
     }
 }

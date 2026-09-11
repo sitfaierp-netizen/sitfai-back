@@ -22,10 +22,15 @@ public class ActualizarSucursalService implements ActualizarSucursalUseCase {
 
     private final EmpresaRepository empresaRepository;
     private final EmpresaEventPublisher eventPublisher;
+    private final com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.output.SucursalRepository sucursalRepository;
 
-    public ActualizarSucursalService(EmpresaRepository empresaRepository, EmpresaEventPublisher eventPublisher) {
+    public ActualizarSucursalService(
+            EmpresaRepository empresaRepository, 
+            EmpresaEventPublisher eventPublisher,
+            com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.output.SucursalRepository sucursalRepository) {
         this.empresaRepository = Objects.requireNonNull(empresaRepository);
         this.eventPublisher = Objects.requireNonNull(eventPublisher);
+        this.sucursalRepository = Objects.requireNonNull(sucursalRepository);
     }
 
     @Override
@@ -36,15 +41,25 @@ public class ActualizarSucursalService implements ActualizarSucursalUseCase {
         Empresa empresa = empresaRepository.buscarPorId(empresaId)
                 .orElseThrow(() -> new EmpresaNoEncontradaException(empresaId));
 
-        empresa.actualizarSucursal(sucursalId, command.codigo(), command.nombre());
+        Sucursal sucursal = sucursalRepository.buscarPorIdYEmpresaId(sucursalId, empresaId)
+                .orElseThrow(() -> new com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.exception.EmpresaInvalidaException("Sucursal no encontrada o no pertenece a la empresa"));
 
-        empresaRepository.guardar(empresa);
-        eventPublisher.publicarTodos(empresa.pullDomainEvents());
+        if (!sucursal.getCodigo().equalsIgnoreCase(command.codigo().trim())) {
+            if (sucursalRepository.existePorEmpresaIdYCodigo(empresaId, command.codigo().trim().toUpperCase())) {
+                throw new com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.RegistroDuplicadoException("Sucursal", "codigo", command.codigo());
+            }
+        }
 
-        Sucursal sucursalActualizada = empresa.getSucursales().stream()
-                .filter(s -> s.getId().equals(sucursalId))
-                .findFirst()
-                .orElseThrow();
+        sucursal.actualizar(command.codigo(), command.nombre());
+        
+        Sucursal sucursalActualizada = sucursalRepository.guardar(sucursal, empresaId);
+        
+        // Disparar evento de dominio de sucursal actualizada, pero necesitamos publicarlo desde Empresa o directamente?
+        // Como Empresa es el aggregate root y nosotros usamos el repositorio de sucursal...
+        // Replicar comportamiento de evento:
+        eventPublisher.publicarTodos(java.util.List.of(
+            com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.SucursalActualizadaEvent.ahora(empresaId, sucursalId, sucursal.getCodigo(), sucursal.getNombre())
+        ));
 
         return EmpresaApplicationMapper.toResponse(sucursalActualizada);
     }

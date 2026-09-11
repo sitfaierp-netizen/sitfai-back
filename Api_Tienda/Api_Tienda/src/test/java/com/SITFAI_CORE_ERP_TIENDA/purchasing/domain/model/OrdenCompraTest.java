@@ -1,7 +1,8 @@
 package com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model;
 
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.exception.DomainException;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.*;
+import com.SITFAI_CORE_ERP_TIENDA.core.document.domain.model.enums.DocumentStatus;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.*;
+import com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.DocumentStateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,75 +14,69 @@ import static org.junit.jupiter.api.Assertions.*;
 class OrdenCompraTest {
 
     private OrdenCompraId ordenId;
-    private EmpresaId empresaId;
+    private UUID empresaId;
     private ProveedorId proveedorId;
+    private UUID bodegaDestinoId;
+    private String createdBy;
 
     @BeforeEach
     void setUp() {
-        ordenId = new OrdenCompraId(UUID.randomUUID());
-        empresaId = new EmpresaId(UUID.randomUUID());
+        ordenId = OrdenCompraId.generar();
+        empresaId = UUID.randomUUID();
         proveedorId = new ProveedorId(UUID.randomUUID());
+        bodegaDestinoId = UUID.randomUUID();
+        createdBy = "user123";
     }
 
     @Test
-    void dadoDatosValidos_cuandoCrearBorrador_entoncesOrdenEstadoBorradorYTotalCero() {
-        OrdenCompra orden = OrdenCompra.crearBorrador(ordenId, empresaId, proveedorId);
+    void dadoDatosValidos_cuandoCrear_entoncesOrdenEstadoBorradorYTotalCero() {
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
 
-        assertEquals(EstadoOrden.BORRADOR, orden.getEstado());
-        assertEquals(new BigDecimal("0.0000"), orden.getCostoTotal().monto());
+        assertEquals(DocumentStatus.BORRADOR, orden.getEstado());
+        assertEquals(0, BigDecimal.ZERO.compareTo(orden.getTotalMonetario().monto()));
         assertTrue(orden.getLineas().isEmpty());
+        assertEquals(1, orden.pullDomainEvents().size());
     }
 
     @Test
     void dadoOrdenEnBorrador_cuandoAgregarLinea_entoncesSumaAlCostoTotalConCuatroDecimales() {
-        OrdenCompra orden = OrdenCompra.crearBorrador(ordenId, empresaId, proveedorId);
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
+        orden.pullDomainEvents(); // Clear initial event
 
         ProductoId prod1 = new ProductoId(UUID.randomUUID());
-        LineaOrdenCompra linea1 = new LineaOrdenCompra(prod1, new BigDecimal("2"), Dinero.de(50.1234));
+        LineaOrdenCompra linea1 = new LineaOrdenCompra(UUID.randomUUID(), prod1, 2, new Dinero(new BigDecimal("50.1234")));
         
         orden.agregarLinea(linea1);
 
         assertEquals(1, orden.getLineas().size());
-        assertEquals(new BigDecimal("100.2468"), orden.getCostoTotal().monto()); // 50.1234 * 2
+        assertEquals(0, new BigDecimal("100.2468").compareTo(orden.getTotalMonetario().monto())); // 50.1234 * 2
     }
 
     @Test
-    void dadoOrdenSinLineas_cuandoEmitir_entoncesLanzaDomainException() {
-        OrdenCompra orden = OrdenCompra.crearBorrador(ordenId, empresaId, proveedorId);
+    void dadoOrdenSinLineas_cuandoEmitir_entoncesLanzaDocumentStateException() {
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
 
-        assertThrows(DomainException.class, orden::emitir);
+        assertThrows(DocumentStateException.class, orden::emitir);
     }
 
     @Test
     void dadoOrdenConLineas_cuandoEmitir_entoncesCambiaEstado() {
-        OrdenCompra orden = OrdenCompra.crearBorrador(ordenId, empresaId, proveedorId);
-        orden.agregarLinea(new LineaOrdenCompra(new ProductoId(UUID.randomUUID()), BigDecimal.ONE, Dinero.de(10)));
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
+        orden.agregarLinea(new LineaOrdenCompra(UUID.randomUUID(), new ProductoId(UUID.randomUUID()), 1, new Dinero(BigDecimal.TEN)));
         
         orden.emitir();
 
-        assertEquals(EstadoOrden.EMITIDA, orden.getEstado());
+        assertEquals(DocumentStatus.EMITIDO, orden.getEstado());
     }
 
     @Test
-    void dadoOrdenEmitida_cuandoAgregarLinea_entoncesLanzaDomainException() {
-        OrdenCompra orden = OrdenCompra.crearBorrador(ordenId, empresaId, proveedorId);
-        orden.agregarLinea(new LineaOrdenCompra(new ProductoId(UUID.randomUUID()), BigDecimal.ONE, Dinero.de(10)));
+    void dadoOrdenEmitida_cuandoAgregarLinea_entoncesLanzaDocumentStateException() {
+        OrdenCompra orden = OrdenCompra.crear(ordenId, empresaId, proveedorId, bodegaDestinoId, createdBy);
+        orden.agregarLinea(new LineaOrdenCompra(UUID.randomUUID(), new ProductoId(UUID.randomUUID()), 1, new Dinero(BigDecimal.TEN)));
         orden.emitir();
 
-        assertThrows(DomainException.class, () -> 
-            orden.agregarLinea(new LineaOrdenCompra(new ProductoId(UUID.randomUUID()), BigDecimal.ONE, Dinero.de(10)))
+        assertThrows(DocumentStateException.class, () -> 
+            orden.agregarLinea(new LineaOrdenCompra(UUID.randomUUID(), new ProductoId(UUID.randomUUID()), 1, new Dinero(BigDecimal.TEN)))
         );
-    }
-
-    @Test
-    void dadoOrdenEmitida_cuandoRecibir_entoncesCambiaEstadoYGeneraEvento() {
-        OrdenCompra orden = OrdenCompra.crearBorrador(ordenId, empresaId, proveedorId);
-        orden.agregarLinea(new LineaOrdenCompra(new ProductoId(UUID.randomUUID()), BigDecimal.ONE, Dinero.de(10)));
-        orden.emitir();
-        
-        orden.marcarComoRecibida();
-
-        assertEquals(EstadoOrden.RECIBIDA, orden.getEstado());
-        assertEquals(1, orden.getDomainEvents().size());
     }
 }

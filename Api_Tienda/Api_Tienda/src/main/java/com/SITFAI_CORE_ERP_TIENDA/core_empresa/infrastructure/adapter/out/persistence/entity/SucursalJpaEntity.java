@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.SQLRestriction;
 
 /**
  * Entidad JPA para la persistencia de Sucursal en la tabla `core_sucursal`.
@@ -57,6 +58,25 @@ public class SucursalJpaEntity {
     private String deletedBy;
 
     public SucursalJpaEntity() {
+    }
+
+    public SucursalJpaEntity(
+            String id,
+            EmpresaJpaEntity empresa,
+            String codigo,
+            String nombre,
+            String estado,
+            Instant creadoEn,
+            Instant actualizadoEn
+    ) {
+        this.id = id;
+        this.empresa = empresa;
+        this.codigo = codigo;
+        this.nombre = nombre;
+        this.estado = estado;
+        this.creadoEn = creadoEn;
+        this.actualizadoEn = actualizadoEn;
+        this.activo = true;
     }
 
     public SucursalJpaEntity(
