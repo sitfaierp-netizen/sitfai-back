@@ -2,15 +2,12 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.i
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.BodegaResponse;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.MovimientoResponse;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.StockResponse;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.ConsultarStockUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.CrearBodegaUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.RegistrarMovimientoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.BodegaWebResponse;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.CrearBodegaWebRequest;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.MovimientoWebResponse;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.RegistrarMovimientoWebRequest;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.StockWebResponse;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.mapper.InventarioWebMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,17 +39,14 @@ public class BodegaController {
 
     private final CrearBodegaUseCase crearBodegaUseCase;
     private final RegistrarMovimientoUseCase registrarMovimientoUseCase;
-    private final ConsultarStockUseCase consultarStockUseCase;
     private final InventarioWebMapper webMapper;
 
     public BodegaController(
             CrearBodegaUseCase crearBodegaUseCase,
             RegistrarMovimientoUseCase registrarMovimientoUseCase,
-            ConsultarStockUseCase consultarStockUseCase,
             InventarioWebMapper webMapper) {
         this.crearBodegaUseCase = Objects.requireNonNull(crearBodegaUseCase, "crearBodegaUseCase no puede ser null");
         this.registrarMovimientoUseCase = Objects.requireNonNull(registrarMovimientoUseCase, "registrarMovimientoUseCase no puede ser null");
-        this.consultarStockUseCase = Objects.requireNonNull(consultarStockUseCase, "consultarStockUseCase no puede ser null");
         this.webMapper = Objects.requireNonNull(webMapper, "webMapper no puede ser null");
     }
 
@@ -83,18 +77,5 @@ public class BodegaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(webMapper.toWebResponse(response));
     }
 
-    /**
-     * Endpoint para consultar el stock de un producto en una bodega.
-     * GET /api/v1/bodegas/{id}/stock/{productoId}
-     */
-    @GetMapping("/{id}/stock/{productoId}")
-    public ResponseEntity<StockWebResponse> consultarStock(
-            @PathVariable("id") String bodegaId,
-            @PathVariable("productoId") String productoId,
-            @RequestHeader(value = "X-Empresa-Id", required = true) String empresaId) {
-
-        StockResponse response = consultarStockUseCase.ejecutar(webMapper.toQuery(empresaId, bodegaId, productoId));
-        return ResponseEntity.ok(webMapper.toWebResponse(response));
-    }
-
+    // El endpoint de consulta de stock fue movido a InventoryQueryController para soportar CQRS puro
 }

@@ -3,11 +3,12 @@ package com.SITFAI_CORE_ERP_TIENDA.billing.application.service;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.EmitirNotaCreditoCommand;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.NotaCreditoResponse;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaEventPublisher;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.port.output.FacturaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.NotaCreditoRepository;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.exception.DomainException;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.EstadoFacturaDian;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.FacturaElectronica;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.FacturaId;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.valueobject.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,7 +69,7 @@ class EmitirNotaCreditoServiceTest {
                 ))
         );
 
-        when(facturaRepository.buscarPorId(any(FacturaId.class), any(EmpresaId.class)))
+        when(facturaRepository.findByIdAndEmpresaId(any(FacturaId.class), any(UUID.class)))
                 .thenReturn(Optional.of(facturaSimulada));
 
         NotaCreditoResponse response = service.emitirNotaCredito(command);
@@ -87,7 +88,7 @@ class EmitirNotaCreditoServiceTest {
                 empresaId, facturaId, "01", "Devolucion", List.of()
         );
 
-        when(facturaRepository.buscarPorId(any(FacturaId.class), any(EmpresaId.class)))
+        when(facturaRepository.findByIdAndEmpresaId(any(FacturaId.class), any(UUID.class)))
                 .thenReturn(Optional.empty());
 
         assertThrows(DomainException.class, () -> service.emitirNotaCredito(command));

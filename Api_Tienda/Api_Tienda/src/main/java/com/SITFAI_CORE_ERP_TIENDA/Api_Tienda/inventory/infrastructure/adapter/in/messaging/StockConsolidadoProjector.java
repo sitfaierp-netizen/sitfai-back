@@ -1,12 +1,11 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.messaging;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockActualizadoEvent;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.out.persistence.cqrs.StockProyeccionId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.out.persistence.cqrs.StockProyeccionJpaEntity;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.out.persistence.cqrs.StockProyeccionJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class StockConsolidadoProjector {
 
     private static final Logger log = LoggerFactory.getLogger(StockConsolidadoProjector.class);
-    private final StockProyeccionJpaRepository readRepository;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    public StockConsolidadoProjector(StockProyeccionJpaRepository readRepository) {
-        this.readRepository = readRepository;
+    public StockConsolidadoProjector(NamedParameterJdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     /**
@@ -35,25 +34,22 @@ public class StockConsolidadoProjector {
         log.debug("Proyectando stock para producto={}, bodega={}, empresa={}",
                 event.productoId().valor(), event.bodegaId().valor(), event.empresaId().valor());
 
-        StockProyeccionId id = new StockProyeccionId(
-                event.empresaId().valor(),
-                event.bodegaId().valor(),
-                event.productoId().valor()
-        );
+        String sql = """
+            INSERT INTO inventory_stock_view (empresa_id, bodega_id, producto_id, cantidad_total, ultima_actualizacion)
+            VALUES (UUID_TO_BIN(:empresaId), UUID_TO_BIN(:bodegaId), UUID_TO_BIN(:productoId), :cantidad, :fecha)
+            ON DUPLICATE KEY UPDATE 
+                cantidad_total = VALUES(cantidad_total),
+                ultima_actualizacion = VALUES(ultima_actualizacion)
+        """;
 
-        StockProyeccionJpaEntity entity = readRepository.findById(id)
-                .orElse(new StockProyeccionJpaEntity(
-                        event.empresaId().valor(),
-                        event.bodegaId().valor(),
-                        event.productoId().valor(),
-                        event.stockNuevo(),
-                        event.ocurridoEn()
-                ));
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("empresaId", event.empresaId().valor())
+                .addValue("bodegaId", event.bodegaId().valor())
+                .addValue("productoId", event.productoId().valor())
+                .addValue("cantidad", event.stockNuevo())
+                .addValue("fecha", java.sql.Timestamp.from(event.ocurridoEn()));
 
-        entity.setCantidadTotal(event.stockNuevo());
-        entity.setUltimaActualizacion(event.ocurridoEn());
-
-        readRepository.save(entity);
+        jdbcTemplate.update(sql, params);
         log.info("Proyección CQRS de stock actualizada correctamente.");
     }
 }
