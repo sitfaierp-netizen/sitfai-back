@@ -9,6 +9,7 @@ import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.SucursalId;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.UsuarioId;
 
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.ArqueoCaja;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +25,7 @@ public class TurnoCaja {
     private EstadoTurno estado;
     private final Dinero montoApertura;
     private final List<TransaccionCaja> transacciones;
+    private ArqueoCaja arqueo;
     private final List<DomainEvent> domainEvents;
 
     private TurnoCaja(TurnoId id, EmpresaId empresaId, CajaId cajaId, SucursalId sucursalId, UsuarioId usuarioId, Dinero montoApertura) {
@@ -42,12 +44,13 @@ public class TurnoCaja {
         return new TurnoCaja(TurnoId.generar(), empresaId, cajaId, sucursalId, usuarioId, montoApertura);
     }
 
-    public static TurnoCaja reconstituir(TurnoId id, EmpresaId empresaId, CajaId cajaId, SucursalId sucursalId, UsuarioId usuarioId, EstadoTurno estado, Dinero montoApertura, List<TransaccionCaja> transacciones) {
+    public static TurnoCaja reconstituir(TurnoId id, EmpresaId empresaId, CajaId cajaId, SucursalId sucursalId, UsuarioId usuarioId, EstadoTurno estado, Dinero montoApertura, List<TransaccionCaja> transacciones, ArqueoCaja arqueo) {
         TurnoCaja turno = new TurnoCaja(id, empresaId, cajaId, sucursalId, usuarioId, montoApertura);
         turno.estado = estado;
         if (transacciones != null) {
             turno.transacciones.addAll(transacciones);
         }
+        turno.arqueo = arqueo;
         return turno;
     }
 
@@ -84,16 +87,32 @@ public class TurnoCaja {
             throw new IllegalStateException("El turno ya se encuentra " + this.estado);
         }
 
-        Dinero consolidado = calcularConsolidado();
-        
-        // Validación local de discrepancias no justificadas
-        if (!consolidado.valor().equals(montoDeclarado.valor())) {
-            throw new IllegalStateException("Discrepancia en el arqueo: Calculado " + consolidado.valor() + " pero declarado " + montoDeclarado.valor());
+        Dinero totalVentas = Dinero.cero();
+        Dinero totalDevoluciones = Dinero.cero();
+        Dinero totalIngresos = Dinero.cero();
+        Dinero totalEgresos = Dinero.cero();
+
+        for (TransaccionCaja transaccion : this.transacciones) {
+            switch (transaccion.getTipo()) {
+                case VENTA -> totalVentas = totalVentas.sumar(transaccion.getMonto());
+                case DEVOLUCION -> totalDevoluciones = totalDevoluciones.sumar(transaccion.getMonto());
+                case INGRESO -> totalIngresos = totalIngresos.sumar(transaccion.getMonto());
+                case EGRESO -> totalEgresos = totalEgresos.sumar(transaccion.getMonto());
+            }
         }
+
+        this.arqueo = ArqueoCaja.calcular(
+                this.montoApertura,
+                totalVentas,
+                totalDevoluciones,
+                totalIngresos,
+                totalEgresos,
+                montoDeclarado
+        );
 
         this.estado = EstadoTurno.CERRADO;
         
-        this.domainEvents.add(TurnoCerradoEvent.of(this.id, this.empresaId, this.cajaId, this.usuarioId, consolidado));
+        this.domainEvents.add(TurnoCerradoEvent.of(this.id, this.empresaId, this.cajaId, this.usuarioId, this.arqueo.balanceEsperado(), this.arqueo.montoDeclarado(), this.arqueo.diferencia()));
     }
 
     // Getters
@@ -127,6 +146,10 @@ public class TurnoCaja {
 
     public List<TransaccionCaja> getTransacciones() {
         return Collections.unmodifiableList(transacciones);
+    }
+
+    public ArqueoCaja getArqueo() {
+        return arqueo;
     }
 
     public List<DomainEvent> getDomainEvents() {

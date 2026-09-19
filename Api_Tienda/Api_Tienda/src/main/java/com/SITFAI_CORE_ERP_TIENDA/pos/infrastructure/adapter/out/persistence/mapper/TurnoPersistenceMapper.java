@@ -4,6 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.EstadoTurno;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TipoTransaccion;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TransaccionCaja;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.ArqueoCaja;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.CajaId;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId;
@@ -34,6 +35,16 @@ public final class TurnoPersistenceMapper {
         entity.setUsuarioId(domain.getUsuarioId().value().toString());
         entity.setEstado(domain.getEstado().name());
         entity.setMontoApertura(domain.getMontoApertura().valor());
+
+        if (domain.getArqueo() != null) {
+            entity.setMontoEsperado(domain.getArqueo().balanceEsperado().valor());
+            entity.setMontoDeclarado(domain.getArqueo().montoDeclarado().valor());
+            entity.setDiferencia(domain.getArqueo().diferencia().valor());
+        } else {
+            entity.setMontoEsperado(null);
+            entity.setMontoDeclarado(null);
+            entity.setDiferencia(null);
+        }
 
         if (domain.getTransacciones() != null) {
             List<TransaccionCajaJpaEntity> txs = new ArrayList<>();
@@ -79,6 +90,20 @@ public final class TurnoPersistenceMapper {
             }
         }
 
+        ArqueoCaja arqueo = null;
+        if (entity.getMontoEsperado() != null && entity.getMontoDeclarado() != null) {
+            arqueo = new ArqueoCaja(
+                    Dinero.de(entity.getMontoApertura()),
+                    Dinero.cero(),
+                    Dinero.cero(),
+                    Dinero.cero(),
+                    Dinero.cero(),
+                    Dinero.de(entity.getMontoEsperado()),
+                    Dinero.de(entity.getMontoDeclarado()),
+                    Dinero.de(entity.getDiferencia())
+            );
+        }
+
         return TurnoCaja.reconstituir(
                 turnoId,
                 empresaId,
@@ -87,7 +112,8 @@ public final class TurnoPersistenceMapper {
                 usuarioId,
                 estado,
                 montoApertura,
-                transacciones
+                transacciones,
+                arqueo
         );
     }
 }

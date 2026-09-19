@@ -14,7 +14,9 @@ public record ArqueoCaja(
         Dinero totalDevoluciones,
         Dinero totalIngresos,
         Dinero totalEgresos,
-        Dinero balanceEsperado
+        Dinero balanceEsperado,
+        Dinero montoDeclarado,
+        Dinero diferencia
 ) {
 
     public ArqueoCaja {
@@ -24,6 +26,8 @@ public record ArqueoCaja(
         Objects.requireNonNull(totalIngresos, "ArqueoCaja: totalIngresos es obligatorio.");
         Objects.requireNonNull(totalEgresos, "ArqueoCaja: totalEgresos es obligatorio.");
         Objects.requireNonNull(balanceEsperado, "ArqueoCaja: balanceEsperado es obligatorio.");
+        Objects.requireNonNull(montoDeclarado, "ArqueoCaja: montoDeclarado es obligatorio.");
+        Objects.requireNonNull(diferencia, "ArqueoCaja: diferencia es obligatoria.");
     }
 
     public static ArqueoCaja calcular(
@@ -31,13 +35,15 @@ public record ArqueoCaja(
             Dinero totalVentas,
             Dinero totalDevoluciones,
             Dinero totalIngresos,
-            Dinero totalEgresos) {
+            Dinero totalEgresos,
+            Dinero montoDeclarado) {
 
         Objects.requireNonNull(montoInicial, "montoInicial es requerido para calcular el arqueo.");
         Objects.requireNonNull(totalVentas, "totalVentas es requerido para calcular el arqueo.");
         Objects.requireNonNull(totalDevoluciones, "totalDevoluciones es requerido para calcular el arqueo.");
         Objects.requireNonNull(totalIngresos, "totalIngresos es requerido para calcular el arqueo.");
         Objects.requireNonNull(totalEgresos, "totalEgresos es requerido para calcular el arqueo.");
+        Objects.requireNonNull(montoDeclarado, "montoDeclarado es requerido para calcular el arqueo.");
 
         // Balance esperado = Monto Inicial + Ventas + Ingresos - Devoluciones - Egresos
         Dinero balance = montoInicial
@@ -45,6 +51,8 @@ public record ArqueoCaja(
                 .sumar(totalIngresos)
                 .restar(totalDevoluciones)
                 .restar(totalEgresos);
+        
+        Dinero diferencia = montoDeclarado.restar(balance);
 
         return new ArqueoCaja(
                 montoInicial,
@@ -52,7 +60,9 @@ public record ArqueoCaja(
                 totalDevoluciones,
                 totalIngresos,
                 totalEgresos,
-                balance
+                balance,
+                montoDeclarado,
+                diferencia
         );
     }
 }

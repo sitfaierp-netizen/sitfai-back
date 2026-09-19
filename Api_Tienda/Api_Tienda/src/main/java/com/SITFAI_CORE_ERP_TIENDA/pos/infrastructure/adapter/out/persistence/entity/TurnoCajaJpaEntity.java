@@ -32,6 +32,19 @@ public class TurnoCajaJpaEntity {
     @Column(name = "monto_apertura", precision = 19, scale = 4, nullable = false)
     private BigDecimal montoApertura;
 
+    @Column(name = "monto_esperado", precision = 19, scale = 4)
+    private BigDecimal montoEsperado;
+
+    @Column(name = "monto_declarado", precision = 19, scale = 4)
+    private BigDecimal montoDeclarado;
+
+    @Column(name = "diferencia", precision = 19, scale = 4)
+    private BigDecimal diferencia;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     @OneToMany(mappedBy = "turno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransaccionCajaJpaEntity> transacciones = new ArrayList<>();
 
@@ -89,6 +102,38 @@ public class TurnoCajaJpaEntity {
 
     public void setMontoApertura(BigDecimal montoApertura) {
         this.montoApertura = montoApertura;
+    }
+
+    public BigDecimal getMontoEsperado() {
+        return montoEsperado;
+    }
+
+    public void setMontoEsperado(BigDecimal montoEsperado) {
+        this.montoEsperado = montoEsperado;
+    }
+
+    public BigDecimal getMontoDeclarado() {
+        return montoDeclarado;
+    }
+
+    public void setMontoDeclarado(BigDecimal montoDeclarado) {
+        this.montoDeclarado = montoDeclarado;
+    }
+
+    public BigDecimal getDiferencia() {
+        return diferencia;
+    }
+
+    public void setDiferencia(BigDecimal diferencia) {
+        this.diferencia = diferencia;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public List<TransaccionCajaJpaEntity> getTransacciones() {

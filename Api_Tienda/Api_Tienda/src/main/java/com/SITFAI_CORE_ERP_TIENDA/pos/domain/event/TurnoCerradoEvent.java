@@ -16,9 +16,11 @@ public record TurnoCerradoEvent(
         CajaId cajaId,
         UsuarioId usuarioId,
         Dinero consolidadoFinal,
+        Dinero montoDeclarado,
+        Dinero diferencia,
         Instant ocurridoEn
 ) implements DomainEvent {
-    public static TurnoCerradoEvent of(TurnoId turnoId, EmpresaId empresaId, CajaId cajaId, UsuarioId usuarioId, Dinero consolidadoFinal) {
+    public static TurnoCerradoEvent of(TurnoId turnoId, EmpresaId empresaId, CajaId cajaId, UsuarioId usuarioId, Dinero consolidadoFinal, Dinero montoDeclarado, Dinero diferencia) {
         return new TurnoCerradoEvent(
                 UUID.randomUUID(),
                 turnoId,
@@ -26,6 +28,8 @@ public record TurnoCerradoEvent(
                 cajaId,
                 usuarioId,
                 consolidadoFinal,
+                montoDeclarado,
+                diferencia,
                 Instant.now()
         );
     }
