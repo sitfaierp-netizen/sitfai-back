@@ -469,6 +469,79 @@ public final class Bodega {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
+    // GESTIÓN DE AJUSTE DE INVENTARIO
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Procesa matemáticamente la diferencia de un ajuste físico de inventario.
+     * Si la diferencia es positiva, registra un ingreso (Sobrante).
+     * Si la diferencia es negativa, registra una salida del lote específico (Faltante, Merma, etc.).
+     */
+    public void aplicarAjuste(
+            ProductoId productoId,
+            BigDecimal diferencia,
+            LoteId loteId,
+            Instant fechaCaducidad,
+            DocumentoFuenteId documentoFuente) {
+
+        Objects.requireNonNull(productoId, "aplicarAjuste: productoId es obligatorio.");
+        Objects.requireNonNull(diferencia, "aplicarAjuste: diferencia es obligatoria.");
+        Objects.requireNonNull(documentoFuente, "aplicarAjuste: documentoFuente es obligatorio.");
+
+        if (diferencia.compareTo(BigDecimal.ZERO) == 0) {
+            return; // Sin efecto
+        }
+
+        if (diferencia.compareTo(BigDecimal.ZERO) > 0) {
+            // Sobrante de inventario -> registrar como ingreso
+            registrarIngreso(productoId, Cantidad.de(diferencia), loteId, fechaCaducidad, documentoFuente);
+        } else {
+            // Faltante de inventario -> descontar cantidad absoluta
+            BigDecimal cantidadADescontar = diferencia.abs();
+            
+            if (loteId != null) {
+                // Descuento exacto de un lote (no usa FEFO automático)
+                descontarStockDeLote(productoId, cantidadADescontar, loteId, documentoFuente);
+            } else {
+                // Faltante general sin lote especificado (usa FEFO)
+                descontarStock(productoId, Cantidad.de(cantidadADescontar), documentoFuente);
+            }
+        }
+    }
+
+    private void descontarStockDeLote(ProductoId productoId, BigDecimal cantidad, LoteId loteId, DocumentoFuenteId documentoFuente) {
+        if (!this.activa) {
+            throw new IllegalStateException(String.format("La Bodega '%s' está inactiva.", this.id));
+        }
+
+        StockLote lote = this.lotes.stream()
+                .filter(l -> l.getProductoId().equals(productoId) && Objects.equals(l.getLoteId(), loteId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el Lote " + loteId + " para el Producto " + productoId));
+
+        if (lote.getCantidad().compareTo(cantidad) < 0) {
+            throw new StockInsuficienteException(this.id, productoId, lote.getCantidad(), cantidad);
+        }
+
+        lote.descontar(cantidad);
+        
+        MovimientoInventario mov = MovimientoInventario.crear(
+                this.id, productoId, this.empresaId, Cantidad.de(cantidad), TipoMovimiento.SALIDA, loteId, documentoFuente
+        );
+        this.movimientos.add(mov);
+        
+        this.actualizadoEn = Instant.now();
+        BigDecimal nuevoStock = consultarStock(productoId);
+
+        this.domainEvents.add(MovimientoRegistradoEvent.of(
+                this.id, productoId, this.empresaId, TipoMovimiento.SALIDA, Cantidad.de(cantidad), documentoFuente
+        ));
+        this.domainEvents.add(StockActualizadoEvent.of(
+                this.id, productoId, this.empresaId, nuevoStock
+        ));
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
     // GESTIÓN DE PUNTO DE REORDEN
     // ═════════════════════════════════════════════════════════════════════════
 
