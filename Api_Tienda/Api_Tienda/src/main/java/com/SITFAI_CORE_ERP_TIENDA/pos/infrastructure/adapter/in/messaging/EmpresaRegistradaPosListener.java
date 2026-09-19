@@ -22,6 +22,7 @@ public class EmpresaRegistradaPosListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void onEmpresaRegistrada(EmpresaRegistradaIntegrationEvent event) {
         Objects.requireNonNull(event, "El evento de integración no puede ser nulo");
         log.info("POS Saga: Aprovisionando Caja Principal para nueva EmpresaId={}", event.empresaId());

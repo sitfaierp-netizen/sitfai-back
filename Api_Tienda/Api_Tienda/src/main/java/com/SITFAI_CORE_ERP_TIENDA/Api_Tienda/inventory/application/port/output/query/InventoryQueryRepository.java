@@ -20,4 +20,9 @@ public interface InventoryQueryRepository {
      * Consulta los movimientos históricos (kárdex).
      */
     List<MovimientoKardexView> findKardexByEmpresaBodegaAndProducto(String empresaId, String bodegaId, String productoId);
+
+    /**
+     * Consulta las bodegas de la empresa.
+     */
+    List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.query.dto.BodegaView> findBodegasByEmpresa(String empresaId);
 }

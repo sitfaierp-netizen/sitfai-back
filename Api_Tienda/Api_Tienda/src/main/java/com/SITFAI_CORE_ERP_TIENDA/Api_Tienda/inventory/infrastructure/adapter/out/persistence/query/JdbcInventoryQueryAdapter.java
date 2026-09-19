@@ -83,4 +83,25 @@ public class JdbcInventoryQueryAdapter implements InventoryQueryRepository {
                 rs.getTimestamp("fecha_registro").toInstant()
         ));
     }
+
+    @Override
+    public List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.query.dto.BodegaView> findBodegasByEmpresa(String empresaId) {
+        String sql = """
+            SELECT 
+                id as id,
+                nombre,
+                empresa_id as empresa_id
+            FROM inventory_bodega
+            WHERE empresa_id = :empresaId 
+        """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("empresaId", empresaId);
+
+        return jdbcTemplate.query(sql, params, (rs, rowNum) -> new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.query.dto.BodegaView(
+                rs.getString("id"),
+                rs.getString("nombre"),
+                rs.getString("empresa_id")
+        ));
+    }
 }

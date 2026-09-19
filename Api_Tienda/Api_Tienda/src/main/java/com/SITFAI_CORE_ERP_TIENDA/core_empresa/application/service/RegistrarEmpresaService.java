@@ -52,7 +52,8 @@ public class RegistrarEmpresaService implements RegistrarEmpresaUseCase {
         Empresa empresaGuardada = repository.guardar(nuevaEmpresa);
 
         // Se extraen y publican los eventos de dominio (Ej. EmpresaCreadaEvent - Big Bang)
-        eventPublisher.publicarTodos(empresaGuardada.pullDomainEvents());
+        // MUST extract from nuevaEmpresa because repository.guardar() returns a reconstituted instance without the events
+        eventPublisher.publicarTodos(nuevaEmpresa.pullDomainEvents());
 
         return new EmpresaResponse(
                 empresaGuardada.getId().valor(),

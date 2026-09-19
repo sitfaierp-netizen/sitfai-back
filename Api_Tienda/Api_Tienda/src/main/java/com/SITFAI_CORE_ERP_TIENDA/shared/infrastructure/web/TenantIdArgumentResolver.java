@@ -59,11 +59,18 @@ public class TenantIdArgumentResolver implements HandlerMethodArgumentResolver {
         String empresaIdStr = extractEmpresaIdFromAuthentication(authentication);
 
         if (empresaIdStr == null || empresaIdStr.isBlank()) {
-            if (required) {
-                throw new AccessDeniedException(
-                        "El token JWT de autenticación no contiene el claim obligatorio 'empresa_id' (MT-01, MT-06).");
+            boolean isSuperAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+            if (isSuperAdmin) {
+                empresaIdStr = webRequest.getHeader("X-Empresa-Id");
             }
-            return null;
+            if (empresaIdStr == null || empresaIdStr.isBlank()) {
+                if (required) {
+                    throw new AccessDeniedException(
+                            "El token JWT de autenticación no contiene el claim obligatorio 'empresa_id' (MT-01, MT-06) y no se proveyó X-Empresa-Id como SUPER_ADMIN.");
+                }
+                return null;
+            }
         }
 
         Class<?> paramType = parameter.getParameterType();

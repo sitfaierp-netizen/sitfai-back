@@ -6,6 +6,10 @@ import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.TenantAuthentic
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.UUID;
 
 /**
  * Driven Adapter: Implementa TenantProviderPort usando Spring Security.
@@ -24,6 +28,19 @@ public class SpringSecurityTenantProviderAdapter implements TenantProviderPort {
         Object details = auth.getDetails();
         if (details instanceof TenantAuthenticationDetails tenantDetails) {
             return new EmpresaId(tenantDetails.empresaUuid());
+        }
+
+        boolean isSuperAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+        
+        if (isSuperAdmin) {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                String headerEmpresaId = attributes.getRequest().getHeader("X-Empresa-Id");
+                if (headerEmpresaId != null && !headerEmpresaId.isBlank()) {
+                    return new EmpresaId(UUID.fromString(headerEmpresaId.trim()));
+                }
+            }
         }
 
         throw new IllegalStateException(

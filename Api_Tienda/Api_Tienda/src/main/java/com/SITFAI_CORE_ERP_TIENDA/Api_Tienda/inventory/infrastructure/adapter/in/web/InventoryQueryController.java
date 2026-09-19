@@ -17,7 +17,7 @@ import java.util.List;
  * Aislado de las operaciones de comando.
  */
 @RestController
-@RequestMapping("/api/v1/inventory")
+@RequestMapping("/inventory")
 public class InventoryQueryController {
 
     private final ConsultarStockUseCase consultarStockUseCase;

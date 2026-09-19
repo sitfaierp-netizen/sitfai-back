@@ -74,94 +74,87 @@ echo "============================================================"
 # El script lanza los requests HTTP esperando que se implementen en el futuro.
 
 echo "Verificando Bodega Matriz (Inventory)..."
-BODEGAS_RESP=$(curl -s -w "\nHTTP_CODE:%{http_code}\n" -X GET "$GATEWAY_URL/api/v1/bodegas" \
+BODEGAS_RESP=$(curl -s -X GET "$GATEWAY_URL/api/v1/bodegas" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Empresa-Id: $EMPRESA_ID")
-echo "$BODEGAS_RESP"
+echo "Respuesta Bodegas: $BODEGAS_RESP"
+
+BODEGA_ID=$(echo $BODEGAS_RESP | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')
+if [ -z "$BODEGA_ID" ]; then
+    echo "❌ No se encontró ninguna bodega para la empresa. Abortando."
+    exit 1
+fi
+echo "✅ Bodega encontrada. ID: $BODEGA_ID"
 
 echo ""
 echo "Verificando Caja Principal (POS)..."
-CAJAS_RESP=$(curl -s -w "\nHTTP_CODE:%{http_code}\n" -X GET "$GATEWAY_URL/api/v1/cajas" \
+CAJAS_RESP=$(curl -s -X GET "$GATEWAY_URL/api/v1/cajas" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Empresa-Id: $EMPRESA_ID")
-echo "$CAJAS_RESP"
+echo "Respuesta Cajas: $CAJAS_RESP"
+
+CAJA_ID=$(echo $CAJAS_RESP | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')
+if [ -z "$CAJA_ID" ]; then
+    echo "❌ No se encontró ninguna caja para la empresa. Abortando."
+    exit 1
+fi
+echo "✅ Caja encontrada. ID: $CAJA_ID"
 
 echo ""
 echo "============================================================"
-echo "5. VERIFICACIÓN DEFINITIVA EN BASE DE DATOS (Opcional E2E)"
+echo "5. APERTURA DE TURNO (POS)"
 echo "============================================================"
-echo "Consultando contenedores MySQL para validar la inserción real de los Agregados..."
-docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
-SELECT id, nombre, empresa_id FROM inventory_bodega WHERE empresa_id='$EMPRESA_ID';
-"
-# docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
-# SELECT id, nombre, empresa_id FROM cajas WHERE empresa_id='$EMPRESA_ID';
-# "
-
-
-echo ""
-echo "============================================================"
-echo "6. APERTURA DE TURNO (POS)"
-echo "============================================================"
-# Asumimos que extraemos el ID de la caja del query anterior o creamos un UUID dummy si no lo hay
-# CAJA_ID=$(docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -sN -e "SELECT id FROM cajas WHERE empresa_id='$EMPRESA_ID' LIMIT 1;")
-CAJA_ID="caja-mock-id"
-
 echo "Abriendo turno para la caja: $CAJA_ID"
 TURNO_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos" \
   -H "Authorization: Bearer $TOKEN" \
+  -H "X-Empresa-Id: $EMPRESA_ID" \
   -H "Content-Type: application/json" \
   -d '{
         "cajaId": "'"$CAJA_ID"'",
+        "sucursalId": "22222222-2222-2222-2222-222222222222",
+        "usuarioId": "33333333-3333-3333-3333-333333333333",
         "montoApertura": 100.00
       }')
 echo "Respuesta Apertura Turno: $TURNO_RESP"
 TURNO_ID=$(echo $TURNO_RESP | grep -o '"id":"[^"]*' | sed 's/"id":"//')
-if [ -z "$TURNO_ID" ]; then
-    TURNO_ID="turno-mock-id"
+if [ -z "$TURNO_ID" ] || [ "$TURNO_ID" == "null" ]; then
+    echo "❌ Falló la apertura de turno. Abortando E2E."
+    exit 1
 fi
 
 echo ""
 echo "============================================================"
-echo "7. REGISTRO DE VENTA (POS)"
+echo "6. REGISTRO DE VENTA (POS)"
 echo "============================================================"
 echo "Registrando venta en el turno: $TURNO_ID"
 VENTA_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos/$TURNO_ID/transacciones" \
   -H "Authorization: Bearer $TOKEN" \
+  -H "X-Empresa-Id: $EMPRESA_ID" \
   -H "Content-Type: application/json" \
   -d '{
-        "tipo": "VENTA",
-        "montoTotal": 250.00,
-        "lineas": [
-           { "productoId": "prod-1", "cantidad": 2, "precioUnitario": 125.00 }
-        ]
+        "tipoTransaccion": "VENTA",
+        "monto": 250.00,
+        "referencia": "REF-VENTA-001"
       }')
 echo "Respuesta Venta: $VENTA_RESP"
 
 echo ""
 echo "============================================================"
-echo "8. DELAY COREOGRAFÍA SCM"
+echo "7. DELAY COREOGRAFÍA SCM"
 echo "============================================================"
 echo "Esperando 3 segundos para propagación del VentaRegistradaEvent..."
 sleep 3
 
 echo ""
 echo "============================================================"
-echo "9. VALIDACIÓN CQRS E INVENTARIO (DB)"
+echo "8. VALIDACIÓN CQRS E INVENTARIO (API)"
 echo "============================================================"
-echo "Verificando deducción de stock en inventory_stock_view..."
-docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
-SELECT empresa_id, producto_id, cantidad_total FROM inventory_stock_view WHERE empresa_id='$EMPRESA_ID' LIMIT 5;
-"
+echo "Verificando deducción de stock vía API..."
+STOCK_RESP=$(curl -s -X GET "$GATEWAY_URL/api/v1/inventory/bodegas/$BODEGA_ID/stock" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Empresa-Id: $EMPRESA_ID")
+echo "Respuesta Stock: $STOCK_RESP"
 
 echo ""
-echo "============================================================"
-echo "10. VALIDACIÓN TRIBUTARIA (BILLING) (DB)"
-echo "============================================================"
-echo "Verificando emisión automática de Factura Electrónica (DIAN)..."
-docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
-SELECT id, empresa_id, ruc_cliente, estado, total_general FROM billing_factura WHERE empresa_id='$EMPRESA_ID';
-"
-
 echo "============================================================"
 echo "Flujo Cliente Cero Finalizado Exitosamente."
