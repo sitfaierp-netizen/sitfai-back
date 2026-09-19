@@ -66,6 +66,22 @@ public class TurnoCaja {
         this.transacciones.add(transaccion);
     }
 
+    public void registrarDevolucion(com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.TicketId ticketOriginalId, Dinero montoDevolucion, List<com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.DevolucionRegistradaEvent.LineaDevolucion> lineas, List<com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.LoteRevertido> lotes) {
+        Objects.requireNonNull(ticketOriginalId, "El ID del ticket original es obligatorio");
+        Objects.requireNonNull(montoDevolucion, "El monto de devolución es obligatorio");
+        Objects.requireNonNull(lineas, "Las líneas devueltas son obligatorias");
+        Objects.requireNonNull(lotes, "Los lotes revertidos son obligatorios");
+        
+        if (this.estado != EstadoTurno.ABIERTO) {
+            throw new IllegalStateException("No se pueden registrar devoluciones porque el turno está " + this.estado);
+        }
+
+        TransaccionCaja transaccion = TransaccionCaja.registrar(TipoTransaccion.DEVOLUCION, montoDevolucion, "DEV-" + ticketOriginalId.toString());
+        this.transacciones.add(transaccion);
+        
+        this.domainEvents.add(com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.DevolucionRegistradaEvent.of(this.id, this.cajaId, this.empresaId, this.sucursalId, ticketOriginalId.value(), lineas, lotes, montoDevolucion));
+    }
+
     public Dinero calcularConsolidado() {
         Dinero consolidado = this.montoApertura;
         
