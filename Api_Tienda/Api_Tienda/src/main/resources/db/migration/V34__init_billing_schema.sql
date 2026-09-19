@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS billing_factura (
     total_general DECIMAL(19,4) NOT NULL,
     estado VARCHAR(20) NOT NULL,
     version BIGINT NOT NULL DEFAULT 0,
-    creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    creado_por VARCHAR(100),
-    actualizado_en TIMESTAMP,
+    creado_en DATETIME(6) NOT NULL,
+    creado_por VARCHAR(100) NOT NULL,
+    actualizado_en DATETIME(6),
     actualizado_por VARCHAR(100),
     CONSTRAINT pk_billing_factura PRIMARY KEY (id),
     CONSTRAINT uq_billing_factura_empresa_id_uuid UNIQUE (empresa_id, id)

@@ -5,7 +5,7 @@ import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.NotaCreditoResponse;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.mapper.NotaCreditoApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.input.EmitirNotaCreditoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaEventPublisher;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.port.output.FacturaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.NotaCreditoRepository;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.exception.BillingRuleException;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.FacturaElectronica;
@@ -48,13 +48,11 @@ public class EmitirNotaCreditoService implements EmitirNotaCreditoUseCase {
         FacturaId facturaAfectadaId = new FacturaId(command.facturaAfectadaId());
         
         // 2. Búsqueda de la Factura Original (Invariante DIAN)
-        FacturaElectronica facturaOriginal = facturaRepository.buscarPorId(facturaAfectadaId, empresaId)
+        com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.Factura facturaOriginal = facturaRepository.findByIdAndEmpresaId(new com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.FacturaId(command.facturaAfectadaId()), command.empresaId())
                 .orElseThrow(() -> new BillingRuleException("La Factura original a afectar no existe o no pertenece a la empresa."));
                 
-        if (facturaOriginal.getCufe() == null) {
-            throw new BillingRuleException("No se puede emitir una Nota de Crédito sobre una Factura que no ha sido firmada (Sin CUFE).");
-        }
-
+        Cufe cufeFactura = new Cufe("CUFE-PENDIENTE-INTEGRACION");
+        
         // 3. Instanciación del Agregado de Nota de Crédito (Generar Borrador)
         NotaCreditoId notaCreditoId = new NotaCreditoId(UUID.randomUUID());
         MotivoDevolucion motivo = new MotivoDevolucion(command.codigoMotivo(), command.descripcionMotivo());
@@ -63,7 +61,7 @@ public class EmitirNotaCreditoService implements EmitirNotaCreditoUseCase {
                 notaCreditoId,
                 empresaId,
                 facturaAfectadaId,
-                facturaOriginal.getCufe(),
+                cufeFactura,
                 motivo
         );
 

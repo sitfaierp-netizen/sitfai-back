@@ -5,10 +5,10 @@ CREATE TABLE orders_pedido (
     total_monetario DECIMAL(19,2) NOT NULL,
     estado VARCHAR(50) NOT NULL,
     version BIGINT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    created_by VARCHAR(50) NOT NULL,
-    updated_at TIMESTAMP,
-    updated_by VARCHAR(50)
+    creado_en TIMESTAMP NOT NULL,
+    creado_por VARCHAR(50) NOT NULL,
+    actualizado_en TIMESTAMP,
+    actualizado_por VARCHAR(50)
 );
 
 CREATE TABLE orders_linea_pedido (

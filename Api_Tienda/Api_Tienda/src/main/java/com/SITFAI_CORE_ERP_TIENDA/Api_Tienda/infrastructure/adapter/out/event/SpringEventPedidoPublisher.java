@@ -1,7 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.out.event;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.PedidoEventPublisher;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent;
+import com.SITFAI_CORE_ERP_TIENDA.orders.domain.port.output.PedidoEventPublisher;
+import com.SITFAI_CORE_ERP_TIENDA.orders.domain.event.DomainEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,10 +27,10 @@ public class SpringEventPedidoPublisher implements PedidoEventPublisher {
     }
 
     @Override
-    public void publicar(DomainEvent evento) {
+    public void publish(DomainEvent evento) {
         Objects.requireNonNull(evento, "SpringEventPedidoPublisher: evento no puede ser null.");
         log.info("[DOMAIN EVENT] Publicando evento: {} ocurrido en: {}",
-                evento.getClass().getSimpleName(), evento.ocurridoEn());
+                evento.getClass().getSimpleName(), evento.occurredOn());
 
         applicationEventPublisher.publishEvent(evento);
     }

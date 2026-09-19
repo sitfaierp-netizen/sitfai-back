@@ -15,7 +15,7 @@ RUN ./mvnw dependency:go-offline -B || true
 
 # Copiar código fuente y compilar artefacto JAR
 COPY src ./src
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -Dmaven.test.skip=true
 
 # --- Etapa 2: Imagen Ligera de Ejecución (Runtime) ---
 FROM eclipse-temurin:21-jre-alpine

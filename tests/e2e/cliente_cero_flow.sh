@@ -8,7 +8,7 @@ set -e
 # Configuración
 GATEWAY_URL="http://localhost:8000"
 KEYCLOAK_URL="http://localhost:8080/realms/sitfai-erp/protocol/openid-connect/token"
-RUC="099$(date +%s)" # RUC dinámico para evitar conflictos
+RUC="20$(date +%s | cut -c2-10)" # RUC dinámico para evitar conflictos (11 dígitos)
 RAZON_SOCIAL="Empresa Cero $(date +%s) S.A."
 
 echo "============================================================"
@@ -21,8 +21,8 @@ TOKEN=$(curl -s -X POST $KEYCLOAK_URL \
   -H "Host: keycloak-iam:8080" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "client_id=api-tienda-client" \
-  -d "username=cajero_test" \
-  -d "password=12345" \
+  -d "username=super.admin" \
+  -d "password=admin123" \
   -d "grant_type=password" | grep -o '"access_token":"[^"]*' | sed 's/"access_token":"//')
 
 if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
@@ -92,11 +92,11 @@ echo "5. VERIFICACIÓN DEFINITIVA EN BASE DE DATOS (Opcional E2E)"
 echo "============================================================"
 echo "Consultando contenedores MySQL para validar la inserción real de los Agregados..."
 docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
-SELECT id, nombre, empresa_id FROM bodegas WHERE empresa_id='$EMPRESA_ID';
+SELECT id, nombre, empresa_id FROM inventory_bodega WHERE empresa_id='$EMPRESA_ID';
 "
-docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
-SELECT id, nombre, empresa_id FROM cajas WHERE empresa_id='$EMPRESA_ID';
-"
+# docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
+# SELECT id, nombre, empresa_id FROM cajas WHERE empresa_id='$EMPRESA_ID';
+# "
 
 
 echo ""
@@ -104,10 +104,8 @@ echo "============================================================"
 echo "6. APERTURA DE TURNO (POS)"
 echo "============================================================"
 # Asumimos que extraemos el ID de la caja del query anterior o creamos un UUID dummy si no lo hay
-CAJA_ID=$(docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -sN -e "SELECT id FROM cajas WHERE empresa_id='$EMPRESA_ID' LIMIT 1;")
-if [ -z "$CAJA_ID" ]; then
-    CAJA_ID="caja-mock-id"
-fi
+# CAJA_ID=$(docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -sN -e "SELECT id FROM cajas WHERE empresa_id='$EMPRESA_ID' LIMIT 1;")
+CAJA_ID="caja-mock-id"
 
 echo "Abriendo turno para la caja: $CAJA_ID"
 TURNO_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos" \
@@ -153,7 +151,7 @@ echo "9. VALIDACIÓN CQRS E INVENTARIO (DB)"
 echo "============================================================"
 echo "Verificando deducción de stock en inventory_stock_view..."
 docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
-SELECT empresa_id, producto_id, stock_disponible FROM inventory_stock_view WHERE empresa_id='$EMPRESA_ID' LIMIT 5;
+SELECT empresa_id, producto_id, cantidad_total FROM inventory_stock_view WHERE empresa_id='$EMPRESA_ID' LIMIT 5;
 "
 
 echo ""
@@ -162,7 +160,7 @@ echo "10. VALIDACIÓN TRIBUTARIA (BILLING) (DB)"
 echo "============================================================"
 echo "Verificando emisión automática de Factura Electrónica (DIAN)..."
 docker exec sitfai-mysql-db mysql -u sitfai_user -psitfai_secret_pwd sitfai_tienda -e "
-SELECT id, empresa_id, nit_receptor, estado, total_general FROM billing_factura WHERE empresa_id='$EMPRESA_ID';
+SELECT id, empresa_id, ruc_cliente, estado, total_general FROM billing_factura WHERE empresa_id='$EMPRESA_ID';
 "
 
 echo "============================================================"

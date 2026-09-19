@@ -14,32 +14,5 @@ CREATE TABLE billing_resolucion (
     activa BOOLEAN NOT NULL
 );
 
-CREATE TABLE billing_factura (
-    id VARCHAR(36) PRIMARY KEY,
-    empresa_id VARCHAR(36) NOT NULL,
-    nit_emisor VARCHAR(20) NOT NULL,
-    nit_receptor VARCHAR(20) NOT NULL,
-    estado VARCHAR(30) NOT NULL,
-    cufe VARCHAR(100),
-    resolucion_dian VARCHAR(10) NOT NULL,
-    subtotal DECIMAL(19, 4) NOT NULL,
-    total_impuestos DECIMAL(19, 4) NOT NULL,
-    total_general DECIMAL(19, 4) NOT NULL
-);
-
-CREATE TABLE billing_linea_factura (
-    id VARCHAR(36) PRIMARY KEY,
-    empresa_id VARCHAR(36) NOT NULL,
-    factura_id VARCHAR(36) NOT NULL,
-    concepto VARCHAR(255) NOT NULL,
-    cantidad DECIMAL(19, 4) NOT NULL,
-    precio_unitario DECIMAL(19, 4) NOT NULL,
-    subtotal DECIMAL(19, 4) NOT NULL,
-    total_impuestos DECIMAL(19, 4) NOT NULL,
-    CONSTRAINT fk_linea_factura FOREIGN KEY (factura_id) REFERENCES billing_factura(id) ON DELETE CASCADE
-);
-
 -- Índices de aislamiento y rendimiento (MT-01)
 CREATE INDEX idx_resolucion_empresa ON billing_resolucion(empresa_id, activa);
-CREATE INDEX idx_factura_empresa_nit ON billing_factura(empresa_id, nit_receptor);
-CREATE INDEX idx_linea_factura_empresa ON billing_linea_factura(empresa_id);
