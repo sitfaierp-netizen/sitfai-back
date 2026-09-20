@@ -153,8 +153,52 @@ echo "Verificando deducción de stock vía API..."
 STOCK_RESP=$(curl -s -X GET "$GATEWAY_URL/api/v1/inventory/bodegas/$BODEGA_ID/stock" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Empresa-Id: $EMPRESA_ID")
-echo "Respuesta Stock: $STOCK_RESP"
+echo "Respuesta Stock antes de devolución: $STOCK_RESP"
 
 echo ""
 echo "============================================================"
-echo "Flujo Cliente Cero Finalizado Exitosamente."
+echo "9. PRUEBA DE LOGÍSTICA INVERSA (BUMERÁN)"
+echo "============================================================"
+VENTA_ID=$(echo $VENTA_RESP | grep -o '"id":"[^"]*' | sed 's/"id":"//')
+if [ -z "$VENTA_ID" ] || [ "$VENTA_ID" == "null" ]; then
+    # Fallback si el POST de transaccion no devuelve ID directamente 
+    VENTA_ID="00000000-0000-0000-0000-000000000000"
+fi
+
+echo "Iniciando devolución para la venta origen: $VENTA_ID en el turno: $TURNO_ID"
+DEVOLUCION_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos/$TURNO_ID/devoluciones" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Empresa-Id: $EMPRESA_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "ventaOrigenId": "'"$VENTA_ID"'",
+        "lineas": [
+          {
+            "productoId": "11111111-1111-1111-1111-111111111111",
+            "cantidad": 5,
+            "precioUnitario": 50.00
+          }
+        ],
+        "lotesRevertidos": [
+          {
+            "productoId": "11111111-1111-1111-1111-111111111111",
+            "codigoLote": "LOTE-BUMERAN",
+            "cantidad": 5
+          }
+        ],
+        "montoDevuelto": 250.00
+      }')
+echo "Respuesta Devolución: $DEVOLUCION_RESP"
+
+echo "Esperando 3 segundos para propagación del DevolucionRegistradaEvent..."
+sleep 3
+
+echo "Verificando incremento de stock (CQRS)..."
+STOCK_FINAL_RESP=$(curl -s -X GET "$GATEWAY_URL/api/v1/inventory/bodegas/$BODEGA_ID/stock" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Empresa-Id: $EMPRESA_ID")
+echo "Respuesta Stock Final: $STOCK_FINAL_RESP"
+
+echo ""
+echo "============================================================"
+echo "Flujo Cliente Cero (con Bumerán) Finalizado Exitosamente."

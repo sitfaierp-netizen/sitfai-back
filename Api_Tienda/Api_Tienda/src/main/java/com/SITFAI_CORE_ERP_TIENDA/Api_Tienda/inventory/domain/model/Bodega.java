@@ -399,6 +399,22 @@ public final class Bodega {
     }
 
     /**
+     * Reingresa stock a la bodega proveniente de una devolución de POS (Logística Inversa).
+     * CAJ-08: Reversión de stock.
+     */
+    public void reingresarStock(
+            ProductoId productoId,
+            Cantidad cantidad,
+            LoteId loteId,
+            DocumentoFuenteId documentoFuente) {
+        
+        // El reingreso es semánticamente un ingreso de stock, reutilizamos la lógica de registrarIngreso.
+        // Al reingresar de un lote conocido, la fecha de caducidad original se mantiene si el lote aún existe en la lista,
+        // o se asume nula si el lote ya se agotó por completo y fue removido (aunque FEFO lo manejará enviándolo al final).
+        registrarIngreso(productoId, cantidad, loteId, null, documentoFuente);
+    }
+
+    /**
      * Descuenta stock de la Bodega aplicando la lógica FEFO.
      */
     public void descontarStock(
