@@ -2,6 +2,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCreadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoInvalidoException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Cantidad;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
@@ -179,6 +180,33 @@ public class Pedido {
         }
 
         return total;
+    }
+
+    /**
+     * Solicita la reserva temporal de stock a Inventario.
+     * Cambia el estado a {@link EstadoPedido#RESERVANDO_STOCK} y emite el evento {@link PedidoCreadoEvent}.
+     *
+     * @throws PedidoInvalidoException si la lista de líneas está vacía o si no está en estado modificable.
+     */
+    public void solicitarReserva() {
+        validarEstadoModificable("solicitar reserva");
+
+        if (this.lineas.isEmpty()) {
+            throw new PedidoInvalidoException("Un pedido no puede solicitar reserva si su lista de líneas está vacía.");
+        }
+
+        this.estado = EstadoPedido.RESERVANDO_STOCK;
+        this.actualizadoEn = Instant.now();
+
+        // Registrar Domain Event
+        Dinero total = calcularTotal();
+        this.domainEvents.add(PedidoCreadoEvent.of(
+                this.id,
+                this.empresaId,
+                this.clienteId,
+                total,
+                this.lineas
+        ));
     }
 
     /**

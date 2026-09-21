@@ -6,6 +6,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model;
 public enum EstadoPedido {
     CREADO,
     BORRADOR,
+    RESERVANDO_STOCK,
     CONFIRMADO,
     CANCELADO;
 

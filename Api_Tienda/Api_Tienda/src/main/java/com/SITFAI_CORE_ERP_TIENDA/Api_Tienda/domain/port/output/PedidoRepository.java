@@ -1,4 +1,4 @@
-package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output;
+package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.port.output;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.Pedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;

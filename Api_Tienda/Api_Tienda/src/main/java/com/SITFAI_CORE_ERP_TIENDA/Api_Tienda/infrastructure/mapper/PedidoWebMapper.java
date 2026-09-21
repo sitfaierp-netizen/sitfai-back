@@ -31,7 +31,11 @@ public class PedidoWebMapper {
         Objects.requireNonNull(empresaId, "PedidoWebMapper: empresaId es requerido.");
         Objects.requireNonNull(request, "PedidoWebMapper: request es requerido.");
 
-        return new CrearPedidoCommand(empresaId, request.clienteId());
+        List<CrearPedidoCommand.LineaComando> lineas = request.lineas() != null 
+                ? request.lineas().stream().map(l -> new CrearPedidoCommand.LineaComando(l.productoId(), l.cantidad(), l.precioUnitario())).toList()
+                : List.of();
+
+        return new CrearPedidoCommand(empresaId, request.clienteId(), lineas);
     }
 
     public AgregarLineaPedidoCommand toAgregarLineaCommand(UUID empresaId, UUID pedidoId, AgregarLineaWebRequest request) {
