@@ -26,11 +26,11 @@ TOKEN=$(curl -s -X POST $KEYCLOAK_URL \
   -d "grant_type=password" | grep -o '"access_token":"[^"]*' | sed 's/"access_token":"//')
 
 if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
-    echo "⚠️  No se pudo obtener un token válido desde Keycloak."
-    echo "Usando TOKEN MOCK de SUPER_ADMIN para bypassing local (si aplica)..."
-    TOKEN="mock-super-admin-jwt-token"
+    echo "❌ No se pudo obtener un token válido desde Keycloak. Abortando E2E."
+    exit 1
 else
     echo "✅ Token JWT (SUPER_ADMIN) obtenido exitosamente."
+    export TOKEN
 fi
 
 echo ""
