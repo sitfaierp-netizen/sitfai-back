@@ -12,7 +12,7 @@ import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
 
-@Entity
+@Entity(name = "ApiTiendaLineaPedido")
 @Table(name = "tienda_linea_pedido")
 public class LineaPedidoJpaEntity extends AuditableJpaEntity {
 

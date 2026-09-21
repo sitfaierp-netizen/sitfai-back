@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+@Service("ecommerceCrearPedidoService")
 public class CrearPedidoService implements CrearPedidoUseCase {
 
     private final PedidoRepository pedidoRepository;

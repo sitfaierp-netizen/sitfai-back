@@ -6,8 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-@Repository
+@Repository("apiTiendaPedidoJpaRepository")
 public interface PedidoJpaRepository extends JpaRepository<PedidoJpaEntity, String> {
     
     // MT-01: Siempre buscar usando empresaId

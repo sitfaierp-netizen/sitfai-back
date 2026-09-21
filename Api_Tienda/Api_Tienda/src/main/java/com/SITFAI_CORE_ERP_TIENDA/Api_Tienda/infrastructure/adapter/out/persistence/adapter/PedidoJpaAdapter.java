@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Component
+@Component("apiTiendaPedidoJpaAdapter")
 public class PedidoJpaAdapter implements PedidoRepository {
 
     private final PedidoJpaRepository repository;

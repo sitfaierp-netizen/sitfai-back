@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@RestController
+@RestController("apiTiendaPedidoController")
 @RequestMapping("/api/v1/api-tienda/pedidos")
 public class PedidoController {
 

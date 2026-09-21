@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
+@Entity(name = "ApiTiendaPedido")
 @Table(name = "tienda_pedido")
 public class PedidoJpaEntity extends AuditableJpaEntity {
 
