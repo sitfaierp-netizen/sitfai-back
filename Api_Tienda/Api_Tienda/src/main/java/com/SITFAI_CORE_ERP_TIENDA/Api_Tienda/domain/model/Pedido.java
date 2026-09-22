@@ -3,6 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCreadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCanceladoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoInvalidoException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Cantidad;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
@@ -248,6 +249,30 @@ public class Pedido {
 
         this.estado = EstadoPedido.CANCELADO;
         this.actualizadoEn = Instant.now();
+    }
+
+    /**
+     * SAGA Compensation: Cancela el pedido porque el inventario rechazó la reserva de stock (BOD-05).
+     * <p>
+     * @param motivo El motivo del rechazo enviado por el inventario.
+     * @throws PedidoInvalidoException si el pedido no está en estado RESERVANDO_STOCK.
+     */
+    public void cancelarPorFaltaDeStock(String motivo) {
+        if (this.estado != EstadoPedido.RESERVANDO_STOCK) {
+            throw new PedidoInvalidoException(
+                    String.format("No se puede cancelar por falta de stock: el pedido no está en estado RESERVANDO_STOCK. Estado actual: '%s'.", this.estado)
+            );
+        }
+
+        this.estado = EstadoPedido.CANCELADO;
+        this.actualizadoEn = Instant.now();
+
+        this.domainEvents.add(PedidoCanceladoEvent.of(
+                this.id,
+                this.empresaId,
+                this.clienteId,
+                motivo
+        ));
     }
 
     private void validarEstadoModificable(String accion) {

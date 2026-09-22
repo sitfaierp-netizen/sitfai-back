@@ -174,5 +174,41 @@ class PedidoTest {
 
             assertThrows(PedidoInvalidoException.class, () -> pedido.cancelar("Segunda cancelacion"));
         }
+
+        @Test
+        @DisplayName("SAGA: Debe cancelar por falta de stock si el estado es RESERVANDO_STOCK")
+        void debeCancelarPorFaltaDeStockSiEstadoEsReservandoStock() {
+            Pedido pedido = Pedido.iniciar(empresaId, clienteId);
+            pedido.agregarItem(prod1, 2, Dinero.de(10.0));
+            pedido.solicitarReserva(); // Cambia a RESERVANDO_STOCK
+
+            pedido.cancelarPorFaltaDeStock("Stock insuficiente en bodega");
+
+            assertEquals(EstadoPedido.CANCELADO, pedido.getEstado());
+
+            List<DomainEvent> eventos = pedido.drainDomainEvents();
+            // Expected 2 events: PedidoCreadoEvent (from solicitarReserva) and PedidoCanceladoEvent
+            assertEquals(2, eventos.size());
+            assertTrue(eventos.get(1) instanceof com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCanceladoEvent);
+
+            com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCanceladoEvent evento = (com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCanceladoEvent) eventos.get(1);
+            assertEquals(pedido.getId(), evento.pedidoId());
+            assertEquals(empresaId, evento.empresaId());
+            assertEquals(clienteId, evento.clienteId());
+            assertEquals("Stock insuficiente en bodega", evento.motivo());
+        }
+
+        @Test
+        @DisplayName("SAGA: Debe fallar al intentar cancelar por falta de stock si no está en RESERVANDO_STOCK")
+        void debeFallarCancelarPorFaltaDeStockSiNoEstaEnReservandoStock() {
+            Pedido pedido = Pedido.iniciar(empresaId, clienteId);
+            pedido.agregarItem(prod1, 2, Dinero.de(10.0));
+
+            // Estado es CREADO, no RESERVANDO_STOCK
+            PedidoInvalidoException ex = assertThrows(PedidoInvalidoException.class, () ->
+                    pedido.cancelarPorFaltaDeStock("Stock insuficiente"));
+            
+            assertTrue(ex.getMessage().contains("no está en estado RESERVANDO_STOCK"));
+        }
     }
 }
