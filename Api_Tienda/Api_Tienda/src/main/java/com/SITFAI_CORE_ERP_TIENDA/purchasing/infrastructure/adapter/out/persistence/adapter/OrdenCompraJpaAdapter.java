@@ -1,35 +1,110 @@
 package com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.adapter;
 
 import com.SITFAI_CORE_ERP_TIENDA.core.document.domain.model.enums.DocumentStatus;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.port.output.OrdenCompraRepository;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaOrdenCompra;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.ordencompra.OrdenCompra;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.ordencompra.port.output.OrdenCompraRepository;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.ordencompra.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.ordencompra.vo.EstadoOrdenCompra;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.ordencompra.vo.OrdenCompraId;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProductoId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProveedorId;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.entity.LineaOrdenCompraJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.entity.OrdenCompraJpaEntity;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.mapper.OrdenCompraPersistenceMapper;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.repository.OrdenCompraJpaRepository;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-@Repository
-public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
+/**
+ * Adaptador de Salida JPA (Driven Adapter):
+ * Implementa el puerto {@link OrdenCompraRepository} conectando el dominio puro con Spring Data JPA.
+ * Mantiene compatibilidad con el puerto legado {@link com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.port.output.OrdenCompraRepository}.
+ * <p>
+ * Regla MT-01: Exige el {@code empresa_id} en todas las operaciones para blindar el aislamiento multitenant.
+ */
+@Repository("purchasingOrdenCompraJpaAdapter")
+@Primary
+public class OrdenCompraJpaAdapter implements OrdenCompraRepository, com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.port.output.OrdenCompraRepository {
 
     private final OrdenCompraJpaRepository repository;
 
     public OrdenCompraJpaAdapter(OrdenCompraJpaRepository repository) {
-        this.repository = repository;
+        this.repository = Objects.requireNonNull(repository, "OrdenCompraJpaRepository es obligatorio");
     }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // PUERTO DE DOMINIO ACTUAL: purchasing.domain.model.ordencompra.port.output.OrdenCompraRepository
+    // ═════════════════════════════════════════════════════════════════════════
 
     @Override
     public OrdenCompra guardar(OrdenCompra ordenCompra) {
-        OrdenCompraJpaEntity entity = toEntity(ordenCompra);
+        Objects.requireNonNull(ordenCompra, "OrdenCompra no puede ser nula");
+        OrdenCompraJpaEntity entity = OrdenCompraPersistenceMapper.toEntity(ordenCompra);
+
+        Optional<OrdenCompraJpaEntity> existing = repository.findById(entity.getId());
+        OrdenCompraJpaEntity savedEntity;
+        if (existing.isPresent()) {
+            OrdenCompraJpaEntity e = existing.get();
+            e.setEstado(entity.getEstado());
+            e.setCostoTotal(entity.getCostoTotal());
+            e.setEmitidoEn(entity.getEmitidoEn());
+            e.getLineas().clear();
+            if (entity.getLineas() != null) {
+                entity.getLineas().forEach(l -> {
+                    l.setOrdenCompra(e);
+                    e.getLineas().add(l);
+                });
+            }
+            savedEntity = repository.save(e);
+        } else {
+            savedEntity = repository.save(entity);
+        }
+
+        return OrdenCompraPersistenceMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<OrdenCompra> buscarPorId(OrdenCompraId id, EmpresaId empresaId) {
+        Objects.requireNonNull(id, "OrdenCompraId es obligatorio");
+        Objects.requireNonNull(empresaId, "EmpresaId es obligatorio (MT-01)");
+        return repository.findByIdAndEmpresaId(id.valor().toString(), empresaId.valor().toString())
+                .map(OrdenCompraPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public List<OrdenCompra> buscarPorEmpresa(EmpresaId empresaId) {
+        Objects.requireNonNull(empresaId, "EmpresaId es obligatorio (MT-01)");
+        return repository.findByEmpresaId(empresaId.valor().toString()).stream()
+                .map(OrdenCompraPersistenceMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrdenCompra> buscarPorEmpresaYEstado(EmpresaId empresaId, EstadoOrdenCompra estado) {
+        Objects.requireNonNull(empresaId, "EmpresaId es obligatorio (MT-01)");
+        Objects.requireNonNull(estado, "EstadoOrdenCompra es obligatorio");
+        return repository.findByEmpresaIdAndEstado(empresaId.valor().toString(), estado.name()).stream()
+                .map(OrdenCompraPersistenceMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // COMPATIBILIDAD CON PUERTO LEGADO
+    // ═════════════════════════════════════════════════════════════════════════
+
+    @Override
+    public com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra guardar(
+            com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra ordenCompra) {
+        if (ordenCompra == null) return null;
+
+        OrdenCompraJpaEntity entity = toLegacyEntity(ordenCompra);
 
         Optional<OrdenCompraJpaEntity> existing = repository.findById(entity.getId());
         OrdenCompraJpaEntity savedEntity;
@@ -53,17 +128,18 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
             entity.setActualizadoPor(ordenCompra.getUpdatedBy());
             savedEntity = repository.save(entity);
         }
-        
-        return toDomain(savedEntity);
+
+        return toLegacyDomain(savedEntity);
     }
 
     @Override
-    public Optional<OrdenCompra> buscarPorIdYEmpresaId(OrdenCompraId id, UUID empresaId) {
+    public Optional<com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra> buscarPorIdYEmpresaId(
+            com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId id, UUID empresaId) {
         return repository.findByIdAndEmpresaId(id.valor().toString(), empresaId.toString())
-                .map(this::toDomain);
+                .map(this::toLegacyDomain);
     }
 
-    private OrdenCompraJpaEntity toEntity(OrdenCompra dominio) {
+    private OrdenCompraJpaEntity toLegacyEntity(com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra dominio) {
         OrdenCompraJpaEntity entity = new OrdenCompraJpaEntity(
                 dominio.getId().valor().toString(),
                 dominio.getEmpresaId().toString(),
@@ -87,11 +163,11 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
         return entity;
     }
 
-    private OrdenCompra toDomain(OrdenCompraJpaEntity entity) {
-        OrdenCompra orden = OrdenCompra.crear(
-                new OrdenCompraId(UUID.fromString(entity.getId())),
+    private com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra toLegacyDomain(OrdenCompraJpaEntity entity) {
+        com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra orden = com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra.crear(
+                new com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId(UUID.fromString(entity.getId())),
                 UUID.fromString(entity.getEmpresaId()),
-                new ProveedorId(UUID.fromString(entity.getProveedorId())),
+                new com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProveedorId(UUID.fromString(entity.getProveedorId())),
                 entity.getCreadoPor() != null ? entity.getCreadoPor() : "system"
         );
 
@@ -104,25 +180,25 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
 
             entity.getLineas().forEach(l -> {
                 try {
-                    LineaOrdenCompra linea = new LineaOrdenCompra(
-                            UUID.randomUUID(), // Or extract from DB if it had a UUID
-                            new ProductoId(UUID.fromString(l.getProductoId())),
+                    com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaOrdenCompra linea = new com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaOrdenCompra(
+                            UUID.randomUUID(),
+                            new com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProductoId(UUID.fromString(l.getProductoId())),
                             l.getCantidadSolicitada().intValue(),
                             new Dinero(l.getCostoUnitarioEsperado())
                     );
                     @SuppressWarnings("unchecked")
-                    java.util.List<LineaOrdenCompra> lineas = (java.util.List<LineaOrdenCompra>) getField(orden, "lineas");
+                    List<com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaOrdenCompra> lineas =
+                            (List<com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaOrdenCompra>) getField(orden, "lineas");
                     lineas.add(linea);
                 } catch (Exception e) {
                     throw new RuntimeException("Error mapeando línea desde JPA", e);
                 }
             });
 
-            java.lang.reflect.Method recalc = OrdenCompra.class.getDeclaredMethod("recalcularTotal");
+            java.lang.reflect.Method recalc = com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra.class.getDeclaredMethod("recalcularTotal");
             recalc.setAccessible(true);
             recalc.invoke(orden);
-            
-            // Limpiar eventos generados por la hidratación (ya que creamos con .crear())
+
             orden.pullDomainEvents();
 
         } catch (Exception e) {
@@ -133,13 +209,13 @@ public class OrdenCompraJpaAdapter implements OrdenCompraRepository {
     }
 
     private void setField(Object obj, String name, Object value) throws Exception {
-        java.lang.reflect.Field f = OrdenCompra.class.getDeclaredField(name);
+        java.lang.reflect.Field f = com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra.class.getDeclaredField(name);
         f.setAccessible(true);
         f.set(obj, value);
     }
 
     private Object getField(Object obj, String name) throws Exception {
-        java.lang.reflect.Field f = OrdenCompra.class.getDeclaredField(name);
+        java.lang.reflect.Field f = com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra.class.getDeclaredField(name);
         f.setAccessible(true);
         return f.get(obj);
     }
