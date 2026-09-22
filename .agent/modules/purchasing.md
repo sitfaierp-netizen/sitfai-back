@@ -1,46 +1,46 @@
-# Módulo: purchasing — Compras y Reabastecimiento (Replenishment)
-> **Estado:** 🟢 COMPLETADO Y VALIDADO | **Fecha:** 2026-08-11 | **Revisión:** 1.2.0
+# Módulo: purchasing — Compras y Abastecimiento (Replenishment)
+> **Estado:** 🟢 DOMINIO CERTIFICADO (Java 21 / Clean Architecture) | **Fecha:** 2026-09-22 | **Revisión:** 2.0.0
 
 ---
 
 ## Bounded Context
 
-**Nombre:** `purchasing`
-**Paquete raíz:** `com.SITFAI_CORE_ERP_TIENDA.purchasing`
-**Responsabilidad:** Gestión de reabastecimiento, generación de Órdenes de Compra a proveedores y su ciclo de vida (desde borrador hasta recepción). Trabaja en estricta coordinación con `inventory` para asegurar la entrada física.
+**Nombre:** `purchasing`  
+**Paquete raíz:** `com.SITFAI_CORE_ERP_TIENDA.purchasing`  
+**Puerto Asignado:** `8087` (Mapa de Puertos SITFAI ERP)  
+**Responsabilidad:** Gestión de abastecimiento, negociación con proveedores y ciclo de vida de Órdenes de Compra (desde borrador hasta recepción física total o parcial). Actúa como documento fuente canónico (BOD-04) para la trazabilidad de stock en tránsito hacia el módulo de almacenes (`inventory`).
 
 ---
 
 ## Lenguaje Ubicuo (Ubiquitous Language)
 
-- **Orden de Compra (`OrdenCompra`):** Documento comercial que autoriza la adquisición de bienes a un proveedor.
-- **Línea de Orden (`LineaOrdenCompra`):** Detalle de cantidad y costo pactado por cada producto.
-- **Costo Exacto (`Dinero`):** Value Object matemático que garantiza redondeo a 4 decimales (`HALF_UP`) para cumplir con normativas de costeo promedio.
-- **EstadoOrden:**
-  - `BORRADOR`: Orden en preparación, permite añadir líneas.
-  - `EMITIDA`: Orden finalizada y enviada al proveedor. Es inmutable.
-  - `RECIBIDA`: Orden cuya mercadería ha llegado, dispara el evento `OrdenCompraRecibidaEvent` consumido por inventario.
-  - `CANCELADA`: Orden abortada.
+- **Orden de Compra (`OrdenCompra`):** Aggregate Root que formaliza el requerimiento comercial y contractual hacia un proveedor.
+- **Línea de Orden (`LineaOrdenCompra`):** Entidad interna protegida que detalla producto, cantidad solicitada y costo unitario esperado con cálculo de subtotal.
+- **Estado de Orden de Compra (`EstadoOrdenCompra`):**
+  - `BORRADOR`: Orden en preparación inicial; única fase donde se pueden agregar líneas.
+  - `EMITIDA`: Orden formalmente notificada al proveedor adjudicado; stock declarado en tránsito (emite `OrdenCompraEmitidaEvent`).
+  - `RECEPCION_PARCIAL`: Recepción inicial de mercancía en bodega con saldo pendiente.
+  - `COMPLETADA`: Recepción total y cierre definitivo de la orden.
+  - `CANCELADA`: Anulación de la orden antes de su recepción completa.
 
 ---
 
-## Reglas de Negocio Implementadas
+## Reglas de Negocio e Invariantes (Dominio)
 
-| ID     | Regla                                                              | Implementación                                    |
-|--------|--------------------------------------------------------------------|---------------------------------------------------|
-| PUR-01 | Precisión contable estricta en compras (Cero Floats, 4 decimales)  | Value Object `Dinero` con `setScale(4, HALF_UP)`  |
-| PUR-02 | Inmutabilidad Comercial                                            | Invariante: Solo en `BORRADOR` se agregan líneas  |
-| PUR-03 | Prevención de Emisión Vacía                                        | Invariante en `OrdenCompra.emitir()`              |
-| PUR-04 | Acoplamiento mediante Eventos hacia Inventario                     | Emisión de `OrdenCompraRecibidaEvent` al recibir  |
-| MT-01  | `empresa_id` obligatorio en todas las transacciones                | Value Object `EmpresaId` inyectado en Factory     |
+| ID | Regla | Implementación en Dominio |
+|---|---|---|
+| **MT-01** | Aislamiento multi-tenant estricto por `empresa_id`. | Value Object `EmpresaId` encapsulado en `OrdenCompra`, `LineaOrdenCompra` y en todas las firmas del puerto `OrdenCompraRepository`. |
+| **BOD-04** | Documento fuente obligatorio para movimientos de bodega. | `OrdenCompra` y su evento `OrdenCompraEmitidaEvent` actúan como documento fuente trazable de stock en tránsito. |
+| **PUR-01** | Máquina de estados estricta y unidireccional. | `OrdenCompra.emitirAlProveedor()`, `marcarRecepcionParcial()`, `marcarCompletada()`, `cancelar()`. |
+| **PUR-02** | Prevención de Emisión Vacía (Fail-fast). | Invariante inquebrantable: `emitirAlProveedor()` exige al menos una línea de detalle registrada. |
+| **PUR-03** | Inmutabilidad Comercial post-emisión. | No se pueden agregar líneas a una orden emitida, completada o cancelada. |
 
 ---
 
-## Estado de Capas
+## Diseño del Modelo (Clean Architecture - Dominio Puro)
 
-| Capa | Estado |
-|---|---|
-| **Domain** | ✅ COMPLETADO |
-| **Application** | ✅ COMPLETADO |
-| **Infrastructure** | ✅ COMPLETADO |
-| **Testing Suite** | ✅ Domain & App Tests pasando |
+- **Value Objects:** [`OrdenCompraId`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/vo/OrdenCompraId.java), [`ProveedorId`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/vo/ProveedorId.java), [`EmpresaId`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/vo/EmpresaId.java), [`ProductoId`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/vo/ProductoId.java), [`EstadoOrdenCompra`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/vo/EstadoOrdenCompra.java).
+- **Entidades Protegidas:** [`LineaOrdenCompra`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/LineaOrdenCompra.java).
+- **Aggregate Root:** [`OrdenCompra`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/OrdenCompra.java).
+- **Eventos de Dominio:** [`OrdenCompraEmitidaEvent`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/event/OrdenCompraEmitidaEvent.java).
+- **Puertos de Salida:** [`OrdenCompraRepository`](file:///C:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/purchasing/domain/model/ordencompra/port/output/OrdenCompraRepository.java).
