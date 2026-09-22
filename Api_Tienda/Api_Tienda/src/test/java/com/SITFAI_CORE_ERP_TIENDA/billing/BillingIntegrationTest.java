@@ -1,87 +1,113 @@
 package com.SITFAI_CORE_ERP_TIENDA.billing;
 
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.Factura;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.FacturaId;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.Ruc;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.port.output.FacturaRepository;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.valueobject.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.LineaPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.Factura;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.port.FacturaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.vo.EstadoFactura;
+import com.SITFAI_CORE_ERP_TIENDA.billing.infrastructure.adapter.in.messaging.PedidoConfirmadoEventHandler;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Prueba de Integración: Verifica el flujo asíncrono desde el E-Commerce hacia Facturación.
+ * <p>
+ * Simula la publicación de {@link PedidoConfirmadoEvent} y comprueba que la factura
+ * se genera en estado {@link EstadoFactura#EMITIDA}, con sus totales calculados,
+ * vinculada al documento origen y almacenada con aislamiento MT-01.
+ */
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
 public class BillingIntegrationTest {
 
+    @Container
+    @ServiceConnection
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.4.0")
+            .withDatabaseName("sitfai_tienda")
+            .withUsername("sitfai_user")
+            .withPassword("sitfai_secret_pwd");
+
+    @Autowired
+    private PedidoConfirmadoEventHandler pedidoConfirmadoEventHandler;
+
     @Autowired
     private FacturaRepository facturaRepository;
 
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+
     @Test
-    public void testPersistenciaYConcurrenciaOptimista() throws InterruptedException {
-        // 1. Arrange: Crear y persistir factura
-        UUID empresaId = UUID.randomUUID();
-        FacturaId facturaId = new FacturaId(UUID.randomUUID());
-        ClienteId clienteId = new ClienteId(UUID.randomUUID());
-        Ruc ruc = new Ruc("0912345678001");
+    @DisplayName("Debe emitir y persistir la factura correctamente al recibir PedidoConfirmadoEvent")
+    void alRecibirPedidoConfirmadoEvent_debeEmitirYPersistirFacturaEnBaseDeDatos() {
+        // 1. ARRANGE
+        UUID empresaIdRaw = UUID.randomUUID();
+        UUID clienteIdRaw = UUID.randomUUID();
+        UUID pedidoIdRaw = UUID.randomUUID();
+        UUID productoIdRaw = UUID.randomUUID();
 
-        Factura factura = Factura.crear(facturaId, empresaId, clienteId, null, ruc, "user1");
-        factura.agregarLinea("Laptop", new BigDecimal("2"), Dinero.de(new BigDecimal("1000.00")));
-        facturaRepository.save(factura);
+        EmpresaId empresaId = EmpresaId.de(empresaIdRaw);
+        ClienteId clienteId = ClienteId.de(clienteIdRaw);
+        PedidoId pedidoId = PedidoId.de(pedidoIdRaw);
+        ProductoId productoId = ProductoId.de(productoIdRaw);
 
-        // 2. Arrange Concurrencia
-        int numHilos = 3;
-        ExecutorService executor = Executors.newFixedThreadPool(numHilos);
-        CountDownLatch latch = new CountDownLatch(numHilos);
-        AtomicInteger exitos = new AtomicInteger(0);
-        AtomicInteger fallos = new AtomicInteger(0);
+        LineaPedido linea = LineaPedido.crear(
+                productoId,
+                2,
+                Dinero.de(new BigDecimal("50000.00"), "COP")
+        );
 
-        // 3. Act: Simular ataques concurrentes
-        for (int i = 0; i < numHilos; i++) {
-            executor.submit(() -> {
-                try {
-                    Factura facturaCargada = facturaRepository
-                            .findByIdAndEmpresaId(facturaId, empresaId)
-                            .orElseThrow();
+        PedidoConfirmadoEvent event = PedidoConfirmadoEvent.of(
+                pedidoId,
+                empresaId,
+                clienteId,
+                Dinero.de(new BigDecimal("100000.00"), "COP"),
+                List.of(linea)
+        );
 
-                    facturaCargada.agregarLinea("Mouse", new BigDecimal("1"),
-                            Dinero.de(new BigDecimal("25.00")));
-                    facturaCargada.emitir();
+        // 2. ACT: Simular la recepción del evento de confirmación de pedido
+        pedidoConfirmadoEventHandler.onPedidoConfirmado(event);
 
-                    facturaRepository.save(facturaCargada);
-                    exitos.incrementAndGet();
-                } catch (OptimisticLockingFailureException e) {
-                    fallos.incrementAndGet();
-                } catch (Exception e) {
-                    System.out.println("Otro error: " + e.getMessage());
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
+        // 3. ASSERT: Verificar persistencia con aislamiento MT-01
+        com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.vo.EmpresaId tenantId =
+                com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.vo.EmpresaId.de(empresaIdRaw);
 
-        latch.await();
+        List<Factura> facturas = facturaRepository.buscarPorEmpresa(tenantId);
+        assertThat(facturas).isNotEmpty();
 
-        // 4. Assert: Solo 1 éxito, los demás fallan por bloqueo optimista
-        assertThat(exitos.get()).isEqualTo(1);
-        assertThat(fallos.get()).isEqualTo(numHilos - 1);
+        Factura factura = facturas.stream()
+                .filter(f -> f.getDocumentoFuenteId().numero().equals(pedidoIdRaw.toString()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No se encontró la factura para el pedido " + pedidoIdRaw));
 
-        // Verificar estado final
-        Factura facturaFinal = facturaRepository.findByIdAndEmpresaId(facturaId, empresaId).orElseThrow();
-        assertThat(facturaFinal.getEstado().name()).isEqualTo("EMITIDO");
-        assertThat(facturaFinal.getVersion()).isGreaterThan(0L);
+        assertThat(factura.getEstado()).isEqualTo(EstadoFactura.EMITIDA);
+        assertThat(factura.getEmpresaId().valor()).isEqualTo(empresaIdRaw);
+        assertThat(factura.getClienteId().valor()).isEqualTo(clienteIdRaw);
+        assertThat(factura.getDocumentoFuenteId().tipo()).contains("ECOMMERCE");
+        assertThat(factura.getLineas()).hasSize(1);
+
+        // Validar cálculo de totales matemáticos (Subtotal 100,000 + IVA 19% = 119,000)
+        assertThat(factura.getSubtotal().monto()).isEqualByComparingTo(new BigDecimal("100000.0000"));
+        assertThat(factura.getTotalImpuestos().monto()).isEqualByComparingTo(new BigDecimal("19000.0000"));
+        assertThat(factura.getTotal().monto()).isEqualByComparingTo(new BigDecimal("119000.0000"));
     }
 }

@@ -24,7 +24,6 @@ import java.util.UUID;
 public class ReservaRechazadaEventHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ReservaRechazadaEventHandler.class);
-    private static final UUID EMPRESA_SISTEMA_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
 
@@ -39,26 +38,23 @@ public class ReservaRechazadaEventHandler {
     @Async
     @EventListener
     public void onReservaRechazada(ReservaRechazadaEvent evento) {
-        log.warn("[SAGA-COMPENSACION] Reserva rechazada para pedidoId={} | productoId={} | motivo='{}'",
-                evento.pedidoId(), evento.productoId().valor(), evento.motivo());
+        log.warn("[SAGA-COMPENSACION] Reserva rechazada para tenant={} | pedidoId={} | productoId={} | motivo='{}'",
+                evento.empresaId().valor(), evento.pedidoId(), evento.productoId().valor(), evento.motivo());
 
         try {
-            // El pedidoId fue mapeado como DocumentoFuenteId durante la creación del evento.
-            // empresaId: Para la compensación, el sistema usa el ID del pedido y asume el tenant del evento.
-            // En una implementación robusta, el ReservaRechazadaEvent debería incluir el empresaId.
-            // Aquí usamos un empresaId de sistema para el lookup, que en una implementación real
-            // debería estar incluido en el payload del evento de integración.
+            // MT-01: Se extrae el empresaId del payload del evento asíncrono para garantizar el aislamiento multi-inquilino
             CancelarPedidoCommand command = new CancelarPedidoCommand(
-                    EMPRESA_SISTEMA_UUID,
+                    evento.empresaId().valor(),
                     evento.pedidoId(),
                     "SAGA-COMPENSACION: " + evento.motivo()
             );
 
             cancelarPedidoUseCase.ejecutar(command);
-            log.info("[SAGA-COMPENSACION] Pedido {} cancelado exitosamente por compensación.", evento.pedidoId());
+            log.info("[SAGA-COMPENSACION] Pedido {} del tenant {} cancelado exitosamente por compensación.",
+                    evento.pedidoId(), evento.empresaId().valor());
         } catch (Exception e) {
-            log.error("[SAGA-COMPENSACION] Error al cancelar pedido {} por compensación SAGA: {}",
-                    evento.pedidoId(), e.getMessage(), e);
+            log.error("[SAGA-COMPENSACION] Error al cancelar pedido {} del tenant {} por compensación SAGA: {}",
+                    evento.pedidoId(), evento.empresaId().valor(), e.getMessage(), e);
         }
     }
 }

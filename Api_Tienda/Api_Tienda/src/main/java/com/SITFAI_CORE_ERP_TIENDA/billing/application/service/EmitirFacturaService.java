@@ -2,83 +2,137 @@ package com.SITFAI_CORE_ERP_TIENDA.billing.application.service;
 
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.EmitirFacturaCommand;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.FacturaResponse;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.mapper.FacturaApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.input.EmitirFacturaUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.Factura;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.FacturaId;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.PedidoId;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.vo.Ruc;
-import com.SITFAI_CORE_ERP_TIENDA.billing.domain.port.output.FacturaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.Factura;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.LineaFactura;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.port.FacturaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.vo.DocumentoFuenteId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.vo.FacturaId;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.core.audit.domain.port.ActorProviderPort;
-import com.SITFAI_CORE_ERP_TIENDA.billing.application.port.output.FacturaEventPublisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+/**
+ * Servicio de Aplicación: Orquestador del caso de uso de Emisión de Facturas.
+ * <p>
+ * Regla 1: Orquesta el dominio, llama al factory method del agregado Factura,
+ * persiste mediante el puerto FacturaRepository garantizando el aislamiento MT-01,
+ * y publica los eventos de dominio mediante ApplicationEventPublisher.
+ */
 @Service
 public class EmitirFacturaService implements EmitirFacturaUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(EmitirFacturaService.class);
+
     private final FacturaRepository facturaRepository;
-    private final ActorProviderPort actorProvider;
-    private final FacturaEventPublisher eventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
 
     public EmitirFacturaService(FacturaRepository facturaRepository,
-                                ActorProviderPort actorProvider,
-                                FacturaEventPublisher eventPublisher) {
-        this.facturaRepository = facturaRepository;
-        this.actorProvider = actorProvider;
-        this.eventPublisher = eventPublisher;
+                                ApplicationEventPublisher eventPublisher) {
+        this.facturaRepository = Objects.requireNonNull(facturaRepository, "FacturaRepository es obligatorio");
+        this.eventPublisher = Objects.requireNonNull(eventPublisher, "ApplicationEventPublisher es obligatorio");
     }
 
     @Override
     @Transactional
     public FacturaResponse emitirFactura(EmitirFacturaCommand command) {
-        // 1. Extraer actor del contexto de seguridad (ActorProviderPort — AUD-01)
-        // EmpresaId viene inyectado en el controller vía @TenantId (MT-02 Zero Trust)
-        // El actorId se usa como auditoría del creador
-        String usuario = actorProvider.getCurrentActorId();
+        Objects.requireNonNull(command, "EmitirFacturaCommand no puede ser nulo");
 
-        // empresaId proviene del command (MT-01):
-        // En flujo REST → inyectado por @TenantId en el controller
-        // En flujo de evento → extraído del PedidoConfirmadoEvent
-        UUID empresaId = command.empresaId();
-        if (empresaId == null) {
+        // 1. Validar aislamiento Multitenant (MT-01)
+        if (command.empresaId() == null) {
             throw new IllegalArgumentException("EmpresaId es obligatorio (MT-01)");
         }
 
-        FacturaId facturaId = new FacturaId(UUID.randomUUID());
-        ClienteId clienteId = new ClienteId(command.clienteId());
-        PedidoId pedidoId = command.pedidoId() != null ? new PedidoId(command.pedidoId()) : null;
-        Ruc rucCliente = new Ruc(command.rucCliente());
+        // 2. Preparar Value Objects de Dominio
+        FacturaId facturaId = FacturaId.generar();
+        EmpresaId empresaId = EmpresaId.de(command.empresaId());
+        ClienteId clienteId = command.clienteId() != null
+                ? ClienteId.de(command.clienteId())
+                : ClienteId.generar();
 
-        // 2. Instanciar agregado Factura
-        Factura factura = Factura.crear(facturaId, empresaId, clienteId, pedidoId, rucCliente, usuario);
-
-        // 3. Añadir líneas e impuestos
-        for (EmitirFacturaCommand.LineaFacturaCommand lineaDto : command.lineas()) {
-            Dinero precioUnitario = Dinero.de(lineaDto.precioUnitario(), lineaDto.moneda());
-            factura.agregarLinea(lineaDto.concepto(), lineaDto.cantidad(), precioUnitario);
-            
-            if (lineaDto.impuestos() != null) {
-                for (EmitirFacturaCommand.ImpuestoCommand impuestoDto : lineaDto.impuestos()) {
-                    factura.aplicarImpuesto(impuestoDto.tipo(), impuestoDto.tarifa());
-                }
-            }
+        DocumentoFuenteId documentoFuenteId;
+        if (command.documentoFuenteId() != null && command.tipoOrigen() != null) {
+            documentoFuenteId = DocumentoFuenteId.de(command.tipoOrigen(), command.documentoFuenteId().toString());
+        } else if (command.pedidoId() != null) {
+            documentoFuenteId = DocumentoFuenteId.ecommerce(command.pedidoId().toString());
+        } else if (command.documentoFuenteId() != null) {
+            documentoFuenteId = DocumentoFuenteId.de("VENTA", command.documentoFuenteId().toString());
+        } else {
+            documentoFuenteId = DocumentoFuenteId.de("DIRECTA", UUID.randomUUID().toString());
         }
 
-        // 4. Emitir factura (cambia estado a EMITIDO y genera FacturaEmitidaEvent)
-        factura.emitir();
+        // 3. Mapear líneas de comando a entidades de Dominio protegidas
+        List<LineaFactura> lineasDominio = new ArrayList<>();
+        for (EmitirFacturaCommand.LineaFacturaCommand lineaCmd : command.lineas()) {
+            Dinero precioUnitario = Dinero.de(
+                    lineaCmd.precioUnitario(),
+                    lineaCmd.moneda() != null ? lineaCmd.moneda() : "COP"
+            );
+            LineaFactura linea = LineaFactura.crear(
+                    lineaCmd.concepto(),
+                    lineaCmd.cantidad(),
+                    precioUnitario
+            );
+            if (lineaCmd.impuestos() != null) {
+                for (EmitirFacturaCommand.ImpuestoCommand imp : lineaCmd.impuestos()) {
+                    linea.agregarImpuesto(imp.tipo(), imp.tarifa());
+                }
+            }
+            lineasDominio.add(linea);
+        }
 
-        // 5. Persistir agregado
-        facturaRepository.save(factura);
+        // 4. Instanciar Agregado Factura mediante Factory Method (calcula totales y valida fail-fast)
+        Factura factura = Factura.emitir(
+                facturaId,
+                empresaId,
+                documentoFuenteId,
+                clienteId,
+                lineasDominio
+        );
 
-        // 6. Publicar eventos de dominio
-        factura.pullDomainEvents().forEach(eventPublisher::publicar);
+        // 5. Persistir agregado a través del Output Port (MT-01)
+        Factura facturaGuardada = facturaRepository.guardar(factura);
 
-        // 7. Retornar DTO
-        return FacturaApplicationMapper.toResponse(factura);
+        // 6. Publicar eventos de dominio acumulados mediante ApplicationEventPublisher
+        factura.drainDomainEvents().forEach(evento -> {
+            log.debug("Publicando evento de dominio de facturación: {}", evento);
+            eventPublisher.publishEvent(evento);
+        });
+
+        log.info("Factura {} emitida y persistida exitosamente para la empresa {}",
+                facturaGuardada.getId().valor(), empresaId.valor());
+
+        // 7. Mapear y retornar FacturaResponse
+        return new FacturaResponse(
+                facturaGuardada.getId().valor().toString(),
+                facturaGuardada.getEmpresaId().valor().toString(),
+                facturaGuardada.getClienteId().valor().toString(),
+                command.pedidoId() != null ? command.pedidoId().toString() : null,
+                command.rucCliente(),
+                facturaGuardada.getSubtotal().monto(),
+                facturaGuardada.getTotalImpuestos().monto(),
+                facturaGuardada.getTotal().monto(),
+                facturaGuardada.getEstado().name(),
+                facturaGuardada.getLineas().stream()
+                        .map(l -> new FacturaResponse.LineaFacturaResponse(
+                                l.getDescripcion(),
+                                l.getCantidad(),
+                                l.getPrecioUnitario().monto(),
+                                l.calcularSubtotal().monto(),
+                                l.calcularTotalImpuestos().monto()
+                        ))
+                        .collect(Collectors.toList())
+        );
     }
 }

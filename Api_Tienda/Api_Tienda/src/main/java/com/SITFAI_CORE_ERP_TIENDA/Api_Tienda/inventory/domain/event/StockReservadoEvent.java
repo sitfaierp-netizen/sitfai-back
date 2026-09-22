@@ -19,6 +19,16 @@ public record StockReservadoEvent(
         DocumentoFuenteId documentoFuente
 ) implements DomainEvent {
 
+    public StockReservadoEvent {
+        java.util.Objects.requireNonNull(eventoId, "eventoId es obligatorio");
+        java.util.Objects.requireNonNull(ocurridoEn, "ocurridoEn es obligatorio");
+        java.util.Objects.requireNonNull(bodegaId, "bodegaId es obligatorio");
+        java.util.Objects.requireNonNull(productoId, "productoId es obligatorio");
+        java.util.Objects.requireNonNull(empresaId, "empresaId es obligatorio (MT-01)");
+        java.util.Objects.requireNonNull(cantidadReservada, "cantidadReservada es obligatoria");
+        java.util.Objects.requireNonNull(documentoFuente, "documentoFuente es obligatorio");
+    }
+
     public static StockReservadoEvent of(BodegaId bodegaId, ProductoId productoId, EmpresaId empresaId, Cantidad cantidadReservada, DocumentoFuenteId documentoFuente) {
         return new StockReservadoEvent(
                 UUID.randomUUID(),

@@ -44,18 +44,20 @@ Para asegurar la correcta alineación con la normatividad tributaria colombiana 
 
 Este módulo fue diseñado con CERO dependencias a Spring, JPA, y otros frameworks técnicos, basándose exclusivamente en records y clases de Java 21 LTS puro, garantizando que toda la matemática impositiva pueda ser testeada unitariamente con precisión.
 
-- **Value Objects:** `Cufe`, `Nit`, `ResolucionDian`, `Dinero`, `Impuesto`, `NotaCreditoId`, `MotivoDevolucion`.
-- **Entities:** `LineaFactura`.
+- **Value Objects:** `Cufe`, `Nit`, `ResolucionDian`, `Dinero`, `Impuesto`, `NotaCreditoId`, `MotivoDevolucion`, `FacturaId`, `ClienteId`, `DocumentoFuenteId` (POS / E-commerce), `EstadoFactura` (EMITIDA, ANULADA), `EmpresaId`.
+- **Entities:** `LineaFactura` (protegida, cálculos de subtotal e impuestos fail-fast).
 - **Aggregate Roots:** 
   - `FacturaElectronica`.
   - `NotaCreditoElectronica` (Logística Inversa).
-- **Events:** `FacturaFirmadaEvent`, `NotaCreditoFirmadaEvent`.
+  - `Factura` (Facturación unificada multi-origen: POS / E-commerce con invariantes MT-01, cálculo automático de totales y AUD-04 para anulación).
+- **Events:** `FacturaFirmadaEvent`, `NotaCreditoFirmadaEvent`, `FacturaEmitidaEvent`, `FacturaAnuladaEvent`.
+- **Ports (Output):** `FacturaRepository` (interfaz pura de Java con aislamiento `EmpresaId` en todas sus firmas).
 
 ---
 
 ## Orquestación y Aplicación
 
-- **Emisión de Factura:** `EmitirFacturaService` orquesta la inyección de `EmpresaId`, la obtención de la resolución DIAN y los comandos.
+- **Emisión de Factura:** `EmitirFacturaService` orquesta el caso de uso `EmitirFacturaUseCase`. Ejecuta el factory method del Agregado `Factura`, calcula subtotales e impuestos fail-fast, persiste a través de `FacturaRepository` exigiendo `EmpresaId` (MT-01) y publica `FacturaEmitidaEvent` mediante `ApplicationEventPublisher`.
 - **Emisión de Nota de Crédito (Reverso):** `EmitirNotaCreditoService` protege contra notas huérfanas validando la pre-existencia y firma (CUFE) de la `FacturaElectronica` original mediante `FacturaRepository`, cumpliendo estrictamente con las reglas DIAN.
 
 ---
@@ -64,11 +66,13 @@ Este módulo fue diseñado con CERO dependencias a Spring, JPA, y otros framewor
 
 - **Controllers REST:** `FacturaController` protegido con `@PreAuthorize` y extracción obligatoria de `empresa_id` desde el JWT (Zero Trust).
 - **Manejo de Errores:** Implementado `BillingExceptionHandler` bajo el estándar RFC 7807 (Problem Details).
-- **Persistencia JPA:** `FacturaJpaEntity` y `LineaFacturaJpaEntity` completamente desvinculadas del dominio. Se utiliza `FacturaPersistenceMapper` como traductor.
-- **Base de Datos (Flyway V18):**
-  - Tipado matemático estricto: `DECIMAL(19, 4)`.
-  - UUIDs forzados a `VARCHAR(36)` para consistencia en cruces.
-  - Índices compuestos con `empresa_id` por diseño MT-01.
+- **Persistencia JPA:** `FacturaJpaEntity` y `LineaFacturaJpaEntity` heredan de `AuditableJpaEntity` (AUD-01) garantizando trazabilidad de fechas (`creado_en`, `actualizado_en`) y actores (`creado_por`, `actualizado_por`).
+- **Adaptadores:** `FacturaJpaAdapter` implementa el puerto `FacturaRepository` con filtrado mandatorio por `empresa_id` (MT-01). Mapeo limpio con `FacturaPersistenceMapper`.
+- **Base de Datos (Flyway V40):**
+  - Script `V40__init_billing_schema.sql` crea y ajusta `billing_factura` y `billing_linea_factura`.
+  - Precisión matemática estricta: `DECIMAL(19, 4)`.
+  - Discriminador multitenant: `empresa_id BINARY(16)`.
+  - Trazabilidad documental: `tipo_origen`, `documento_fuente_id` y auditoría de anulación (`motivo_anulacion`, `anulado_en`).
 
 ---
 
@@ -76,7 +80,11 @@ Este módulo fue diseñado con CERO dependencias a Spring, JPA, y otros framewor
 
 El módulo se integra asíncronamente con otros Bounded Contexts para automatizar la facturación sin acoplamiento duro (Regla 1 y 5):
 
-1. **Consumo de `VentaRegistradaEvent` (POS / E-commerce):**
+1. **Consumo de `PedidoConfirmadoEvent` (E-commerce / Api_Tienda):**
+   - **Handler:** `PedidoConfirmadoEventHandler` (`billing/infrastructure/adapter/in/messaging`).
+   - **Aislamiento Multitenant (MT-01):** Extrae el `empresa_id` directamente del payload del evento (cero dependencia de contextos HTTP).
+   - **Mapeo:** Traduce las líneas de pedido a `LineaFacturaCommand` inyectando IVA 19% y ejecuta `EmitirFacturaUseCase`.
+2. **Consumo de `VentaRegistradaEvent` (POS):**
    - **Listener:** `VentaRealizadaBillingListener` (@Async @EventListener).
-   - **Mapeo y Transformación:** Traduce las líneas de venta a comandos de facturación, inyectando impuestos base (ej. IVA 19%).
-   - **Fallback Legal (DIAN):** Si el evento original no declara un cliente explícito, el listener asigna automáticamente el NIT genérico `222222222222` ("Consumidor Final") para garantizar que la emisión nunca falle por falta de receptor, aislando la regla tributaria del POS.
+   - **Mapeo y Transformación:** Traduce las líneas de venta a comandos de facturación, inyectando impuestos base.
+   - **Fallback Legal (DIAN):** Asigna consumidor final cuando no se especifica cliente.

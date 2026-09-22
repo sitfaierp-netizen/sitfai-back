@@ -1,6 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCanceladoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoInvalidoException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.EstadoPedido;
@@ -151,6 +152,38 @@ class PedidoTest {
                     pedido.agregarItem(prod2, 1, Dinero.de(5.0)));
             assertThrows(PedidoInvalidoException.class, pedido::confirmar);
         }
+
+        @Test
+        @DisplayName("SAGA Happy Path: Debe confirmar reserva si estado es RESERVANDO_STOCK")
+        void debeConfirmarReservaCuandoEstadoEsReservandoStock() {
+            Pedido pedido = Pedido.iniciar(empresaId, clienteId);
+            pedido.agregarItem(prod1, 2, Dinero.de(30.0));
+            pedido.solicitarReserva();
+            pedido.drainDomainEvents();
+
+            pedido.confirmarReserva();
+
+            assertEquals(EstadoPedido.CONFIRMADO, pedido.getEstado());
+
+            List<DomainEvent> eventos = pedido.drainDomainEvents();
+            assertThat(eventos).hasSize(1);
+            assertThat(eventos.get(0)).isInstanceOf(PedidoConfirmadoEvent.class);
+
+            PedidoConfirmadoEvent evento = (PedidoConfirmadoEvent) eventos.get(0);
+            assertEquals(pedido.getId(), evento.pedidoId());
+            assertEquals(empresaId, evento.empresaId());
+            assertEquals(new BigDecimal("60.00"), evento.total().monto());
+        }
+
+        @Test
+        @DisplayName("SAGA Happy Path: Debe fallar confirmarReserva si estado no es RESERVANDO_STOCK")
+        void debeFallarConfirmarReservaSiNoEstaEnReservandoStock() {
+            Pedido pedido = Pedido.iniciar(empresaId, clienteId);
+            pedido.agregarItem(prod1, 1, Dinero.de(10.0));
+
+            // Estado CREADO, no RESERVANDO_STOCK
+            assertThrows(PedidoInvalidoException.class, pedido::confirmarReserva);
+        }
     }
 
     @Nested
@@ -209,6 +242,28 @@ class PedidoTest {
                     pedido.cancelarPorFaltaDeStock("Stock insuficiente"));
             
             assertTrue(ex.getMessage().contains("no está en estado RESERVANDO_STOCK"));
+        }
+
+        @Test
+        @DisplayName("MT-01: Invariante de Aislamiento Tenant en Cancelación SAGA")
+        void debePreservarAislamientoTenantEnCancelacion() {
+            Pedido pedido = Pedido.iniciar(empresaId, clienteId);
+            pedido.agregarItem(prod1, 1, Dinero.de(50.0));
+            pedido.solicitarReserva();
+
+            // Cancelación por compensación SAGA
+            pedido.cancelarPorFaltaDeStock("Rechazo BOD-05 multitenant");
+
+            // Validar que el EmpresaId permanece inalterado e idéntico al original
+            assertEquals(empresaId, pedido.getEmpresaId());
+
+            List<DomainEvent> eventos = pedido.drainDomainEvents();
+            PedidoCanceladoEvent canceladoEvent = (PedidoCanceladoEvent) eventos.stream()
+                    .filter(e -> e instanceof PedidoCanceladoEvent)
+                    .findFirst()
+                    .orElseThrow();
+
+            assertEquals(empresaId, canceladoEvent.empresaId(), "El evento de integración debe portar el EmpresaId exacto (MT-01)");
         }
     }
 }

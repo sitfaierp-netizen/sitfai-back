@@ -238,6 +238,39 @@ public class Pedido {
     }
 
     /**
+     * SAGA Happy Path: Confirma el pedido tras la confirmación exitosa de la reserva de stock en Inventario.
+     * <p>
+     * Valida fail-fast que el pedido se encuentre en estado {@link EstadoPedido#RESERVANDO_STOCK}.
+     * Transiciona el estado a {@link EstadoPedido#CONFIRMADO} y registra el evento {@link PedidoConfirmadoEvent}.
+     *
+     * @throws PedidoInvalidoException si el pedido no está en estado RESERVANDO_STOCK o si la lista de líneas está vacía.
+     */
+    public void confirmarReserva() {
+        if (this.estado != EstadoPedido.RESERVANDO_STOCK) {
+            throw new PedidoInvalidoException(
+                    String.format("No se puede confirmar la reserva: el pedido no está en estado RESERVANDO_STOCK. Estado actual: '%s'.", this.estado)
+            );
+        }
+
+        if (this.lineas.isEmpty()) {
+            throw new PedidoInvalidoException("Un pedido no puede ser confirmado si su lista de líneas está vacía.");
+        }
+
+        this.estado = EstadoPedido.CONFIRMADO;
+        this.actualizadoEn = Instant.now();
+
+        // Registrar Domain Event
+        Dinero total = calcularTotal();
+        this.domainEvents.add(PedidoConfirmadoEvent.of(
+                this.id,
+                this.empresaId,
+                this.clienteId,
+                total,
+                this.lineas
+        ));
+    }
+
+    /**
      * Cancela el pedido.
      *
      * @throws PedidoInvalidoException si el pedido ya está cancelado o confirmado.

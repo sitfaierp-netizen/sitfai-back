@@ -54,8 +54,9 @@ public class ReservarStockService implements ReservarStockUseCase {
             eventPublisher.publicarTodos(bodega.drainDomainEvents());
         } catch (StockInsuficienteException e) {
             // Unhappy Path: Violación de la regla BOD-05
-            // Publicamos el evento de compensación SAGA
+            // Publicamos el evento de compensación SAGA enriquecido con empresaId (MT-01)
             ReservaRechazadaEvent evento = ReservaRechazadaEvent.of(
+                    empresaId,
                     java.util.UUID.fromString(command.referenciaOrigen()), // referenciaOrigen lleva el PedidoId
                     command.toProductoId(),
                     "Rechazado por regla BOD-05: " + e.getMessage()
