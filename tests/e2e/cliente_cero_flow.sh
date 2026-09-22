@@ -171,7 +171,7 @@ DEVOLUCION_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos/$TURNO_ID/devo
   -H "X-Empresa-Id: $EMPRESA_ID" \
   -H "Content-Type: application/json" \
   -d '{
-        "ventaOrigenId": "'"$VENTA_ID"'",
+        "ticketOriginalId": "'"$VENTA_ID"'",
         "lineas": [
           {
             "productoId": "11111111-1111-1111-1111-111111111111",

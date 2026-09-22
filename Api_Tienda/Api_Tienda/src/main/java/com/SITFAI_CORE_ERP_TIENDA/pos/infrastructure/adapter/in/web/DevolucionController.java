@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pos/turnos")
+@RequestMapping("/pos/turnos")
 public class DevolucionController {
 
     private final ProcesarDevolucionUseCase procesarDevolucionUseCase;

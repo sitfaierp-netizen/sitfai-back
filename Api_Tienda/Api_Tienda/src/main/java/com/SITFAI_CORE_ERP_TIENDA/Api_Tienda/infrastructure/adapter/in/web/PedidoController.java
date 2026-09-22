@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController("apiTiendaPedidoController")
-@RequestMapping("/api/v1/api-tienda/pedidos")
+@RequestMapping("/api-tienda/pedidos")
 public class PedidoController {
 
     private final CrearPedidoUseCase crearPedidoUseCase;
