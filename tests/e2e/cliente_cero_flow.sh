@@ -201,4 +201,50 @@ echo "Respuesta Stock Final: $STOCK_FINAL_RESP"
 
 echo ""
 echo "============================================================"
-echo "Flujo Cliente Cero (con Bumerán) Finalizado Exitosamente."
+echo "10. PRUEBA DE E-COMMERCE Y RESERVA SAGA"
+echo "============================================================"
+echo "Iniciando creación de pedido en E-commerce..."
+PRODUCTO_ID="11111111-1111-1111-1111-111111111111"
+
+# Nota: Si el producto no tiene stock, primero hacemos un ingreso rápido para evitar fallo BOD-05
+echo "Asegurando stock inicial para el producto $PRODUCTO_ID en la Bodega $BODEGA_ID..."
+curl -s -X POST "$GATEWAY_URL/api/v1/inventory/bodegas/$BODEGA_ID/ingresos" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Empresa-Id: $EMPRESA_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "productoId": "'"$PRODUCTO_ID"'",
+        "cantidad": 100.00,
+        "loteId": "LOTE-SAGA-01",
+        "docFuenteTipo": "COMPRA_INICIAL",
+        "docFuenteNumero": "DOC-001"
+      }' > /dev/null
+
+PEDIDO_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/api-tienda/pedidos" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Empresa-Id: $EMPRESA_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "clienteId": "44444444-4444-4444-4444-444444444444",
+        "lineas": [
+          {
+            "productoId": "'"$PRODUCTO_ID"'",
+            "cantidad": 10,
+            "precioUnitario": 150.00
+          }
+        ]
+      }')
+echo "Respuesta Pedido E-Commerce: $PEDIDO_RESP"
+
+echo "Esperando 3 segundos para propagación asíncrona del PedidoCreadoEvent..."
+sleep 3
+
+echo "Verificando deducción de stock disponible y aumento de stock reservado (CQRS)..."
+STOCK_SAGA_RESP=$(curl -s -X GET "$GATEWAY_URL/api/v1/inventory/bodegas/$BODEGA_ID/stock" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Empresa-Id: $EMPRESA_ID")
+echo "Respuesta Stock Final (SAGA): $STOCK_SAGA_RESP"
+
+echo ""
+echo "============================================================"
+echo "Flujo Cliente Cero (con Bumerán y SAGA E-Commerce) Finalizado Exitosamente."

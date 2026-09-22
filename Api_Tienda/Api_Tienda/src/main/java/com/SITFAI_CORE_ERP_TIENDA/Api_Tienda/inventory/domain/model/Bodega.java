@@ -3,6 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.DomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.MovimientoRegistradoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockActualizadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockReservadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.PuntoReordenAlcanzadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.StockInsuficienteException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.BodegaId;
@@ -484,6 +485,59 @@ public final class Bodega {
         }
     }
 
+    /**
+     * Reserva stock en la Bodega aplicando la lógica FEFO.
+     * Mueve el stock de "disponible" a "reservado" sin crear un Movimiento de Salida todavía.
+     */
+    public void reservarStock(
+            ProductoId productoId,
+            Cantidad cantidad,
+            DocumentoFuenteId documentoFuente) {
+
+        if (!this.activa) {
+            throw new IllegalStateException(String.format("La Bodega '%s' está inactiva y no puede recibir reservas.", this.id));
+        }
+
+        Objects.requireNonNull(productoId, "reservarStock: productoId es obligatorio.");
+        Objects.requireNonNull(cantidad, "reservarStock: cantidad es obligatoria.");
+        Objects.requireNonNull(documentoFuente, "reservarStock: documentoFuente es obligatorio.");
+
+        BigDecimal stockTotal = consultarStock(productoId);
+
+        if (stockTotal.compareTo(cantidad.valor()) < 0) {
+            throw new StockInsuficienteException(this.id, productoId, stockTotal, cantidad.valor());
+        }
+
+        // Lógica FEFO: Ordenar por fecha de caducidad ascendente (nulos al final)
+        List<StockLote> lotesProducto = this.lotes.stream()
+                .filter(l -> l.getProductoId().equals(productoId) && l.getCantidad().compareTo(BigDecimal.ZERO) > 0)
+                .sorted((l1, l2) -> {
+                    if (l1.getFechaCaducidad() == null && l2.getFechaCaducidad() == null) return 0;
+                    if (l1.getFechaCaducidad() == null) return 1;
+                    if (l2.getFechaCaducidad() == null) return -1;
+                    return l1.getFechaCaducidad().compareTo(l2.getFechaCaducidad());
+                })
+                .toList();
+
+        BigDecimal cantidadRestante = cantidad.valor();
+
+        for (StockLote lote : lotesProducto) {
+            if (cantidadRestante.compareTo(BigDecimal.ZERO) <= 0) break;
+
+            BigDecimal disponibleEnLote = lote.getCantidad();
+            BigDecimal aReservar = disponibleEnLote.compareTo(cantidadRestante) >= 0 ? cantidadRestante : disponibleEnLote;
+            
+            lote.reservar(aReservar);
+            cantidadRestante = cantidadRestante.subtract(aReservar);
+        }
+
+        this.actualizadoEn = Instant.now();
+
+        this.domainEvents.add(StockReservadoEvent.of(
+                this.id, productoId, this.empresaId, cantidad, documentoFuente
+        ));
+    }
+
     // ═════════════════════════════════════════════════════════════════════════
     // GESTIÓN DE AJUSTE DE INVENTARIO
     // ═════════════════════════════════════════════════════════════════════════
@@ -600,6 +654,21 @@ public final class Bodega {
         return this.lotes.stream()
                 .filter(l -> l.getProductoId().equals(productoId))
                 .map(StockLote::getCantidad)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Retorna el stock reservado actual de un producto en esta Bodega.
+     * Un producto sin movimientos retorna {@code BigDecimal.ZERO}.
+     *
+     * @param productoId Producto a consultar.
+     * @return Stock reservado actual.
+     */
+    public BigDecimal consultarStockReservado(ProductoId productoId) {
+        Objects.requireNonNull(productoId, "consultarStockReservado: productoId es obligatorio.");
+        return this.lotes.stream()
+                .filter(l -> l.getProductoId().equals(productoId))
+                .map(StockLote::getCantidadReservada)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

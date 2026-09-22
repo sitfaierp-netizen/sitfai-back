@@ -17,7 +17,7 @@ import java.util.UUID;
  * Reglas validadas: REGLA-3 (Domain Events), AUD-03 (Event Store), MCP-01.
  */
 public sealed interface DomainEvent
-        permits MovimientoRegistradoEvent, StockActualizadoEvent, PuntoReordenAlcanzadoEvent, RecepcionConfirmadaEvent, AjusteAplicadoEvent {
+        permits MovimientoRegistradoEvent, StockActualizadoEvent, StockReservadoEvent, PuntoReordenAlcanzadoEvent, RecepcionConfirmadaEvent, AjusteAplicadoEvent {
 
     /**
      * Identificador único del evento — permite idempotencia en consumidores.
