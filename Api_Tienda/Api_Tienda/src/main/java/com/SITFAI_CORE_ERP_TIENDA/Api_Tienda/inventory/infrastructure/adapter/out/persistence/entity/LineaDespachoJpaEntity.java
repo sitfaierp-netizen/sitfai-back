@@ -20,7 +20,7 @@ import java.util.UUID;
  * Regla MT-01: Contiene partición estricta por {@code empresa_id}.
  * Regla MONEY-01: Precisión contable DECIMAL(19,4).
  */
-@Entity
+@Entity(name = "InventoryLineaDespachoJpaEntity")
 @Table(name = "inventory_linea_despacho")
 public class LineaDespachoJpaEntity extends AuditableJpaEntity {
 

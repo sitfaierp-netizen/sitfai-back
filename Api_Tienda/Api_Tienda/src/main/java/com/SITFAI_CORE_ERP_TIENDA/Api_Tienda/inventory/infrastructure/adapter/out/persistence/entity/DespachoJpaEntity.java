@@ -23,7 +23,7 @@ import java.util.UUID;
  * Regla AUD-01: Hereda de {@link AuditableJpaEntity} para trazabilidad obligatoria.
  * Regla MT-01: Partición estricta mediante {@code empresa_id}.
  */
-@Entity
+@Entity(name = "InventoryDespachoJpaEntity")
 @Table(name = "inventory_despacho")
 public class DespachoJpaEntity extends AuditableJpaEntity {
 
