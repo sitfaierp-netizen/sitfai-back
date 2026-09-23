@@ -1,13 +1,21 @@
 package com.SITFAI_CORE_ERP_TIENDA.pos.infrastructure.adapter.out.persistence.entity;
 
+import com.SITFAI_CORE_ERP_TIENDA.core.audit.infrastructure.persistence.entity.AuditableJpaEntity;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Entity
+/**
+ * Entidad JPA para las transacciones procesadas dentro de un Turno de Caja.
+ * <p>
+ * Regla AUD-01: Hereda de {@link AuditableJpaEntity}.
+ * Regla MT-01: Partición estricta mediante {@code empresa_id}.
+ * Regla MONEY-01: Precisión contable {@code DECIMAL(19,4)}.
+ */
+@Entity(name = "PosTransaccionCajaJpaEntity")
 @Table(name = "pos_transaccion_caja")
-public class TransaccionCajaJpaEntity {
+public class TransaccionCajaJpaEntity extends AuditableJpaEntity {
 
     @Id
     @Column(length = 36, nullable = false)
@@ -29,8 +37,21 @@ public class TransaccionCajaJpaEntity {
     @Column(name = "referencia")
     private String referencia;
 
-    @Column(name = "fecha", nullable = false)
+    @Column(name = "documento_fuente_id", length = 100)
+    private String documentoFuenteId;
+
+    @Column(name = "fecha")
     private Instant fecha;
+
+    @Column(name = "fecha_hora")
+    private Instant fechaHora;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
+    public TransaccionCajaJpaEntity() {
+    }
 
     public String getId() {
         return id;
@@ -80,11 +101,35 @@ public class TransaccionCajaJpaEntity {
         this.referencia = referencia;
     }
 
+    public String getDocumentoFuenteId() {
+        return documentoFuenteId;
+    }
+
+    public void setDocumentoFuenteId(String documentoFuenteId) {
+        this.documentoFuenteId = documentoFuenteId;
+    }
+
     public Instant getFecha() {
         return fecha;
     }
 
     public void setFecha(Instant fecha) {
         this.fecha = fecha;
+    }
+
+    public Instant getFechaHora() {
+        return fechaHora;
+    }
+
+    public void setFechaHora(Instant fechaHora) {
+        this.fechaHora = fechaHora;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }
