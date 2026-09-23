@@ -538,6 +538,64 @@ public final class Bodega {
         ));
     }
 
+    /**
+     * Deduce definitivamente las unidades reservadas del inventario (Outbound Logistics).
+     * Se ejecuta al confirmar el despacho físico de mercancía para eliminar el stock reservado.
+     * Genera un MovimientoInventario de tipo SALIDA y actualiza la bodega.
+     */
+    public void deducirStockReservado(
+            ProductoId productoId,
+            Cantidad cantidad,
+            DocumentoFuenteId documentoFuente) {
+
+        if (!this.activa) {
+            throw new IllegalStateException(String.format("La Bodega '%s' está inactiva y no puede deducir reservas.", this.id));
+        }
+
+        Objects.requireNonNull(productoId, "deducirStockReservado: productoId es obligatorio.");
+        Objects.requireNonNull(cantidad, "deducirStockReservado: cantidad es obligatoria.");
+        Objects.requireNonNull(documentoFuente, "deducirStockReservado: documentoFuente es obligatorio (BOD-04).");
+
+        BigDecimal totalReservado = consultarStockReservado(productoId);
+        if (totalReservado.compareTo(cantidad.valor()) < 0) {
+            throw new IllegalStateException(String.format(
+                    "No hay suficiente stock reservado en la Bodega '%s' para el producto '%s'. Reservado: %s, Solicitado: %s",
+                    this.id, productoId, totalReservado, cantidad.valor()
+            ));
+        }
+
+        BigDecimal cantidadRestante = cantidad.valor();
+
+        List<StockLote> lotesConReserva = this.lotes.stream()
+                .filter(l -> l.getProductoId().equals(productoId) && l.getCantidadReservada().compareTo(BigDecimal.ZERO) > 0)
+                .toList();
+
+        for (StockLote lote : lotesConReserva) {
+            if (cantidadRestante.compareTo(BigDecimal.ZERO) <= 0) break;
+
+            BigDecimal disponibleEnReserva = lote.getCantidadReservada();
+            BigDecimal aDescontar = disponibleEnReserva.compareTo(cantidadRestante) >= 0 ? cantidadRestante : disponibleEnReserva;
+
+            lote.descontarReservado(aDescontar);
+            cantidadRestante = cantidadRestante.subtract(aDescontar);
+
+            MovimientoInventario mov = MovimientoInventario.crear(
+                    this.id, productoId, this.empresaId, Cantidad.de(aDescontar), TipoMovimiento.SALIDA, lote.getLoteId(), documentoFuente
+            );
+            this.movimientos.add(mov);
+        }
+
+        this.actualizadoEn = Instant.now();
+
+        this.domainEvents.add(MovimientoRegistradoEvent.of(
+                this.id, productoId, this.empresaId, TipoMovimiento.SALIDA, cantidad, documentoFuente
+        ));
+
+        this.domainEvents.add(StockActualizadoEvent.of(
+                this.id, productoId, this.empresaId, consultarStock(productoId)
+        ));
+    }
+
     // ═════════════════════════════════════════════════════════════════════════
     // GESTIÓN DE AJUSTE DE INVENTARIO
     // ═════════════════════════════════════════════════════════════════════════

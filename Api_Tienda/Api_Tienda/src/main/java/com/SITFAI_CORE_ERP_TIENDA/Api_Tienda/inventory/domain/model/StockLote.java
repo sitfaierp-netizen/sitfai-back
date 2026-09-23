@@ -61,4 +61,14 @@ public class StockLote {
         this.cantidad = this.cantidad.subtract(cant);
         this.cantidadReservada = this.cantidadReservada.add(cant);
     }
+
+    public void descontarReservado(BigDecimal cant) {
+        if (cant == null || cant.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("StockLote: La cantidad a descontar de la reserva debe ser mayor a cero.");
+        }
+        if (this.cantidadReservada.compareTo(cant) < 0) {
+            throw new IllegalArgumentException("StockLote: No hay stock reservado suficiente en este lote para descontar.");
+        }
+        this.cantidadReservada = this.cantidadReservada.subtract(cant);
+    }
 }
