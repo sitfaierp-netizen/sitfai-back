@@ -3,7 +3,11 @@ package com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persist
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.SolicitudAbastecimientoRepository;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaSolicitud;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.SolicitudAbastecimiento;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.*;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.BodegaId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.EstadoSolicitud;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.SolicitudId;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.entity.LineaSolicitudJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.entity.SolicitudJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.out.persistence.repository.SolicitudJpaRepository;
@@ -83,5 +87,22 @@ public class SolicitudJpaAdapter implements SolicitudAbastecimientoRepository {
                 lineas,
                 e.getCreadoEn()
         );
+    }
+
+    // -------------------------------------------------------------------------
+    // Consultas extendidas (CQRS Read Side / Integración)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Busca la solicitud más reciente para una empresa + bodega + producto.
+     * Regla MT-01: Filtra siempre por empresaId.
+     */
+    public Optional<SolicitudAbastecimiento> buscarMasRecientePorEmpresaBodegaProducto(
+            EmpresaId empresaId, BodegaId bodegaId, ProductoId productoId) {
+        return jpaRepository.findMasRecienteByEmpresaIdAndBodegaIdAndProductoId(
+                        empresaId.valor().toString(),
+                        bodegaId.valor().toString(),
+                        productoId.valor().toString())
+                .map(this::toDomain);
     }
 }
