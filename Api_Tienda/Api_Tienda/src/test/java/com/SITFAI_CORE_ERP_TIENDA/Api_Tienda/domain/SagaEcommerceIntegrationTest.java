@@ -10,8 +10,8 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCanceladoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoInvalidoException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoNoEncontradoException;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.EstadoPedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.Pedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EstadoPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.port.output.PedidoRepository;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
@@ -78,13 +78,17 @@ class SagaEcommerceIntegrationTest {
     static class InMemoryPedidoRepository implements PedidoRepository {
         private final Map<String, Pedido> store = new HashMap<>();
 
+        private String key(UUID id, UUID empresaId) {
+            return empresaId + ":" + id;
+        }
+
         private String key(PedidoId id, EmpresaId empresaId) {
-            return empresaId.valor() + ":" + id.valor();
+            return key(id.valor(), empresaId.valor());
         }
 
         @Override
         public Pedido guardar(Pedido pedido) {
-            store.put(key(pedido.getId(), pedido.getEmpresaId()), pedido);
+            store.put(key(pedido.getId().valor(), pedido.getEmpresaId().valor()), pedido);
             return pedido;
         }
 
@@ -93,10 +97,14 @@ class SagaEcommerceIntegrationTest {
             return Optional.ofNullable(store.get(key(id, empresaId)));
         }
 
+        public Optional<Pedido> buscarPorId(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId id, EmpresaId empresaId) {
+            return Optional.ofNullable(store.get(key(id.valor(), empresaId.valor())));
+        }
+
         @Override
         public List<Pedido> buscarPorEmpresa(EmpresaId empresaId) {
             return store.values().stream()
-                    .filter(p -> p.getEmpresaId().equals(empresaId))
+                    .filter(p -> p.getEmpresaId().valor().equals(empresaId.valor()))
                     .toList();
         }
 
@@ -115,7 +123,7 @@ class SagaEcommerceIntegrationTest {
         }
 
         @Override
-        public void publicarTodos(List<DomainEvent> events) {
+        public void publicarTodos(List<? extends DomainEvent> events) {
             published.addAll(events);
         }
     }

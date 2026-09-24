@@ -10,6 +10,7 @@ GATEWAY_URL="http://localhost:8000"
 KEYCLOAK_URL="http://localhost:8080/realms/sitfai-erp/protocol/openid-connect/token"
 RUC="20$(date +%s | cut -c2-10)" # RUC dinámico para evitar conflictos (11 dígitos)
 RAZON_SOCIAL="Empresa Cero $(date +%s) S.A."
+PRODUCTO_ID="11111111-1111-1111-1111-111111111111"
 
 echo "============================================================"
 echo "1. AUTENTICACIÓN (Obteniendo JWT de Keycloak)"
@@ -105,7 +106,7 @@ echo "============================================================"
 echo "5. APERTURA DE TURNO (POS)"
 echo "============================================================"
 echo "Abriendo turno para la caja: $CAJA_ID"
-TURNO_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos" \
+TURNO_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos/abrir" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Empresa-Id: $EMPRESA_ID" \
   -H "Content-Type: application/json" \
@@ -134,7 +135,14 @@ VENTA_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos/$TURNO_ID/transacci
   -d '{
         "tipoTransaccion": "VENTA",
         "monto": 250.00,
-        "referencia": "REF-VENTA-001"
+        "referencia": "REF-VENTA-001",
+        "lineas": [
+          {
+            "productoId": "'"$PRODUCTO_ID"'",
+            "cantidad": 5,
+            "precioUnitario": 50.00
+          }
+        ]
       }')
 echo "Respuesta Venta: $VENTA_RESP"
 
@@ -186,7 +194,8 @@ DEVOLUCION_RESP=$(curl -s -X POST "$GATEWAY_URL/api/v1/pos/turnos/$TURNO_ID/devo
             "cantidad": 5
           }
         ],
-        "montoDevuelto": 250.00
+        "montoDevuelto": 250.00,
+        "version": 1
       }')
 echo "Respuesta Devolución: $DEVOLUCION_RESP"
 

@@ -1,46 +1,60 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.in.web;
 
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.CurrentActorProvider;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.in.web.dto.CrearPedidoWebRequest;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.out.persistence.entity.PedidoJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.out.persistence.repository.PedidoJpaRepository;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-@Testcontainers
+/**
+ * Prueba de Integración: Ciclo Comercial del Agregado Pedido (Api_Tienda).
+ * <p>
+ * Simula:
+ * 1. Creación de un pedido vía REST (POST /pedidos) con DTOs aislados.
+ * 2. Confirmación del pedido vía REST (PATCH /pedidos/{id}/confirmar).
+ * 3. Persistencia en base de datos con clave de partición empresa_id (MT-01).
+ * 4. Despacho del evento PedidoConfirmadoEvent hacia el contexto de Spring (Coreografía con Bodega/Inventario).
+ */
+@SpringBootTest(classes = ApiTiendaApplication.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import({TestcontainersConfiguration.class, PedidoIntegrationTest.TestEventConfig.class})
 @ActiveProfiles("test")
+@Transactional
 public class PedidoIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,35 +65,106 @@ public class PedidoIntegrationTest {
     @Autowired
     private PedidoJpaRepository pedidoRepository;
 
-    @MockBean
+    @Autowired
+    private PedidoEventCaptureListener eventCaptureListener;
+
+    @MockitoBean
     private TenantProviderPort tenantProviderPort;
 
-    @MockBean
-    private CurrentActorProvider currentActorProvider;
+    private UUID empresaId;
+    private UUID clienteId;
+    private UUID productoId;
 
-    @Test
-    void testCrearPedido() throws Exception {
-        UUID empresaId = UUID.randomUUID();
-        UUID clienteId = UUID.randomUUID();
-        UUID productoId = UUID.randomUUID();
+    @BeforeEach
+    void setUp() {
+        empresaId = UUID.randomUUID();
+        clienteId = UUID.randomUUID();
+        productoId = UUID.randomUUID();
 
         when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
-        when(currentActorProvider.getActorActual()).thenReturn("test-actor");
+        eventCaptureListener.clear();
+    }
 
+    @Test
+    @DisplayName("Ciclo completo del pedido: Creación vía REST, confirmación y despacho de evento")
+    void testCrearYConfirmarPedido() throws Exception {
+        // 1. Crear pedido vía REST POST /pedidos
         CrearPedidoWebRequest request = new CrearPedidoWebRequest(
                 clienteId,
                 List.of(
-                        new CrearPedidoWebRequest.LineaWebRequest(productoId, 2, BigDecimal.valueOf(100.00))
+                        new CrearPedidoWebRequest.LineaWebRequest(productoId, 3, BigDecimal.valueOf(150.00))
                 )
         );
 
-        mockMvc.perform(post("/api/v1/api-tienda/pedidos")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        MvcResult createResult = mockMvc.perform(post("/pedidos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.estado").value("RESERVANDO_STOCK"))
-                .andExpect(jsonPath("$.lineas.length()").value(1));
+                .andExpect(jsonPath("$.estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.total").value(450.00))
+                .andExpect(jsonPath("$.lineas.length()").value(1))
+                .andReturn();
 
-        assertThat(pedidoRepository.findByEmpresaId(empresaId.toString())).hasSize(1);
+        JsonNode jsonNode = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        String pedidoIdStr = jsonNode.get("id").asText();
+        UUID pedidoId = UUID.fromString(pedidoIdStr);
+
+        // Validar persistencia en BD viva (MySQL)
+        Optional<PedidoJpaEntity> pedidoGuardado = pedidoRepository.findByIdAndEmpresaId(pedidoIdStr, empresaId.toString());
+        assertThat(pedidoGuardado).isPresent();
+        assertThat(pedidoGuardado.get().getEstado()).isEqualTo("PENDIENTE");
+        assertThat(pedidoGuardado.get().getTotal()).isEqualByComparingTo(BigDecimal.valueOf(450.00));
+        assertThat(pedidoGuardado.get().getLineas()).hasSize(1);
+
+        // No debe haber emitido evento de confirmación todavía
+        assertThat(eventCaptureListener.getEvents()).isEmpty();
+
+        // 2. Confirmar pedido vía REST PATCH /pedidos/{id}/confirmar
+        mockMvc.perform(patch("/pedidos/" + pedidoId + "/confirmar")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(pedidoIdStr))
+                .andExpect(jsonPath("$.estado").value("CONFIRMADO"));
+
+        // Validar estado persistido en BD
+        Optional<PedidoJpaEntity> pedidoConfirmado = pedidoRepository.findByIdAndEmpresaId(pedidoIdStr, empresaId.toString());
+        assertThat(pedidoConfirmado).isPresent();
+        assertThat(pedidoConfirmado.get().getEstado()).isEqualTo("CONFIRMADO");
+
+        // 3. Verificar que se despacha el evento de dominio hacia el contexto de Spring
+        assertThat(eventCaptureListener.getEvents()).hasSize(1);
+        PedidoConfirmadoEvent event = eventCaptureListener.getEvents().get(0);
+        assertThat(event.empresaId().valor()).isEqualTo(empresaId);
+        assertThat(event.pedidoId().valor()).isEqualTo(pedidoId);
+        assertThat(event.clienteId().valor()).isEqualTo(clienteId);
+        assertThat(event.total().monto()).isEqualByComparingTo(BigDecimal.valueOf(450.00));
+        assertThat(event.lineas()).hasSize(1);
+        assertThat(event.lineas().get(0).getProductoId().valor()).isEqualTo(productoId);
+        assertThat(event.lineas().get(0).getCantidad()).isEqualTo(3);
+    }
+
+    @TestConfiguration
+    static class TestEventConfig {
+        @Bean
+        public PedidoEventCaptureListener pedidoEventCaptureListener() {
+            return new PedidoEventCaptureListener();
+        }
+    }
+
+    public static class PedidoEventCaptureListener {
+        private final List<PedidoConfirmadoEvent> events = new CopyOnWriteArrayList<>();
+
+        @EventListener
+        public void onPedidoConfirmado(PedidoConfirmadoEvent event) {
+            events.add(event);
+        }
+
+        public List<PedidoConfirmadoEvent> getEvents() {
+            return events;
+        }
+
+        public void clear() {
+            events.clear();
+        }
     }
 }

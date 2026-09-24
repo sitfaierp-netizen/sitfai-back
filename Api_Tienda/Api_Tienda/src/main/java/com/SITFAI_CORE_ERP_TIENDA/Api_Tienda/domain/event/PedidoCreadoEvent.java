@@ -1,11 +1,12 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.ItemPedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.LineaPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Cantidad;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +26,13 @@ public record PedidoCreadoEvent(
         List<ItemPedido> items
 ) implements DomainEvent {
 
+    public record ItemPedido(UUID id, ProductoId productoId, Cantidad cantidad, Dinero precioUnitario) {
+        public UUID getId() { return id; }
+        public ProductoId getProductoId() { return productoId; }
+        public Cantidad getCantidad() { return cantidad; }
+        public Dinero getPrecioUnitario() { return precioUnitario; }
+    }
+
     public PedidoCreadoEvent {
         Objects.requireNonNull(eventoId);
         Objects.requireNonNull(ocurridoEn);
@@ -43,7 +51,13 @@ public record PedidoCreadoEvent(
             Dinero total,
             List<LineaPedido> lineas) {
 
-        List<ItemPedido> items = lineas.stream().map(LineaPedido::aItemPedido).toList();
+        List<ItemPedido> items = lineas.stream().map(l -> new ItemPedido(
+                l.getId(),
+                new ProductoId(l.getProductoId().valor()),
+                Cantidad.de(l.getCantidad()),
+                Dinero.de(l.getPrecioUnitario().monto())
+        )).toList();
+
         return new PedidoCreadoEvent(
                 UUID.randomUUID(),
                 Instant.now(),

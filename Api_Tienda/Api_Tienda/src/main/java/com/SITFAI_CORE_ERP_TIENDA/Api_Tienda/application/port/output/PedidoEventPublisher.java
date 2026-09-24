@@ -6,7 +6,7 @@ import java.util.List;
 public interface PedidoEventPublisher {
     void publicar(DomainEvent event);
 
-    default void publicarTodos(List<DomainEvent> events) {
+    default void publicarTodos(List<? extends DomainEvent> events) {
         if (events != null) {
             events.forEach(this::publicar);
         }

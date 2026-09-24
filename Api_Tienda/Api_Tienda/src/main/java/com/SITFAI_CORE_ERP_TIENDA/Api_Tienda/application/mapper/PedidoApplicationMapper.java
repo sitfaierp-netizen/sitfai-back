@@ -2,9 +2,9 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.mapper;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.dto.LineaPedidoResponse;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.dto.PedidoResponse;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.LineaPedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.Pedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
 
 import java.util.List;
 import java.util.Objects;

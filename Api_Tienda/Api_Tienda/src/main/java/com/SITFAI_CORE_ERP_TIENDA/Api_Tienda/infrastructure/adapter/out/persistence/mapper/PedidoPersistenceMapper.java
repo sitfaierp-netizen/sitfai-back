@@ -1,14 +1,13 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.out.persistence.mapper;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.EstadoPedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.LineaPedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.Pedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Cantidad;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EstadoPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.out.persistence.entity.LineaPedidoJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.out.persistence.entity.PedidoJpaEntity;
 
@@ -47,17 +46,17 @@ public class PedidoPersistenceMapper {
     }
 
     public static Pedido toDomain(PedidoJpaEntity entity) {
-        List<LineaPedido> lineas = entity.getLineas().stream().map(l -> new LineaPedido(
+        List<LineaPedido> lineas = entity.getLineas() != null ? entity.getLineas().stream().map(l -> new LineaPedido(
                 UUID.fromString(l.getId()),
-                ProductoId.de(UUID.fromString(l.getProductoId())),
-                Cantidad.de(l.getCantidad()),
-                Dinero.de(l.getPrecioUnitario(), l.getMoneda())
-        )).collect(Collectors.toList());
+                new ProductoId(UUID.fromString(l.getProductoId())),
+                l.getCantidad(),
+                Dinero.de(l.getPrecioUnitario())
+        )).collect(Collectors.toList()) : List.of();
 
         return Pedido.reconstruir(
-                PedidoId.de(UUID.fromString(entity.getId())),
-                EmpresaId.de(UUID.fromString(entity.getEmpresaId())),
-                ClienteId.de(UUID.fromString(entity.getClienteId())),
+                new PedidoId(UUID.fromString(entity.getId())),
+                new EmpresaId(UUID.fromString(entity.getEmpresaId())),
+                new ClienteId(UUID.fromString(entity.getClienteId())),
                 EstadoPedido.valueOf(entity.getEstado()),
                 lineas,
                 entity.getCreadoEn(),

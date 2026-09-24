@@ -146,8 +146,25 @@ com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory/
 
 | Capa | Estado |
 |---|---|
-| **Domain** | ✅ APROBADO (Despacho, LineaDespacho, DespachoId, PedidoId, EstadoDespacho, DespachoConfirmadoEvent) |
-| **Application** | ✅ APROBADO (ConfirmarDespachoUseCase, ConfirmarDespachoService, ConfirmarDespachoCommand) |
-| **Infrastructure** | ✅ APROBADO (DespachoController, DespachoJpaEntity, LineaDespachoJpaEntity, Flyway V43, DespachoConfirmadoEventHandler) |
-| **Testing Suite** | ✅ APROBADO (DespachoTest 10/10 unit tests, OutboundLogisticsIntegrationTest) |
-| **Compilación** | ✅ BUILD SUCCESS (`.\mvnw clean test-compile`) |
+| **Domain** | ✅ APROBADO (Despacho, LineaDespacho, DespachoId, PedidoId, EstadoDespacho, DespachoConfirmadoEvent, ClasificacionProducto, AnalisisId, MetricaMovimiento, CategoriaABC, ProductoReclasificadoEvent) |
+| **Application** | ✅ APROBADO (ConfirmarDespachoUseCase, EjecutarAnalisisAbcUseCase, EjecutarAnalisisAbcService, EjecutarAnalisisAbcCommand, AnalisisAbcResponse) |
+| **Infrastructure** | ✅ APROBADO (DespachoController, AnalisisAbcController, ClasificacionProductoJpaEntity, ClasificacionProductoJpaAdapter, JdbcMetricaMovimientoQueryAdapter, Flyway V43, V49) |
+| **Testing Suite** | ✅ APROBADO (DespachoTest, ClasificacionProductoTest 22/22, OutboundLogisticsIntegrationTest, AnalisisAbcIntegrationTest) |
+| **Compilación** | ✅ BUILD SUCCESS (`.\mvnw test-compile`) |
+
+---
+
+## Motor WMS — Análisis ABC de Inventario (Ley de Pareto)
+
+### Sub-Bounded Context: `inventory/clasificacion`
+- **Agregado:** `ClasificacionProducto`
+- **Value Objects:** `AnalisisId`, `BodegaId`, `ProductoId`, `EmpresaId`, `MetricaMovimiento` (con validación fail-fast y DECIMAL(19,4)), `CategoriaABC` (A, B, C, NO_CLASIFICADO).
+- **Domain Event:** `ProductoReclasificadoEvent` (disparado condicionalmente al cambiar de categoría).
+- **Output Port:** `ClasificacionProductoRepository` (persistencia pura) y `MetricaMovimientoQueryPort` (lectura de métricas históricas).
+- **Application Service:** `EjecutarAnalisisAbcService` (orquesta cálculo de Pareto: A top 80%, B siguiente 15%, C último 5%).
+- **Driving Adapter:** `AnalisisAbcController` (`POST /inventory/bodegas/{id}/analisis-abc`).
+- **Driven Adapter:** `ClasificacionProductoJpaAdapter` con `SpringDataClasificacionProductoRepository`.
+- **Query Adapter:** `JdbcMetricaMovimientoQueryAdapter` (agrupa salidas y valoración histórica).
+- **Persistencia:** Tabla `inventory_clasificacion_producto` con migración `V49__init_wms_abc_schema.sql`.
+- **Integración:** `AnalisisAbcIntegrationTest` con Testcontainers + MySQL.
+

@@ -1,6 +1,6 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.LineaPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Domain Event: Emitido cuando un {@link com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.Pedido} es confirmado.
+ * Domain Event: Emitido cuando un {@link com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido} es confirmado.
  * <p>
  * Notifica a otros Bounded Contexts (ej. Inventario para reservar/descontar stock,
  * Facturación para emitir comprobante, etc.).

@@ -3,7 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.event;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCreadoEvent;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.LineaPedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
@@ -81,9 +81,9 @@ class ReservaStockIntegrationTest {
 
         LineaPedido linea = new LineaPedido(
                 UUID.randomUUID(),
-                new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId(productoId.valor()),
+                new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ProductoId(productoId.valor()),
                 10,
-                new Dinero(new BigDecimal("150.0000"), "COP")
+                com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero.de(new BigDecimal("150.0000"))
         );
 
         PedidoCreadoEvent event = PedidoCreadoEvent.of(

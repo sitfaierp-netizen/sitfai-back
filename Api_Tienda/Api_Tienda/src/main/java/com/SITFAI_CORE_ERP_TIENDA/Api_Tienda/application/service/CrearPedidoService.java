@@ -8,7 +8,7 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.PedidoEvent
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.port.output.PedidoRepository;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.Pedido;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
@@ -45,13 +45,18 @@ public class CrearPedidoService implements CrearPedidoUseCase {
         // El actor puede ser usado para trazas o auditoría, pero no en dominio.
         String actor = currentActorProvider.getActorActual();
 
-        Pedido pedido = Pedido.iniciar(empresaId, ClienteId.de(command.clienteId()));
+        com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId empresaIdVo =
+                new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId(empresaId.valor());
+        com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId clienteIdVo =
+                new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId(command.clienteId());
+
+        Pedido pedido = Pedido.iniciar(empresaIdVo, clienteIdVo);
 
         for (CrearPedidoCommand.LineaComando linea : command.lineas()) {
             pedido.agregarItem(
-                    ProductoId.de(linea.productoId()),
+                    new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ProductoId(linea.productoId()),
                     linea.cantidad(),
-                    Dinero.de(linea.precioUnitario(), "USD") // asumiendo USD o de BD
+                    com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero.de(linea.precioUnitario())
             );
         }
 
@@ -59,7 +64,7 @@ public class CrearPedidoService implements CrearPedidoUseCase {
 
         Pedido pedidoGuardado = pedidoRepository.guardar(pedido);
 
-        List<DomainEvent> events = pedidoGuardado.drainDomainEvents();
+        List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent> events = pedidoGuardado.drainDomainEvents();
         events.forEach(eventPublisher::publicar);
 
         List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.dto.LineaPedidoResponse> lineasResp = pedidoGuardado.getLineas().stream()

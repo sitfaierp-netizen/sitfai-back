@@ -194,5 +194,73 @@ com.SITFAI_CORE_ERP_TIENDA.Api_Tienda
 | 0.1.0   | 2026-08-06  | Inicialización del módulo — `application.properties` generado                                     |
 | 0.2.0   | 2026-08-07  | Diseño e implementación de Capas de Dominio y Aplicación bajo DDD estricto y Java 25              |
 | 0.3.0   | 2026-08-07  | Implementación de Capa de Infraestructura básica                                                   |
-| 1.0.0   | 2026-08-07  | Finalización de Infraestructura Zero Trust (@TenantId), endpoints completos, migración Flyway V9 y validación 100% de tests |
 | 1.1.0   | 2026-08-12  | El módulo cuenta con soporte completo de facturación electrónica y notas de crédito con adaptadores JPA estables (Migraciones Flyway V10-V20) |
+| 2.0.0   | 2026-09-24  | Refactorización pura de Dominio: Agregado Pedido bajo DDD estricto (`domain/model/pedido`), VOs inmutables en Java 21, Dinero (MONEY-01 HALF_UP), EstadoPedido (PENDIENTE, CONFIRMADO, CANCELADO), PedidoConfirmadoEvent y PedidoRepository puro con MT-01 |
+| 2.1.0   | 2026-09-24  | Implementación de Capas de Aplicación e Infraestructura para Pedido: `GestionarPedidoUseCase`, `GestionarPedidoService` transaccional con MT-01, `PedidoController` REST canónico (/pedidos), `PedidoJpaAdapter`, migración Flyway `V50__init_pedido_schema.sql` y `PedidoIntegrationTest` con Testcontainers y verificación de eventos asíncronos hacia Spring |
+
+---
+
+## 9. NUEVO MODELO DE DOMINIO PURO (`domain/model/pedido`)
+
+```text
+com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido
+├── Pedido.java                      ← Aggregate Root (crear en PENDIENTE, confirmar, calcularTotal, MT-01)
+├── LineaPedido.java                 ← Entidad interna protegida (ProductoId, cantidad, Dinero precioUnitario)
+├── vo/
+│   ├── PedidoId.java                ← VO Record Java 21
+│   ├── ClienteId.java               ← VO Record Java 21
+│   ├── ProductoId.java              ← VO Record Java 21
+│   ├── EmpresaId.java               ← VO Record Java 21 (MT-01)
+│   ├── Dinero.java                  ← VO Record Java 21 (MONEY-01, RoundingMode.HALF_UP, sin negativos)
+│   └── EstadoPedido.java            ← Enum (PENDIENTE, CONFIRMADO, CANCELADO)
+├── event/
+│   └── PedidoConfirmadoEvent.java   ← Record inmutable con tenant, pedidoId, lineas y total para coreografía
+└── port/
+    └── PedidoRepository.java        ← Output Port puro con EmpresaId obligatorio en todas las firmas
+```
+
+---
+
+## 10. CAPAS DE APLICACIÓN E INFRAESTRUCTURA (V2.1.0)
+
+```text
+com.SITFAI_CORE_ERP_TIENDA.Api_Tienda
+├── application/
+│   ├── dto/
+│   │   ├── CrearPedidoCommand.java          ← DTO inmutable con constructores sobrecargados (sin framework)
+│   │   ├── ConfirmarPedidoCommand.java      ← DTO inmutable para confirmación
+│   │   ├── PedidoResponse.java              ← Record Java 21 inmutable
+│   │   └── LineaPedidoResponse.java         ← Record Java 21 inmutable
+│   ├── port/input/
+│   │   └── GestionarPedidoUseCase.java      ← Driving Port (crear, confirmar)
+│   └── service/
+│       └── GestionarPedidoService.java      ← Application Service @Transactional con MT-01 y emisión de PedidoConfirmadoEvent
+└── infrastructure/
+    ├── adapter/
+    │   ├── in/web/
+    │   │   ├── PedidoController.java        ← REST Controller (/pedidos POST, PATCH /pedidos/{id}/confirmar)
+    │   │   └── dto/
+    │   │       ├── CrearPedidoWebRequest.java ← Web Request DTO aislado sin empresaId (MT-02)
+    │   │       └── PedidoWebResponse.java   ← Web Response DTO aislado
+    │   └── out/persistence/
+    │       ├── PedidoJpaAdapter.java        ← Driven Adapter implementando PedidoRepository puro
+    │       ├── entity/PedidoJpaEntity.java  ← JPA Entity con AuditableJpaEntity y @Version
+    │       └── entity/LineaPedidoJpaEntity.java ← JPA Entity con AuditableJpaEntity y @Version
+    └── mapper/
+        └── PedidoWebMapper.java             ← Mapper entre DTOs web y comandos/respuestas de aplicación
+
+Flyway: V50__init_pedido_schema.sql (tienda_pedido y tienda_linea_pedido con partición MT-01 e índices compuestos)
+Pruebas: PedidoIntegrationTest (Testcontainers MySQL 8.4, MockMvc, captura de eventos PedidoConfirmadoEvent)
+```
+
+---
+
+## 11. SANEAMIENTO DE CÓDIGO ZOMBIE Y CONSOLIDACIÓN DE PAQUETES (V2.2.0)
+
+- **Eliminación Física de Código Zombie:** Se eliminaron las clases obsoletas en la raíz de `domain/model/` (`Pedido.java`, `LineaPedido.java`, `ItemPedido.java`, `EstadoPedido.java`) y tests obsoletos (`ItemPedidoTest.java`, `PedidoTest.java`).
+- **Consolidación del Agregado:** La raíz canónica del Agregado y sus entidades/VOs se consolidó exclusivamente en `com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.*`.
+- **Refactorización Integral de Importaciones:** Capas de Aplicación (`application/service`, `application/mapper`, `application/port`), Infraestructura (`persistence`, `web`, `messaging`) y suites de integración (`SagaEcommerceIntegrationTest`, `BillingIntegrationTest`, `PedidoConfirmadoEventHandlerTest`) actualizadas sin ambigüedades.
+- **Certificación de Compilación:** Ejecución de `mvnw clean test-compile` completada con éxito (`BUILD SUCCESS`, 886 fuentes principales + 78 fuentes de prueba compiladas en Java 21).
+
+
+

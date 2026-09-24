@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/pedidos")
+@RequestMapping("/orders/pedidos")
 public class PedidoController {
 
     private final CrearPedidoService crearPedidoService;
