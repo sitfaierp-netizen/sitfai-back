@@ -41,6 +41,7 @@ public final class TurnoCajaPersistenceMapper {
         entity.setMontoApertura(domain.getMontoApertura().monto());
         entity.setFechaApertura(domain.getFechaApertura());
         entity.setFechaCierre(domain.getFechaCierre());
+        entity.setVersion(domain.getVersion());
 
         if (domain.getMontoCierre() != null) {
             entity.setMontoCierre(domain.getMontoCierre().monto());
@@ -149,7 +150,7 @@ public final class TurnoCajaPersistenceMapper {
             );
         }
 
-        return TurnoCaja.reconstituir(
+        TurnoCaja turno = TurnoCaja.reconstituir(
                 turnoId,
                 empresaId,
                 cajaId,
@@ -160,8 +161,10 @@ public final class TurnoCajaPersistenceMapper {
                 transacciones,
                 arqueo,
                 fechaApertura,
-                fechaCierre
+                fechaCierre,
+                entity.getVersion()
         );
+        return turno;
     }
 
     // ==========================================
@@ -180,6 +183,7 @@ public final class TurnoCajaPersistenceMapper {
         entity.setCajeroId(domain.getUsuarioId().value().toString());
         entity.setEstado(domain.getEstado().name());
         entity.setMontoApertura(domain.getMontoApertura().valor());
+        entity.setVersion(domain.getVersion());
 
         if (domain.getArqueo() != null) {
             entity.setMontoEsperado(domain.getArqueo().balanceEsperado().valor());
@@ -253,8 +257,9 @@ public final class TurnoCajaPersistenceMapper {
             );
         }
 
-        return com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja.reconstituir(
-                turnoId, empresaId, cajaId, sucursalId, usuarioId, estado, montoApertura, txList, arqueo
+        com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja turno = com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja.reconstituir(
+                turnoId, empresaId, cajaId, sucursalId, usuarioId, estado, montoApertura, txList, arqueo, entity.getVersion()
         );
+        return turno;
     }
 }

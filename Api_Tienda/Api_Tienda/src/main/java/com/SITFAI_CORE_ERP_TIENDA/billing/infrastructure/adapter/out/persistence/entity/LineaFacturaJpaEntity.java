@@ -11,6 +11,8 @@ import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Entidad JPA: Detalle de línea en la tabla {@code billing_linea_factura}.
@@ -24,6 +26,7 @@ import java.util.UUID;
 public class LineaFacturaJpaEntity extends AuditableJpaEntity {
 
     @Id
+    @JdbcTypeCode(SqlTypes.BINARY)
     @Column(name = "id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
     private UUID id;
 
@@ -31,6 +34,7 @@ public class LineaFacturaJpaEntity extends AuditableJpaEntity {
     @JoinColumn(name = "factura_id", nullable = false)
     private FacturaJpaEntity factura;
 
+    @JdbcTypeCode(SqlTypes.BINARY)
     @Column(name = "empresa_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID empresaId;
 

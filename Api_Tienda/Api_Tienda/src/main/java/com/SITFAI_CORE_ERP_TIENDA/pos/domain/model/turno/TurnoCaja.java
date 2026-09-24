@@ -35,6 +35,7 @@ public class TurnoCaja {
     private ArqueoCaja arqueo;
     private final Instant fechaApertura;
     private Instant fechaCierre;
+    private Long version;
     private final List<Object> domainEvents;
 
     private TurnoCaja(
@@ -101,7 +102,8 @@ public class TurnoCaja {
             List<TransaccionCaja> transacciones,
             ArqueoCaja arqueo,
             Instant fechaApertura,
-            Instant fechaCierre
+            Instant fechaCierre,
+            Long version
     ) {
         TurnoCaja turno = new TurnoCaja(id, empresaId, cajaId, cajeroId, montoApertura, fechaApertura);
         turno.estado = estado;
@@ -111,6 +113,7 @@ public class TurnoCaja {
         }
         turno.arqueo = arqueo;
         turno.fechaCierre = fechaCierre;
+        turno.version = version;
         return turno;
     }
 
@@ -119,7 +122,7 @@ public class TurnoCaja {
      * <p>
      * Validación Fail-Fast: Impide cualquier registro si el turno no se encuentra en estado ABIERTO.
      */
-    public void registrarTransaccion(TipoTransaccionCaja tipo, Dinero monto, String documentoFuenteId) {
+    public java.util.UUID registrarTransaccion(TipoTransaccionCaja tipo, Dinero monto, String documentoFuenteId) {
         Objects.requireNonNull(tipo, "El tipo de transacción es obligatorio");
         Objects.requireNonNull(monto, "El monto de la transacción es obligatorio");
         Objects.requireNonNull(documentoFuenteId, "El documento fuente es obligatorio (BOD-04)");
@@ -134,6 +137,8 @@ public class TurnoCaja {
 
         TransaccionCaja transaccion = TransaccionCaja.registrar(tipo, monto, documentoFuenteId);
         this.transacciones.add(transaccion);
+        
+        return transaccion.getId();
     }
 
     /**
@@ -266,5 +271,13 @@ public class TurnoCaja {
 
     public void clearDomainEvents() {
         this.domainEvents.clear();
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

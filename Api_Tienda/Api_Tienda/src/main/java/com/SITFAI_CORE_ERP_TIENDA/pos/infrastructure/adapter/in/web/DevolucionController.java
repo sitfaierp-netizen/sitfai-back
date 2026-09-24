@@ -36,7 +36,8 @@ public class DevolucionController {
                 request.ticketOriginalId(),
                 request.montoDevuelto(),
                 lineas,
-                lotes
+                lotes,
+                request.version()
         );
 
         procesarDevolucionUseCase.ejecutar(command);

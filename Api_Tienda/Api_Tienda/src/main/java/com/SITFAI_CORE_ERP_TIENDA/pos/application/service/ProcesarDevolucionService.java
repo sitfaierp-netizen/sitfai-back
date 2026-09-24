@@ -58,6 +58,13 @@ public class ProcesarDevolucionService implements ProcesarDevolucionUseCase {
             throw new SecurityException("Violación de Tenant (MT-02): El turno no pertenece a la empresa autenticada");
         }
 
+        // Validacion manual de Optimistic Locking (Regla CON-01)
+        if (command.version() != null && turno.getVersion() != null) {
+            if (!command.version().equals(turno.getVersion())) {
+                throw new org.springframework.dao.OptimisticLockingFailureException("El turno ha sido modificado por otra transaccion. Version actual: " + turno.getVersion());
+            }
+        }
+
         // 2. Mapear DTOs a Value Objects
         TicketId ticketId = new TicketId(command.ticketOriginalId());
         Dinero montoDevolucion = Dinero.de(command.montoDevuelto());
@@ -77,6 +84,6 @@ public class ProcesarDevolucionService implements ProcesarDevolucionUseCase {
         TurnoCaja turnoActualizado = repository.guardar(turno);
         
         turnoActualizado.getDomainEvents().forEach(eventPublisher::publishEvent);
-        turnoActualizado.getDomainEvents().clear();
+        turnoActualizado.clearDomainEvents();
     }
 }

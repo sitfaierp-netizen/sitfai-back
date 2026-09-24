@@ -27,6 +27,7 @@ public class TurnoCaja {
     private final List<TransaccionCaja> transacciones;
     private ArqueoCaja arqueo;
     private final List<DomainEvent> domainEvents;
+    private Long version;
 
     private TurnoCaja(TurnoId id, EmpresaId empresaId, CajaId cajaId, SucursalId sucursalId, UsuarioId usuarioId, Dinero montoApertura) {
         this.id = Objects.requireNonNull(id, "TurnoId es obligatorio");
@@ -44,17 +45,18 @@ public class TurnoCaja {
         return new TurnoCaja(TurnoId.generar(), empresaId, cajaId, sucursalId, usuarioId, montoApertura);
     }
 
-    public static TurnoCaja reconstituir(TurnoId id, EmpresaId empresaId, CajaId cajaId, SucursalId sucursalId, UsuarioId usuarioId, EstadoTurno estado, Dinero montoApertura, List<TransaccionCaja> transacciones, ArqueoCaja arqueo) {
+    public static TurnoCaja reconstituir(TurnoId id, EmpresaId empresaId, CajaId cajaId, SucursalId sucursalId, UsuarioId usuarioId, EstadoTurno estado, Dinero montoApertura, List<TransaccionCaja> transacciones, ArqueoCaja arqueo, Long version) {
         TurnoCaja turno = new TurnoCaja(id, empresaId, cajaId, sucursalId, usuarioId, montoApertura);
         turno.estado = estado;
         if (transacciones != null) {
             turno.transacciones.addAll(transacciones);
         }
         turno.arqueo = arqueo;
+        turno.version = version;
         return turno;
     }
 
-    public void registrarTransaccion(TipoTransaccion tipo, Dinero monto, String referencia) {
+    public java.util.UUID registrarTransaccion(TipoTransaccion tipo, Dinero monto, String referencia) {
         Objects.requireNonNull(tipo, "El tipo de transacción es obligatorio");
         Objects.requireNonNull(monto, "El monto es obligatorio");
         
@@ -64,6 +66,8 @@ public class TurnoCaja {
 
         TransaccionCaja transaccion = TransaccionCaja.registrar(tipo, monto, referencia);
         this.transacciones.add(transaccion);
+        
+        return transaccion.getId();
     }
 
     public void registrarDevolucion(com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.TicketId ticketOriginalId, Dinero montoDevolucion, List<com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.DevolucionRegistradaEvent.LineaDevolucion> lineas, List<com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.LoteRevertido> lotes) {
@@ -170,5 +174,17 @@ public class TurnoCaja {
 
     public List<DomainEvent> getDomainEvents() {
         return Collections.unmodifiableList(domainEvents);
+    }
+
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

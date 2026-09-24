@@ -24,7 +24,7 @@ import java.util.UUID;
  * - Errores manejados por PurchasingExceptionHandler (RFC 7807).
  */
 @RestController
-@RequestMapping("/api/v1/purchasing/solicitudes")
+@RequestMapping("/purchasing/solicitudes")
 public class SolicitudAbastecimientoController {
 
     private final CrearSolicitudUseCase crearSolicitudUseCase;

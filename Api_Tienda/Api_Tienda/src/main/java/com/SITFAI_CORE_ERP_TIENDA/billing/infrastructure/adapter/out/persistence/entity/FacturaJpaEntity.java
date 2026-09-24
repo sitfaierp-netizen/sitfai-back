@@ -15,6 +15,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Entidad JPA: Representa el registro persistente de una Factura en la tabla {@code billing_factura}.
@@ -30,21 +35,26 @@ import java.util.UUID;
 public class FacturaJpaEntity extends AuditableJpaEntity {
 
     @Id
+    @JdbcTypeCode(SqlTypes.BINARY)
     @Column(name = "id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
     private UUID id;
 
+    @JdbcTypeCode(SqlTypes.BINARY)
     @Column(name = "empresa_id", nullable = false, columnDefinition = "BINARY(16)")
     private UUID empresaId;
 
-    @Column(name = "cliente_id", nullable = false, columnDefinition = "BINARY(16)")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "cliente_id", nullable = false, columnDefinition = "VARCHAR(50)", length = 50)
     private UUID clienteId;
 
+    @JdbcTypeCode(SqlTypes.BINARY)
     @Column(name = "pedido_id", columnDefinition = "BINARY(16)")
     private UUID pedidoId;
 
     @Column(name = "tipo_origen", length = 30)
     private String tipoOrigen;
 
+    @JdbcTypeCode(SqlTypes.BINARY)
     @Column(name = "documento_fuente_id", columnDefinition = "BINARY(16)")
     private UUID documentoFuenteId;
 

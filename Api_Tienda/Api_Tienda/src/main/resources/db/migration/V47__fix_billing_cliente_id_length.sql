@@ -1,0 +1,1 @@
+ALTER TABLE billing_factura MODIFY COLUMN cliente_id VARCHAR(50) NOT NULL;

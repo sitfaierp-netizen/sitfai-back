@@ -14,7 +14,7 @@ import java.net.URI;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/inventory/ajustes")
+@RequestMapping("/inventory/ajustes")
 public class AjusteController {
 
     private final RegistrarAjusteUseCase registrarAjusteUseCase;
@@ -28,7 +28,7 @@ public class AjusteController {
     public ResponseEntity<Map<String, String>> registrarAjuste(@RequestBody RegistrarAjusteCommand command) {
         AjusteInventarioId ajusteId = registrarAjusteUseCase.ejecutar(command);
         return ResponseEntity
-                .created(URI.create("/api/v1/inventory/ajustes/" + ajusteId.valor()))
+                .created(URI.create("/inventory/ajustes/" + ajusteId.valor()))
                 .body(Map.of("id", ajusteId.valor().toString(), "status", "SUCCESS"));
     }
 }

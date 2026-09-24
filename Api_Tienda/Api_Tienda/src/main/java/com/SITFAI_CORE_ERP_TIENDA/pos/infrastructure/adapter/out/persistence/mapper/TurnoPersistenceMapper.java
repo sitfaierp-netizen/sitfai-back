@@ -35,6 +35,7 @@ public final class TurnoPersistenceMapper {
         entity.setUsuarioId(domain.getUsuarioId().value().toString());
         entity.setEstado(domain.getEstado().name());
         entity.setMontoApertura(domain.getMontoApertura().valor());
+        entity.setVersion(domain.getVersion());
 
         if (domain.getArqueo() != null) {
             entity.setMontoEsperado(domain.getArqueo().balanceEsperado().valor());
@@ -113,7 +114,8 @@ public final class TurnoPersistenceMapper {
                 estado,
                 montoApertura,
                 transacciones,
-                arqueo
+                arqueo,
+                entity.getVersion()
         );
     }
 }

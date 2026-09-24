@@ -3,6 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.DomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.MovimientoRegistradoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockActualizadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockDescontadoPorVentaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockReservadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.PuntoReordenAlcanzadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.StockInsuficienteException;
@@ -477,6 +478,102 @@ public final class Bodega {
         ));
 
         // Verificar BOD-08 (Punto de Reorden)
+        BigDecimal umbral = this.puntosReorden.getOrDefault(productoId, PuntoReorden.porDefecto()).valor();
+        if (stockTotal.compareTo(umbral) > 0 && nuevoStock.compareTo(umbral) <= 0) {
+            this.domainEvents.add(PuntoReordenAlcanzadoEvent.of(
+                    this.empresaId, this.id, productoId, nuevoStock
+            ));
+        }
+    }
+
+    /**
+     * Descuenta stock de la Bodega por venta física comercial (POS) aplicando el algoritmo FEFO (First Expires, First Out).
+     * <p>
+     * Reglas aplicadas:
+     * <ul>
+     *   <li>BOD-03: Solo en Bodega se registran movimientos de stock.</li>
+     *   <li>BOD-04: Obligatoriedad de Documento Fuente con el ID de la transacción del POS para trazabilidad.</li>
+     *   <li>BOD-05: Invariante de Stock No Negativo (fail-fast lanzando StockInsuficienteException).</li>
+     *   <li>INV-01: Algoritmo FEFO estricto (consume primero los lotes con fecha de caducidad más cercana).</li>
+     *   <li>MT-01: Aislamiento por EmpresaId en todos los movimientos y eventos emitidos.</li>
+     * </ul>
+     *
+     * @param productoId     Identificador del producto vendido.
+     * @param cantidad       Cantidad total requerida a descontar.
+     * @param documentoVenta Documento fuente identificando la transacción de venta (BOD-04).
+     * @throws StockInsuficienteException si la suma de los lotes no cubre la cantidad solicitada (BOD-05).
+     */
+    public void descontarStockPorVenta(
+            ProductoId productoId,
+            Cantidad cantidad,
+            DocumentoFuenteId documentoVenta) {
+
+        if (!this.activo) {
+            throw new IllegalStateException(String.format("La Bodega '%s' ha sido eliminada y no puede recibir movimientos.", this.id));
+        }
+
+        if (!this.activa) {
+            throw new IllegalStateException(String.format("La Bodega '%s' está inactiva y no puede recibir movimientos.", this.id));
+        }
+
+        Objects.requireNonNull(productoId, "descontarStockPorVenta: productoId es obligatorio.");
+        Objects.requireNonNull(cantidad, "descontarStockPorVenta: cantidad es obligatoria.");
+        Objects.requireNonNull(documentoVenta, "descontarStockPorVenta: documentoVenta es obligatorio (BOD-04).");
+
+        BigDecimal stockTotal = consultarStock(productoId);
+
+        // Invariante BOD-05: Protección de stock negativo con fail-fast
+        if (stockTotal.compareTo(cantidad.valor()) < 0) {
+            throw new StockInsuficienteException(this.id, productoId, stockTotal, cantidad.valor());
+        }
+
+        // Lógica FEFO: Ordenar por fecha de caducidad ascendente (los que caducan primero van primero)
+        // Los lotes sin fecha de caducidad (null) se sitúan al final de la cola
+        List<StockLote> lotesProducto = this.lotes.stream()
+                .filter(l -> l.getProductoId().equals(productoId) && l.getCantidad().compareTo(BigDecimal.ZERO) > 0)
+                .sorted((l1, l2) -> {
+                    if (l1.getFechaCaducidad() == null && l2.getFechaCaducidad() == null) return 0;
+                    if (l1.getFechaCaducidad() == null) return 1;
+                    if (l2.getFechaCaducidad() == null) return -1;
+                    return l1.getFechaCaducidad().compareTo(l2.getFechaCaducidad());
+                })
+                .toList();
+
+        BigDecimal cantidadRestante = cantidad.valor();
+
+        for (StockLote lote : lotesProducto) {
+            if (cantidadRestante.compareTo(BigDecimal.ZERO) <= 0) break;
+
+            BigDecimal disponibleEnLote = lote.getCantidad();
+            BigDecimal aDescontar = disponibleEnLote.compareTo(cantidadRestante) >= 0 ? cantidadRestante : disponibleEnLote;
+
+            lote.descontar(aDescontar);
+            cantidadRestante = cantidadRestante.subtract(aDescontar);
+
+            MovimientoInventario mov = MovimientoInventario.crear(
+                    this.id, productoId, this.empresaId, Cantidad.de(aDescontar), TipoMovimiento.SALIDA, lote.getLoteId(), documentoVenta
+            );
+            this.movimientos.add(mov);
+        }
+
+        this.actualizadoEn = Instant.now();
+        BigDecimal nuevoStock = consultarStock(productoId);
+
+        // Movimiento genérico de salida y actualización de stock para suscriptores
+        this.domainEvents.add(MovimientoRegistradoEvent.of(
+                this.id, productoId, this.empresaId, TipoMovimiento.SALIDA, cantidad, documentoVenta
+        ));
+
+        this.domainEvents.add(StockActualizadoEvent.of(
+                this.id, productoId, this.empresaId, nuevoStock
+        ));
+
+        // Evento de dominio específico para deducción por venta física (FEFO)
+        this.domainEvents.add(StockDescontadoPorVentaEvent.of(
+                this.empresaId, this.id, productoId, cantidad, documentoVenta
+        ));
+
+        // Invariante BOD-08 (Punto de Reorden)
         BigDecimal umbral = this.puntosReorden.getOrDefault(productoId, PuntoReorden.porDefecto()).valor();
         if (stockTotal.compareTo(umbral) > 0 && nuevoStock.compareTo(umbral) <= 0) {
             this.domainEvents.add(PuntoReordenAlcanzadoEvent.of(

@@ -20,7 +20,7 @@ import java.util.Objects;
  * Regla 5 (API REST): Exposición formal bajo {@code POST /api/v1/inventory/despachos} desacoplando DTOs.
  */
 @RestController
-@RequestMapping({"/api/v1/inventory/despachos", "/inventory/despachos"})
+@RequestMapping("/inventory/despachos")
 public class DespachoController {
 
     private final ConfirmarDespachoUseCase confirmarDespachoUseCase;

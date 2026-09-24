@@ -3,6 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.MovimientoRegistradoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.PuntoReordenAlcanzadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockActualizadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockDescontadoPorVentaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.StockInsuficienteException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -234,5 +235,142 @@ class BodegaFefoTest {
 
         assertTrue(bodega.getDomainEvents().stream().anyMatch(e -> e instanceof MovimientoRegistradoEvent));
         assertTrue(bodega.getDomainEvents().stream().anyMatch(e -> e instanceof StockActualizadoEvent));
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // PRUEBAS DE DOMINIO: descontarStockPorVenta (ALGORITMO FEFO Y POS)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    @Test
+    void testDescontarStockPorVenta_FefoConsumeLotesPorOrdenDeCaducidad() {
+        DocumentoFuenteId docPos = new DocumentoFuenteId("VENTA_POS", "TICKET-POS-001");
+
+        // Lote 1: Caduca 2026-08-15 (más próximo a vencer) — 4 unidades
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(4)), LoteId.de("LOTE-PROXIMO"), toInstant(2026, 8, 15), documentoIngreso);
+        // Lote 2: Caduca 2026-10-01 (intermedio) — 6 unidades
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(6)), LoteId.de("LOTE-INTERMEDIO"), toInstant(2026, 10, 1), documentoIngreso);
+        // Lote 3: Caduca 2026-12-31 (lejano) — 10 unidades
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(10)), LoteId.de("LOTE-LEJANO"), toInstant(2026, 12, 31), documentoIngreso);
+
+        assertEquals(BigDecimal.valueOf(20), bodega.consultarStock(productoId));
+        bodega.drainDomainEvents(); // Limpiar eventos de ingreso
+
+        // Solicitar venta de 7 unidades: debe agotar LOTE-PROXIMO (4) y tomar 3 de LOTE-INTERMEDIO
+        bodega.descontarStockPorVenta(productoId, Cantidad.de(BigDecimal.valueOf(7)), docPos);
+
+        assertEquals(BigDecimal.valueOf(13), bodega.consultarStock(productoId));
+
+        StockLote loteProx = bodega.getLotes().stream().filter(l -> l.getLoteId().valor().equals("LOTE-PROXIMO")).findFirst().orElseThrow();
+        StockLote loteInter = bodega.getLotes().stream().filter(l -> l.getLoteId().valor().equals("LOTE-INTERMEDIO")).findFirst().orElseThrow();
+        StockLote loteLej = bodega.getLotes().stream().filter(l -> l.getLoteId().valor().equals("LOTE-LEJANO")).findFirst().orElseThrow();
+
+        assertEquals(BigDecimal.ZERO, loteProx.getCantidad(), "Lote más próximo debe haber sido consumido por completo");
+        assertEquals(BigDecimal.valueOf(3), loteInter.getCantidad(), "Lote intermedio debe tener 3 unidades restantes (6 - 3)");
+        assertEquals(BigDecimal.valueOf(10), loteLej.getCantidad(), "Lote lejano debe permanecer intacto con 10 unidades");
+
+        // Validar emisión de eventos de dominio
+        var eventos = bodega.getDomainEvents();
+        assertTrue(eventos.stream().anyMatch(e -> e instanceof StockDescontadoPorVentaEvent), "Debe emitirse StockDescontadoPorVentaEvent");
+
+        StockDescontadoPorVentaEvent eventoVenta = eventos.stream()
+                .filter(e -> e instanceof StockDescontadoPorVentaEvent)
+                .map(e -> (StockDescontadoPorVentaEvent) e)
+                .findFirst()
+                .orElseThrow();
+
+        assertNotNull(eventoVenta.eventoId());
+        assertNotNull(eventoVenta.ocurridoEn());
+        assertEquals(empresaId, eventoVenta.empresaId());
+        assertEquals(bodega.getId(), eventoVenta.bodegaId());
+        assertEquals(productoId, eventoVenta.productoId());
+        assertEquals(BigDecimal.valueOf(7), eventoVenta.cantidad().valor());
+        assertEquals(docPos, eventoVenta.documentoFuente());
+    }
+
+    @Test
+    void testDescontarStockPorVenta_StockInsuficiente_LanzaExcepcionFailFast() {
+        DocumentoFuenteId docPos = new DocumentoFuenteId("VENTA_POS", "TICKET-POS-002");
+
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(3)), LoteId.de("LOTE-1"), toInstant(2026, 9, 1), documentoIngreso);
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(4)), LoteId.de("LOTE-2"), toInstant(2026, 11, 1), documentoIngreso);
+
+        assertEquals(BigDecimal.valueOf(7), bodega.consultarStock(productoId));
+        bodega.drainDomainEvents();
+
+        // Solicitar 8 unidades cuando solo hay 7 disponibles -> StockInsuficienteException
+        StockInsuficienteException ex = assertThrows(StockInsuficienteException.class, () -> {
+            bodega.descontarStockPorVenta(productoId, Cantidad.de(BigDecimal.valueOf(8)), docPos);
+        });
+
+        assertEquals(bodega.getId(), ex.getBodegaId());
+        assertEquals(productoId, ex.getProductoId());
+        assertEquals(0, BigDecimal.valueOf(7).compareTo(ex.getStockDisponible()));
+        assertEquals(0, BigDecimal.valueOf(8).compareTo(ex.getCantidadSolicitada()));
+
+        // Invariante BOD-05: Atomicidad, el stock no fue alterado
+        assertEquals(BigDecimal.valueOf(7), bodega.consultarStock(productoId));
+        assertTrue(bodega.getDomainEvents().isEmpty(), "No deben emitirse eventos si la operación falla");
+    }
+
+    @Test
+    void testDescontarStockPorVenta_ConsumoExactoDeUnLote() {
+        DocumentoFuenteId docPos = new DocumentoFuenteId("VENTA_POS", "TICKET-POS-003");
+
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(5)), LoteId.de("LOTE-1"), toInstant(2026, 8, 1), documentoIngreso);
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(5)), LoteId.de("LOTE-2"), toInstant(2026, 9, 1), documentoIngreso);
+
+        bodega.descontarStockPorVenta(productoId, Cantidad.de(BigDecimal.valueOf(5)), docPos);
+
+        StockLote lote1 = bodega.getLotes().stream().filter(l -> l.getLoteId().valor().equals("LOTE-1")).findFirst().orElseThrow();
+        StockLote lote2 = bodega.getLotes().stream().filter(l -> l.getLoteId().valor().equals("LOTE-2")).findFirst().orElseThrow();
+
+        assertEquals(BigDecimal.ZERO, lote1.getCantidad());
+        assertEquals(BigDecimal.valueOf(5), lote2.getCantidad());
+        assertEquals(BigDecimal.valueOf(5), bodega.consultarStock(productoId));
+    }
+
+    @Test
+    void testDescontarStockPorVenta_LotesSinCaducidadVanAlFinal() {
+        DocumentoFuenteId docPos = new DocumentoFuenteId("VENTA_POS", "TICKET-POS-004");
+
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(5)), LoteId.de("LOTE-NULL"), null, documentoIngreso);
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(5)), LoteId.de("LOTE-FECHA"), toInstant(2026, 7, 1), documentoIngreso);
+
+        bodega.descontarStockPorVenta(productoId, Cantidad.de(BigDecimal.valueOf(7)), docPos);
+
+        StockLote loteFecha = bodega.getLotes().stream().filter(l -> l.getLoteId().valor().equals("LOTE-FECHA")).findFirst().orElseThrow();
+        StockLote loteNull = bodega.getLotes().stream().filter(l -> l.getLoteId().valor().equals("LOTE-NULL")).findFirst().orElseThrow();
+
+        assertEquals(BigDecimal.ZERO, loteFecha.getCantidad(), "Lote con fecha debe consumirse primero");
+        assertEquals(BigDecimal.valueOf(3), loteNull.getCantidad(), "Lote sin fecha debe consumirse al final");
+    }
+
+    @Test
+    void testDescontarStockPorVenta_BodegaInactivaRechazaOperacion() {
+        DocumentoFuenteId docPos = new DocumentoFuenteId("VENTA_POS", "TICKET-POS-005");
+        bodega.registrarIngreso(productoId, Cantidad.de(BigDecimal.valueOf(5)), LoteId.de("LOTE-1"), toInstant(2026, 8, 1), documentoIngreso);
+
+        bodega.desactivar();
+
+        assertThrows(IllegalStateException.class, () -> {
+            bodega.descontarStockPorVenta(productoId, Cantidad.de(BigDecimal.valueOf(2)), docPos);
+        });
+    }
+
+    @Test
+    void testDescontarStockPorVenta_ValidacionParametrosObligatorios() {
+        DocumentoFuenteId docPos = new DocumentoFuenteId("VENTA_POS", "TICKET-POS-006");
+
+        assertThrows(NullPointerException.class, () -> {
+            bodega.descontarStockPorVenta(null, Cantidad.de(BigDecimal.ONE), docPos);
+        });
+
+        assertThrows(NullPointerException.class, () -> {
+            bodega.descontarStockPorVenta(productoId, null, docPos);
+        });
+
+        assertThrows(NullPointerException.class, () -> {
+            bodega.descontarStockPorVenta(productoId, Cantidad.de(BigDecimal.ONE), null);
+        });
     }
 }

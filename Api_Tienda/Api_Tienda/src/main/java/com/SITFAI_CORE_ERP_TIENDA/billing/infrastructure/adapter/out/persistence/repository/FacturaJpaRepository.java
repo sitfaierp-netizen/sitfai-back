@@ -6,10 +6,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+import java.util.UUID;
+
 @Repository
-public interface FacturaJpaRepository extends JpaRepository<FacturaJpaEntity, String> {
+public interface FacturaJpaRepository extends JpaRepository<FacturaJpaEntity, UUID> {
 
     // Regla MT-01: Búsqueda siempre con empresaId
-    Optional<FacturaJpaEntity> findByIdAndEmpresaId(String id, String empresaId);
-    boolean existsByIdAndEmpresaId(String id, String empresaId);
+    Optional<FacturaJpaEntity> findByIdAndEmpresaId(UUID id, UUID empresaId);
+    boolean existsByIdAndEmpresaId(UUID id, UUID empresaId);
 }

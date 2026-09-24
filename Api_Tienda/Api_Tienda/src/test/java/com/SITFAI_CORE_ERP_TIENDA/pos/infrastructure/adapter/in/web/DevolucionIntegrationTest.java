@@ -67,7 +67,8 @@ class DevolucionIntegrationTest {
                 EstadoTurno.ABIERTO,
                 Dinero.de(new BigDecimal("100.00")),
                 List.of(),
-                null
+                null,
+                0L
         );
         turnoCajaRepository.guardar(turno);
 
@@ -88,7 +89,8 @@ class DevolucionIntegrationTest {
                       "codigoLote": "LOTE-123",
                       "cantidad": 1
                     }
-                  ]
+                  ],
+                  "version": 0
                 }
                 """.formatted(ticketOriginalId, UUID.randomUUID(), UUID.randomUUID());
 

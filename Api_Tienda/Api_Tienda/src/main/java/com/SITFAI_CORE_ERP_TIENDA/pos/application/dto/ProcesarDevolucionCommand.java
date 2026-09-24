@@ -9,5 +9,6 @@ public record ProcesarDevolucionCommand(
         UUID ticketOriginalId,
         BigDecimal montoDevuelto,
         List<LineaDevolucionDto> lineas,
-        List<LoteRevertidoDto> lotesRevertidos
+        List<LoteRevertidoDto> lotesRevertidos,
+        Long version
 ) {}

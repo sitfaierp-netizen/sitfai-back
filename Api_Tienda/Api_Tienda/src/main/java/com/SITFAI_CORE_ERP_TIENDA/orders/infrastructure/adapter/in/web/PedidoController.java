@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pedidos")
+@RequestMapping("/pedidos")
 public class PedidoController {
 
     private final CrearPedidoService crearPedidoService;
@@ -49,7 +49,7 @@ public class PedidoController {
 
         UUID pedidoId = crearPedidoService.ejecutar(command);
 
-        return ResponseEntity.created(URI.create("/api/v1/pedidos/" + pedidoId)).build();
+        return ResponseEntity.created(URI.create("/pedidos/" + pedidoId)).build();
     }
 
     @Idempotent

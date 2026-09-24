@@ -15,7 +15,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/billing/facturas")
+@RequestMapping("/billing/facturas")
 public class FacturaController {
 
     private final EmitirFacturaUseCase emitirFacturaUseCase;

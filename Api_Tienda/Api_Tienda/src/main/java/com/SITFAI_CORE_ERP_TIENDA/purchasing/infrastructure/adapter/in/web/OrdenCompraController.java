@@ -26,7 +26,7 @@ import java.util.UUID;
  * Regla MT-02: Ningún parámetro de empresa en payload o query; se resuelve por tokens seguros.
  */
 @RestController
-@RequestMapping({"/api/v1/purchasing/ordenes", "/purchasing/ordenes"})
+@RequestMapping("/purchasing/ordenes")
 public class OrdenCompraController {
 
     private final EmitirOrdenCompraUseCase emitirOrdenCompraUseCase;

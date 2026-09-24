@@ -1,0 +1,7 @@
+package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input;
+
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.DescontarStockVentaCommand;
+
+public interface DescontarStockVentaUseCase {
+    void ejecutar(DescontarStockVentaCommand command);
+}

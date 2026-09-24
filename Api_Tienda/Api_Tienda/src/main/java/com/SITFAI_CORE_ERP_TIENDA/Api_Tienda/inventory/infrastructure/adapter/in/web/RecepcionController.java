@@ -21,7 +21,7 @@ import java.util.UUID;
  * Regla 5 (API REST): Exposición formal con DTOs desacoplados del dominio y commands de aplicación.
  */
 @RestController
-@RequestMapping({"/api/v1/inventory", "/inventory"})
+@RequestMapping("/inventory")
 public class RecepcionController {
 
     private final RegistrarRecepcionUseCase registrarRecepcionUseCase;
@@ -40,7 +40,7 @@ public class RecepcionController {
     @PostMapping("/recepciones")
     public ResponseEntity<Void> registrarRecepcion(@Valid @RequestBody RegistrarRecepcionRequest request) {
         UUID recepcionId = registrarRecepcionUseCase.registrar(request.toCommand());
-        return ResponseEntity.created(URI.create("/api/v1/inventory/recepciones/" + recepcionId)).build();
+        return ResponseEntity.created(URI.create("/inventory/recepciones/" + recepcionId)).build();
     }
 
     /**

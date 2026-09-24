@@ -8,7 +8,8 @@ public record ProcesarDevolucionWebRequest(
         UUID ticketOriginalId,
         BigDecimal montoDevuelto,
         List<LineaDevolucionWebRequest> lineas,
-        List<LoteRevertidoWebRequest> lotesRevertidos
+        List<LoteRevertidoWebRequest> lotesRevertidos,
+        Long version
 ) {
     public record LineaDevolucionWebRequest(
             UUID productoId,

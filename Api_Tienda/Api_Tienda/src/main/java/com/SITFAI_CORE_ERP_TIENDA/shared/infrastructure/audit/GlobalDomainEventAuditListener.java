@@ -149,7 +149,7 @@ public class GlobalDomainEventAuditListener {
         if (value instanceof String str) {
             return str;
         }
-        Object innerVal = invokeMethodIfExists(value, "valor", "getValor", "id", "getId");
+        Object innerVal = invokeMethodIfExists(value, "valor", "getValor", "id", "getId", "value", "getValue");
         if (innerVal != null) {
             return innerVal.toString();
         }
