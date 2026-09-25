@@ -1,14 +1,20 @@
-# Bounded Context: Fulfillment (Despachos y WMS)
-> **Estado:** 🟢 COMPLETADO Y VALIDADO | **Puerto Asignado:** N/A (Módulo Interno/Futuro Puerto)
+# Módulo Fulfillment (Preparación y Despacho)
+> **Versión:** 1.0.0 | **Estado:** DISEÑO DOMINIO
 
-## Propósito
-Gestionar el ciclo de vida de los despachos físicos (Picking y Packing) de los pedidos comerciales, operando como un Warehouse Management System (WMS) ligero dentro del ERP SITFAI.
+## Responsabilidad
+Encapsula las reglas de negocio sobre la preparación y logística de salida de pedidos (picking, packing y despacho). 
 
-## Capas
-- [x] Domain Layer (Value Objects, Entities, Aggregate Root `OrdenDespacho`, Invariantes verificados)
-- [x] Application Layer (Use Cases, DTOs, Mappers, Ports, Services)
-- [x] Infrastructure Layer (JPA Entities, Flyway, Zero Trust REST, RFC 7807)
+## Estructura Actual
+- **Dominio:** 
+  - **Aggregates:** `OrdenDespacho`
+  - **Local Entities:** `LineaDespacho`
+  - **Value Objects:** `DespachoId`, `BodegaId`, `EmpresaId`, `PedidoId`, `EstadoDespacho`, `ProductoId`
+  - **Ports:** `OrdenDespachoRepository`
+  - **Eventos:** `DespachoCompletadoEvent`
 
-## Eventos
-- **Publica:** `PackingCompletadoEvent` (cuando el packing de la Orden de Despacho alcanza el 100% de los productos solicitados).
-- **Consume:** `PedidoConfirmadoEvent` (desde `Api_Tienda`). Altera el estado del sistema inicializando el proceso logístico y planificando el despacho automáticamente.
+## Eventos de Dominio (Outbound)
+- `DespachoCompletadoEvent`: Emitido al completarse el empaque y confirmarse el despacho para descontar stock físico final.
+
+## Reglas Inquebrantables del Dominio
+- Protección del Ciclo de Vida: El estado del despacho debe ser obligatoriamente secuencial: PENDIENTE -> EN_PICKING -> EMPACADO -> DESPACHADO. No se admiten saltos lógicos.
+- Cero dependencias de framework en la capa Domain.
