@@ -6,11 +6,8 @@ import java.util.UUID;
 public record OrdenDespachoResponse(
         UUID id,
         UUID empresaId,
-        UUID pedidoOrigenId,
+        UUID pedidoId,
+        UUID bodegaId,
         String estado,
-        String direccionLocal,
-        String ciudad,
-        String codigoPostal,
         List<LineaDespachoResponse> lineas
-) {
-}
+) {}
