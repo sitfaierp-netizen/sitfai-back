@@ -1,4 +1,4 @@
-package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject;
+package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo;
 
 import java.math.BigDecimal;
 import java.util.Objects;

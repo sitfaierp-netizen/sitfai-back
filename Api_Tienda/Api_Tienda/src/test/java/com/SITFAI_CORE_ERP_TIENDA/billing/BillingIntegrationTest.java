@@ -2,11 +2,11 @@ package com.SITFAI_CORE_ERP_TIENDA.billing;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.Factura;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.port.FacturaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.model.factura.vo.EstadoFactura;
@@ -29,9 +29,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Prueba de Integración: Verifica el flujo asíncrono desde el E-Commerce hacia Facturación.
+ * Prueba de IntegraciÃ³n: Verifica el flujo asÃ­ncrono desde el E-Commerce hacia FacturaciÃ³n.
  * <p>
- * Simula la publicación de {@link PedidoConfirmadoEvent} y comprueba que la factura
+ * Simula la publicaciÃ³n de {@link PedidoConfirmadoEvent} y comprueba que la factura
  * se genera en estado {@link EstadoFactura#EMITIDA}, con sus totales calculados,
  * vinculada al documento origen y almacenada con aislamiento MT-01.
  */
@@ -84,7 +84,7 @@ public class BillingIntegrationTest {
                 List.of(linea)
         );
 
-        // 2. ACT: Simular la recepción del evento de confirmación de pedido
+        // 2. ACT: Simular la recepciÃ³n del evento de confirmaciÃ³n de pedido
         pedidoConfirmadoEventHandler.onPedidoConfirmado(event);
 
         // 3. ASSERT: Verificar persistencia con aislamiento MT-01
@@ -97,7 +97,7 @@ public class BillingIntegrationTest {
         Factura factura = facturas.stream()
                 .filter(f -> f.getDocumentoFuenteId().numero().equals(pedidoIdRaw.toString()))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("No se encontró la factura para el pedido " + pedidoIdRaw));
+                .orElseThrow(() -> new AssertionError("No se encontrÃ³ la factura para el pedido " + pedidoIdRaw));
 
         assertThat(factura.getEstado()).isEqualTo(EstadoFactura.EMITIDA);
         assertThat(factura.getEmpresaId().valor()).isEqualTo(empresaIdRaw);
@@ -105,9 +105,10 @@ public class BillingIntegrationTest {
         assertThat(factura.getDocumentoFuenteId().tipo()).contains("ECOMMERCE");
         assertThat(factura.getLineas()).hasSize(1);
 
-        // Validar cálculo de totales matemáticos (Subtotal 100,000 + IVA 19% = 119,000)
+        // Validar cÃ¡lculo de totales matemÃ¡ticos (Subtotal 100,000 + IVA 19% = 119,000)
         assertThat(factura.getSubtotal().monto()).isEqualByComparingTo(new BigDecimal("100000.0000"));
         assertThat(factura.getTotalImpuestos().monto()).isEqualByComparingTo(new BigDecimal("19000.0000"));
         assertThat(factura.getTotal().monto()).isEqualByComparingTo(new BigDecimal("119000.0000"));
     }
 }
+

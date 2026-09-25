@@ -13,11 +13,11 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoNoEncontrado
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EstadoPedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.port.output.PedidoRepository;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.in.messaging.ReservaRechazadaEventHandler;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.in.messaging.StockReservadoEventHandler;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.ReservaRechazadaEvent;
@@ -40,21 +40,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Suite de Integración de la SAGA E-Commerce (Happy Path & Unhappy Path).
+ * Suite de IntegraciÃ³n de la SAGA E-Commerce (Happy Path & Unhappy Path).
  * <p>
- * Valida el ciclo completo de la coreografía entre Inventario y E-Commerce bajo aislamiento estricto MT-01:
+ * Valida el ciclo completo de la coreografÃ­a entre Inventario y E-Commerce bajo aislamiento estricto MT-01:
  * <ul>
- *   <li><b>Happy Path:</b> Reserva exitosa en Inventario → Emisión de {@link StockReservadoEvent}
- *       → Recepción en {@link StockReservadoEventHandler} → {@link ConfirmarPedidoService}
- *       → Transición a {@link EstadoPedido#CONFIRMADO} → Emisión de {@link PedidoConfirmadoEvent}.</li>
- *   <li><b>Unhappy Path:</b> Falta de stock (BOD-05) → Emisión de {@link ReservaRechazadaEvent}
- *       con {@code EmpresaId} → Recepción en {@link ReservaRechazadaEventHandler} → {@link CancelarPedidoService}
- *       → Transición a {@link EstadoPedido#CANCELADO} → Emisión de {@link PedidoCanceladoEvent}.</li>
- *   <li><b>MT-01:</b> Demostración de frontera estricta entre tenants (las operaciones dirigidas
+ *   <li><b>Happy Path:</b> Reserva exitosa en Inventario â†’ EmisiÃ³n de {@link StockReservadoEvent}
+ *       â†’ RecepciÃ³n en {@link StockReservadoEventHandler} â†’ {@link ConfirmarPedidoService}
+ *       â†’ TransiciÃ³n a {@link EstadoPedido#CONFIRMADO} â†’ EmisiÃ³n de {@link PedidoConfirmadoEvent}.</li>
+ *   <li><b>Unhappy Path:</b> Falta de stock (BOD-05) â†’ EmisiÃ³n de {@link ReservaRechazadaEvent}
+ *       con {@code EmpresaId} â†’ RecepciÃ³n en {@link ReservaRechazadaEventHandler} â†’ {@link CancelarPedidoService}
+ *       â†’ TransiciÃ³n a {@link EstadoPedido#CANCELADO} â†’ EmisiÃ³n de {@link PedidoCanceladoEvent}.</li>
+ *   <li><b>MT-01:</b> DemostraciÃ³n de frontera estricta entre tenants (las operaciones dirigidas
  *       con otro {@code EmpresaId} son rechazadas inmediatamente por el repositorio).</li>
  * </ul>
  */
-@DisplayName("[SAGA] Suite E-Commerce Completa: Happy Path (Confirmación) & Unhappy Path (Compensación) (MT-01)")
+@DisplayName("[SAGA] Suite E-Commerce Completa: Happy Path (ConfirmaciÃ³n) & Unhappy Path (CompensaciÃ³n) (MT-01)")
 class SagaEcommerceIntegrationTest {
 
     private final EmpresaId empresaId = EmpresaId.generar();
@@ -62,7 +62,7 @@ class SagaEcommerceIntegrationTest {
     private final ClienteId clienteId = ClienteId.generar();
     private final ProductoId productoId = ProductoId.generar();
 
-    // VOs del BC de Inventario (FQN para evitar colisión de paquetes)
+    // VOs del BC de Inventario (FQN para evitar colisiÃ³n de paquetes)
     private final com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.ProductoId invProductoId =
             new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.ProductoId(productoId.valor());
 
@@ -71,9 +71,9 @@ class SagaEcommerceIntegrationTest {
 
     private final BodegaId bodegaId = BodegaId.generar();
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Repositorio y Publisher In-Memory para simular persistencia y eventos
-    // ─────────────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     static class InMemoryPedidoRepository implements PedidoRepository {
         private final Map<String, Pedido> store = new HashMap<>();
@@ -97,9 +97,7 @@ class SagaEcommerceIntegrationTest {
             return Optional.ofNullable(store.get(key(id, empresaId)));
         }
 
-        public Optional<Pedido> buscarPorId(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId id, EmpresaId empresaId) {
-            return Optional.ofNullable(store.get(key(id.valor(), empresaId.valor())));
-        }
+
 
         @Override
         public List<Pedido> buscarPorEmpresa(EmpresaId empresaId) {
@@ -128,12 +126,12 @@ class SagaEcommerceIntegrationTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════════
-    // BLOQUE 1: SAGA HAPPY PATH (RESERVA EXITOSA → PEDIDO CONFIRMADO)
-    // ═════════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // BLOQUE 1: SAGA HAPPY PATH (RESERVA EXITOSA â†’ PEDIDO CONFIRMADO)
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     @Nested
-    @DisplayName("SAGA Happy Path (Confirmación de Pedido tras Reserva de Stock)")
+    @DisplayName("SAGA Happy Path (ConfirmaciÃ³n de Pedido tras Reserva de Stock)")
     class HappyPathSagaTest {
 
         @Test
@@ -190,7 +188,7 @@ class SagaEcommerceIntegrationTest {
         }
 
         @Test
-        @DisplayName("MT-01: ConfirmarPedidoService rechaza confirmación si se intenta desde otro EmpresaId (Aislamiento Total)")
+        @DisplayName("MT-01: ConfirmarPedidoService rechaza confirmaciÃ³n si se intenta desde otro EmpresaId (Aislamiento Total)")
         void debeRechazarConfirmacionSiTenantNoCoincide() {
             InMemoryPedidoRepository repo = new InMemoryPedidoRepository();
             InMemoryEventPublisher publisher = new InMemoryEventPublisher();
@@ -235,7 +233,7 @@ class SagaEcommerceIntegrationTest {
 
             StockReservadoEvent evento = StockReservadoEvent.of(bodegaId, invProductoId, invEmpresaId, cantidad, docFuente);
 
-            // Ejecución del listener asíncrono
+            // EjecuciÃ³n del listener asÃ­ncrono
             handler.onStockReservado(evento);
 
             // El pedido debe haber quedado CONFIRMADO en el repositorio del tenant
@@ -245,12 +243,12 @@ class SagaEcommerceIntegrationTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════════
-    // BLOQUE 2: SAGA UNHAPPY PATH (RECHAZO DE RESERVA → COMPENSACIÓN)
-    // ═════════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // BLOQUE 2: SAGA UNHAPPY PATH (RECHAZO DE RESERVA â†’ COMPENSACIÃ“N)
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     @Nested
-    @DisplayName("SAGA Unhappy Path (Compensación de Pedido por Falta de Stock)")
+    @DisplayName("SAGA Unhappy Path (CompensaciÃ³n de Pedido por Falta de Stock)")
     class UnhappyPathSagaTest {
 
         @Test
@@ -299,7 +297,7 @@ class SagaEcommerceIntegrationTest {
         }
 
         @Test
-        @DisplayName("MT-01: Búsqueda acotada por tenant rechaza compensación si se envía otro EmpresaId")
+        @DisplayName("MT-01: BÃºsqueda acotada por tenant rechaza compensaciÃ³n si se envÃ­a otro EmpresaId")
         void debeRechazarCompensacionSiEmpresaIdNoCoincide() {
             InMemoryPedidoRepository repo = new InMemoryPedidoRepository();
             InMemoryEventPublisher publisher = new InMemoryEventPublisher();
@@ -324,7 +322,7 @@ class SagaEcommerceIntegrationTest {
         }
 
         @Test
-        @DisplayName("MT-01: ReservaRechazadaEventHandler extrae empresaId del evento e invoca cancelación")
+        @DisplayName("MT-01: ReservaRechazadaEventHandler extrae empresaId del evento e invoca cancelaciÃ³n")
         void debePropagarEmpresaIdDesdeHandlerHaciaUseCase() {
             InMemoryPedidoRepository repo = new InMemoryPedidoRepository();
             InMemoryEventPublisher publisher = new InMemoryEventPublisher();
@@ -351,3 +349,4 @@ class SagaEcommerceIntegrationTest {
         }
     }
 }
+

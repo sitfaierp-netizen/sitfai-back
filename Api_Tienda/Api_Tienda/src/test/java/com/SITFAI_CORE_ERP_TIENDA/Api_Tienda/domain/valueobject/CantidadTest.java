@@ -1,4 +1,4 @@
-package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject;
+package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,11 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class CantidadTest {
 
     @Nested
-    @DisplayName("Creación e Invariantes")
+    @DisplayName("CreaciÃ³n e Invariantes")
     class CreacionTests {
 
         @Test
-        @DisplayName("Debe crear cantidad válida positiva")
+        @DisplayName("Debe crear cantidad vÃ¡lida positiva")
         void debeCrearCantidadValida() {
             Cantidad c = Cantidad.de(5);
             assertThat(c.valor()).isEqualTo(5);
@@ -56,7 +56,7 @@ class CantidadTest {
     }
 
     @Nested
-    @DisplayName("Operaciones Aritméticas")
+    @DisplayName("Operaciones AritmÃ©ticas")
     class OperacionesTests {
 
         @Test
@@ -87,3 +87,4 @@ class CantidadTest {
         }
     }
 }
+

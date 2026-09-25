@@ -4,7 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.in.web.dto.CrearPedidoWebRequest;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.out.persistence.entity.PedidoJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.out.persistence.repository.PedidoJpaRepository;
@@ -41,13 +41,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Prueba de Integración: Ciclo Comercial del Agregado Pedido (Api_Tienda).
+ * Prueba de IntegraciÃ³n: Ciclo Comercial del Agregado Pedido (Api_Tienda).
  * <p>
  * Simula:
- * 1. Creación de un pedido vía REST (POST /pedidos) con DTOs aislados.
- * 2. Confirmación del pedido vía REST (PATCH /pedidos/{id}/confirmar).
- * 3. Persistencia en base de datos con clave de partición empresa_id (MT-01).
- * 4. Despacho del evento PedidoConfirmadoEvent hacia el contexto de Spring (Coreografía con Bodega/Inventario).
+ * 1. CreaciÃ³n de un pedido vÃ­a REST (POST /pedidos) con DTOs aislados.
+ * 2. ConfirmaciÃ³n del pedido vÃ­a REST (PATCH /pedidos/{id}/confirmar).
+ * 3. Persistencia en base de datos con clave de particiÃ³n empresa_id (MT-01).
+ * 4. Despacho del evento PedidoConfirmadoEvent hacia el contexto de Spring (CoreografÃ­a con Bodega/Inventario).
  */
 @SpringBootTest(classes = ApiTiendaApplication.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -86,9 +86,9 @@ public class PedidoIntegrationTest {
     }
 
     @Test
-    @DisplayName("Ciclo completo del pedido: Creación vía REST, confirmación y despacho de evento")
+    @DisplayName("Ciclo completo del pedido: CreaciÃ³n vÃ­a REST, confirmaciÃ³n y despacho de evento")
     void testCrearYConfirmarPedido() throws Exception {
-        // 1. Crear pedido vía REST POST /pedidos
+        // 1. Crear pedido vÃ­a REST POST /pedidos
         CrearPedidoWebRequest request = new CrearPedidoWebRequest(
                 clienteId,
                 List.of(
@@ -116,10 +116,10 @@ public class PedidoIntegrationTest {
         assertThat(pedidoGuardado.get().getTotal()).isEqualByComparingTo(BigDecimal.valueOf(450.00));
         assertThat(pedidoGuardado.get().getLineas()).hasSize(1);
 
-        // No debe haber emitido evento de confirmación todavía
+        // No debe haber emitido evento de confirmaciÃ³n todavÃ­a
         assertThat(eventCaptureListener.getEvents()).isEmpty();
 
-        // 2. Confirmar pedido vía REST PATCH /pedidos/{id}/confirmar
+        // 2. Confirmar pedido vÃ­a REST PATCH /pedidos/{id}/confirmar
         mockMvc.perform(patch("/pedidos/" + pedidoId + "/confirmar")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -168,3 +168,4 @@ public class PedidoIntegrationTest {
         }
     }
 }
+

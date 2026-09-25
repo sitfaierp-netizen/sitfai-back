@@ -9,8 +9,8 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoNoEncontrado
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EstadoPedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.port.output.PedidoRepository;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +19,9 @@ import java.util.Objects;
 /**
  * Caso de Uso (Application Service): Confirmar Pedido.
  * <p>
- * Orquesta la confirmación del Pedido bajo aislamiento estricto Multi-Tenant (MT-01).
- * Soporta tanto la confirmación originada por la SAGA de reserva de stock (Happy Path)
- * como la confirmación directa.
+ * Orquesta la confirmaciÃ³n del Pedido bajo aislamiento estricto Multi-Tenant (MT-01).
+ * Soporta tanto la confirmaciÃ³n originada por la SAGA de reserva de stock (Happy Path)
+ * como la confirmaciÃ³n directa.
  * <p>
  * Reglas validadas: REGLA-1 (Application Layer), MT-01 (Aislamiento por EmpresaId), AUD-03 (Eventos de Dominio).
  */
@@ -42,7 +42,7 @@ public class ConfirmarPedidoService implements ConfirmarPedidoUseCase {
         PedidoId pedidoId = PedidoId.de(command.pedidoId());
         EmpresaId empresaId = EmpresaId.de(command.empresaId());
 
-        // MT-01: Búsqueda obligatoriamente acotada por tenant
+        // MT-01: BÃºsqueda obligatoriamente acotada por tenant
         Pedido pedido = pedidoRepository.buscarPorId(pedidoId, empresaId)
                 .orElseThrow(() -> new PedidoNoEncontradoException(pedidoId, empresaId));
 
@@ -54,9 +54,10 @@ public class ConfirmarPedidoService implements ConfirmarPedidoUseCase {
 
         pedidoRepository.guardar(pedido);
 
-        // Publicación de Domain Events acumulados (PedidoConfirmadoEvent)
+        // PublicaciÃ³n de Domain Events acumulados (PedidoConfirmadoEvent)
         eventPublisher.publicarTodos(pedido.drainDomainEvents());
 
         return PedidoApplicationMapper.toResponse(pedido);
     }
 }
+

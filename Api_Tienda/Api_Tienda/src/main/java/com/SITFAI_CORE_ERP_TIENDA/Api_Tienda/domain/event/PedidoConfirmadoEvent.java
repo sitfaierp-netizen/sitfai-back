@@ -1,10 +1,10 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId;
 
 import java.time.Instant;
 import java.util.List;
@@ -14,9 +14,9 @@ import java.util.UUID;
  * Domain Event: Emitido cuando un {@link com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido} es confirmado.
  * <p>
  * Notifica a otros Bounded Contexts (ej. Inventario para reservar/descontar stock,
- * Facturación para emitir comprobante, etc.).
+ * FacturaciÃ³n para emitir comprobante, etc.).
  * <p>
- * Inmutable por diseño (record Java 25).
+ * Inmutable por diseÃ±o (record Java 25).
  */
 public record PedidoConfirmadoEvent(
         UUID eventoId,
@@ -46,3 +46,4 @@ public record PedidoConfirmadoEvent(
         );
     }
 }
+

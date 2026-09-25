@@ -9,10 +9,10 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.port.output.PedidoRepository
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.Pedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ProductoId;
 
 import org.springframework.stereotype.Service;
 
@@ -42,7 +42,7 @@ public class CrearPedidoService implements CrearPedidoUseCase {
         // MT-01: Extraer de puerto (confianza cero)
         EmpresaId empresaId = tenantProviderPort.getEmpresaIdAutenticada();
         
-        // El actor puede ser usado para trazas o auditoría, pero no en dominio.
+        // El actor puede ser usado para trazas o auditorÃ­a, pero no en dominio.
         String actor = currentActorProvider.getActorActual();
 
         com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId empresaIdVo =
@@ -90,3 +90,4 @@ public class CrearPedidoService implements CrearPedidoUseCase {
         );
     }
 }
+

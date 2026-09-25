@@ -1,14 +1,14 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId;
 
 import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Evento de Integración emitido cuando un pedido es cancelado.
+ * Evento de IntegraciÃ³n emitido cuando un pedido es cancelado.
  * Especialmente utilizado en la SAGA para compensaciones por falta de stock.
  * <p>
  * Reglas validadas: REGLA-3 (Domain Events inmutables).
@@ -33,3 +33,4 @@ public record PedidoCanceladoEvent(
         );
     }
 }
+
