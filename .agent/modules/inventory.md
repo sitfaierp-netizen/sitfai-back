@@ -168,3 +168,33 @@ com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory/
 - **Persistencia:** Tabla `inventory_clasificacion_producto` con migración `V49__init_wms_abc_schema.sql`.
 - **Integración:** `AnalisisAbcIntegrationTest` con Testcontainers + MySQL.
 
+---
+
+## Submódulo WMS — Conteo Cíclico (Cycle Counting / Auditoría Logística)
+
+### Sub-Bounded Context: `inventory/domain/model/conteo`
+- **Aggregate Root:** [`ConteoCiclico`](file:///c:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/Api_Tienda/inventory/domain/model/conteo/ConteoCiclico.java)
+- **Entidad Local:** [`DetalleConteo`](file:///c:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/Api_Tienda/inventory/domain/model/conteo/DetalleConteo.java) (encapsula `productoId`, `cantidadTeorica` y `cantidadFisica`).
+- **Value Objects:**
+  - `ConteoId`, `BodegaId`, `ProductoId`, `EmpresaId` (records Java 21 inmutables).
+  - `CantidadFisica` (entero >= 0 con validación fail-fast).
+  - `EstadoConteo` enum (`PLANIFICADO`, `EN_EJECUCION`, `COMPLETADO`, `CON_DISCREPANCIAS`).
+- **Domain Event:** [`DiscrepanciaInventarioDetectadaEvent`](file:///c:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/Api_Tienda/inventory/domain/model/conteo/event/DiscrepanciaInventarioDetectadaEvent.java) (emite lista inmutable de `DiscrepanciaItem` si al finalizar hay descuadres).
+- **Output Port:** [`ConteoCiclicoRepository`](file:///c:/ERP_CORE/Api_Tienda/Api_Tienda/src/main/java/com/SITFAI_CORE_ERP_TIENDA/Api_Tienda/inventory/domain/model/conteo/port/ConteoCiclicoRepository.java) (interfaz pura de persistencia con `EmpresaId` obligatorio en todas sus firmas).
+- **Application Layer:**
+  - `RegistrarConteoFisicoCommand`, `FinalizarConteoCommand`, `ConteoCiclicoResponse`, `DetalleConteoResponse`.
+  - Driving Ports: `RegistrarConteoFisicoUseCase`, `FinalizarConteoUseCase`.
+  - Application Service: `EjecutarConteoCiclicoService` (`@Transactional`, extracción segura MT-01 de `empresa_id` vía `TenantProviderPort`, emisión reactiva de eventos).
+- **Infrastructure Layer:**
+  - REST Controller: `ConteoCiclicoController` (`PATCH /inventory/conteos/{id}/fisico`, `POST /inventory/conteos/{id}/finalizar`).
+  - DTOs Web & Mappers: `RegistrarConteoFisicoWebRequest`, `ConteoCiclicoWebResponse`, `DetalleConteoWebResponse`, `ConteoWebMapper`.
+  - JPA Persistence: `ConteoCiclicoJpaEntity`, `DetalleConteoJpaEntity` heredando de `AuditableJpaEntity`, `SpringDataConteoCiclicoRepository`.
+  - Driven Adapter: `ConteoCiclicoJpaAdapter` con gestión de cascada y orfandad.
+  - Flyway Migration: `V51__init_wms_cycle_counting_schema.sql` (tablas `inventory_conteo_ciclico` y `inventory_detalle_conteo` con partición multi-tenant MT-01).
+- **Testing Suite:**
+  - `ConteoCiclicoTest` (13 tests unitarios puros aprobados 13/13).
+  - `ConteoCiclicoIntegrationTest` (Prueba de integración con Testcontainers MySQL 8.4, MockMvc y captura de eventos).
+- **Estado:** 🟢 Capas de Dominio, Aplicación e Infraestructura Certificadas (`BUILD SUCCESS`).
+
+
+
