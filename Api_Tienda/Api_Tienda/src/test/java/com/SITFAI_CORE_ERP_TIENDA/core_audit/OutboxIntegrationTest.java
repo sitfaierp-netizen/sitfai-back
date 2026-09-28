@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.MySQLContainer;
@@ -35,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 2. Lo despacha vía EventDispatcherPort hacia los suscriptores.
  * 3. Actualiza y sella su estado a PROCESADO en la tabla {@code core_audit_event_store}.
  */
-@SpringBootTest
+@SpringBootTest(classes = ApiTiendaApplication.class)
 @Testcontainers
 @ActiveProfiles("test")
 class OutboxIntegrationTest {

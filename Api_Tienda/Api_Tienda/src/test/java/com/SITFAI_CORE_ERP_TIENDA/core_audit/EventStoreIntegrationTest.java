@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
@@ -34,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 3. El payload contiene la serialización JSON del evento.
  * 4. El aislamiento multi-tenant por {@code empresa_id} se preserva estrictamente.
  */
-@SpringBootTest
+@SpringBootTest(classes = ApiTiendaApplication.class)
 @Testcontainers
 @ActiveProfiles("test")
 class EventStoreIntegrationTest {
