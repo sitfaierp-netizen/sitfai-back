@@ -26,7 +26,10 @@ jobs:
           cache: 'maven'
 
       - name: Build, Test and Verify with Maven
-        run: ./mvnw clean verify -pl Api_Tienda -am
+        working-directory: Api_Tienda/Api_Tienda
+        run: |
+          chmod +x mvnw
+          ./mvnw clean verify
         
       - name: Upload JaCoCo Coverage Report
         uses: actions/upload-artifact@v4

@@ -15,7 +15,8 @@ El pipeline de CI garantiza la calidad del código, la inmutabilidad de la arqui
 
 ## 2. ETAPAS DEL PIPELINE (VERIFY)
 
-El comando base del pipeline es `./mvnw clean verify -pl Api_Tienda -am`, el cual dispara automáticamente las siguientes validaciones:
+El workflow utiliza `actions/checkout@v4` para clonar el repositorio y `actions/setup-java@v4` para configurar el JDK con caché de Maven.
+El comando base del pipeline es `./mvnw clean verify`, ejecutado explícitamente desde el subdirectorio del módulo (ej. `Api_Tienda/Api_Tienda` configurado vía `working-directory`). Previo a la ejecución, se otorgan permisos de ejecución al wrapper (`chmod +x mvnw`) para asegurar compatibilidad en entornos UNIX.
 
 ### 2.1 Pruebas Unitarias y de Integración
 - Se ejecutan mediante `maven-surefire-plugin` (unitarias) y `maven-failsafe-plugin` (integración).
