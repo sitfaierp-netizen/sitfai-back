@@ -18,7 +18,7 @@ public class TurnoCajaWebMapper {
                 empresaId,
                 request.cajaId(),
                 request.sucursalId(),
-                request.usuarioId(),
+                request.CajeroId(),
                 request.montoApertura()
         );
     }

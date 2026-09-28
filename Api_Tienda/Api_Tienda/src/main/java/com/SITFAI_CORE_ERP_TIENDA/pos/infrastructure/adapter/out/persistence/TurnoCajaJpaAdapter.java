@@ -21,9 +21,7 @@ import java.util.stream.Collectors;
  * Regla MT-01: Exige y valida el {@link EmpresaId} en todas las operaciones.
  */
 @Component("posTurnoCajaJpaAdapter")
-public class TurnoCajaJpaAdapter implements
-        TurnoCajaRepository,
-        com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TurnoCajaRepository {
+public class TurnoCajaJpaAdapter implements TurnoCajaRepository {
 
     private final TurnoCajaJpaRepository repository;
 
@@ -75,27 +73,4 @@ public class TurnoCajaJpaAdapter implements
                 .collect(Collectors.toList());
     }
 
-    // ==========================================
-    // Métodos de Compatibilidad con Puerto Legado
-    // ==========================================
-
-    @Override
-    public com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja guardar(
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja turno) {
-        Objects.requireNonNull(turno, "El turno legado no puede ser nulo");
-        TurnoCajaJpaEntity entity = TurnoCajaPersistenceMapper.toJpaEntityLegacy(turno);
-        TurnoCajaJpaEntity guardada = repository.save(entity);
-        return TurnoCajaPersistenceMapper.toLegacyDomainEntity(guardada);
-    }
-
-    @Override
-    public Optional<com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja> buscarPorId(
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId id,
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId empresaId) {
-        Objects.requireNonNull(id, "El TurnoId legado no puede ser nulo");
-        Objects.requireNonNull(empresaId, "El EmpresaId legado no puede ser nulo");
-
-        return repository.findByIdAndEmpresaId(id.value().toString(), empresaId.value().toString())
-                .map(TurnoCajaPersistenceMapper::toLegacyDomainEntity);
-    }
 }

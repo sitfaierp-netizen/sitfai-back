@@ -4,13 +4,13 @@ import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.RegistrarTransaccionComman
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.TurnoCajaResponse;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.mapper.TurnoCajaApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.input.RegistrarTransaccionUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TurnoCajaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.port.output.TurnoCajaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.exception.TurnoNoEncontradoException;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TipoTransaccion;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.TipoTransaccionCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.TurnoCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.TurnoId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,7 @@ public class RegistrarTransaccionService implements RegistrarTransaccionUseCase 
 
         EmpresaId empresaId = new EmpresaId(command.empresaId());
         TurnoId turnoId = new TurnoId(command.turnoId());
-        TipoTransaccion tipo = TipoTransaccion.valueOf(command.tipoTransaccion());
+        TipoTransaccionCaja tipo = TipoTransaccionCaja.valueOf(command.TipoTransaccionCaja());
         Dinero monto = Dinero.de(command.monto());
 
         TurnoCaja turno = repository.buscarPorId(turnoId, empresaId)
@@ -40,7 +40,7 @@ public class RegistrarTransaccionService implements RegistrarTransaccionUseCase 
 
         turno.registrarTransaccion(tipo, monto, command.referencia());
 
-        TurnoCaja turnoActualizado = repository.guardar(turno);
+        TurnoCaja turnoActualizado = repository.guardar(turno, turno.getEmpresaId());
 
         return TurnoCajaApplicationMapper.toResponse(turnoActualizado);
     }

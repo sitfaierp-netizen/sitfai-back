@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.CurrentActorProvider;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
 
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import java.util.UUID;
@@ -39,3 +39,4 @@ public class SecurityTenantProviderAdapter implements TenantProviderPort, Curren
         return "00000000-0000-0000-0000-000000000000";
     }
 }
+

@@ -4,10 +4,10 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCreadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.PedidoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.PedidoId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.Bodega;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.TipoBodega;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.output.BodegaRepository;
@@ -110,7 +110,8 @@ class ReservaStockIntegrationTest {
         BigDecimal stockDisponible = bodegaFinal.consultarStock(productoId);
         BigDecimal stockReservado = bodegaFinal.consultarStockReservado(productoId);
 
-        assertEquals(0, new BigDecimal("40.0000").compareTo(stockDisponible), "El stock disponible debería haber disminuido a 40");
-        assertEquals(0, new BigDecimal("10.0000").compareTo(stockReservado), "El stock reservado debería ser 10");
+        assertEquals(0, new BigDecimal("40.0000").compareTo(stockDisponible), "El stock disponible deberÃ­a haber disminuido a 40");
+        assertEquals(0, new BigDecimal("10.0000").compareTo(stockReservado), "El stock reservado deberÃ­a ser 10");
     }
 }
+

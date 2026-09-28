@@ -2,11 +2,11 @@ package com.SITFAI_CORE_ERP_TIENDA.pos.domain.event;
 
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.LoteRevertido;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.TicketId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.CajaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.SucursalId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.CajaId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId;
+
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.TurnoId;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,7 +18,6 @@ public record DevolucionRegistradaEvent(
         TurnoId turnoId,
         CajaId cajaId,
         EmpresaId empresaId,
-        SucursalId sucursalId,
         UUID ventaOrigenId, // Agregado para cumplir invariante tributaria (Factura Original)
         List<LineaDevolucion> lineas,
         List<LoteRevertido> lotesRevertidos,
@@ -28,13 +27,12 @@ public record DevolucionRegistradaEvent(
 
     public record LineaDevolucion(UUID productoId, int cantidad, java.math.BigDecimal precioUnitario) {}
 
-    public static DevolucionRegistradaEvent of(TurnoId turnoId, CajaId cajaId, EmpresaId empresaId, SucursalId sucursalId, UUID ventaOrigenId, List<LineaDevolucion> lineas, List<LoteRevertido> lotesRevertidos, Dinero montoDevuelto) {
+    public static DevolucionRegistradaEvent of(TurnoId turnoId, CajaId cajaId, EmpresaId empresaId, UUID ventaOrigenId, List<LineaDevolucion> lineas, List<LoteRevertido> lotesRevertidos, Dinero montoDevuelto) {
         return new DevolucionRegistradaEvent(
                 UUID.randomUUID(),
                 turnoId,
                 cajaId,
                 empresaId,
-                sucursalId,
                 ventaOrigenId,
                 List.copyOf(lineas),
                 List.copyOf(lotesRevertidos),

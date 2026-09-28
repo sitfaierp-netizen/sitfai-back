@@ -11,16 +11,16 @@ import java.util.UUID;
 public record AbrirTurnoWebRequest(
         UUID cajaId,
         UUID sucursalId,
-        UUID usuarioId,
+        UUID CajeroId,
         UUID cajeroId,
         BigDecimal montoApertura
 ) {
 
-    public AbrirTurnoWebRequest(UUID cajaId, UUID sucursalId, UUID usuarioId, BigDecimal montoApertura) {
-        this(cajaId, sucursalId, usuarioId, usuarioId, montoApertura);
+    public AbrirTurnoWebRequest(UUID cajaId, UUID sucursalId, UUID CajeroId, BigDecimal montoApertura) {
+        this(cajaId, sucursalId, CajeroId, CajeroId, montoApertura);
     }
 
     public UUID getCajeroId() {
-        return cajeroId != null ? cajeroId : usuarioId;
+        return cajeroId != null ? cajeroId : CajeroId;
     }
 }

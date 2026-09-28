@@ -3,9 +3,9 @@ package com.SITFAI_CORE_ERP_TIENDA.pos.application.mapper;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.ArqueoResponse;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.TransaccionResponse;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.TurnoResponse;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TransaccionCaja;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.ArqueoCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.TransaccionCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.TurnoCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.ArqueoCaja;
 
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +36,7 @@ public final class TurnoApplicationMapper {
                 turno.getCajaId().value(),
                 turno.getEmpresaId().value(),
                 turno.getEstado().name(),
-                turno.getMontoApertura() != null ? turno.getMontoApertura().valor() : null,
+                turno.getMontoApertura() != null ? turno.getMontoApertura().monto() : null,
                 "USD", // moneda mock
                 transaccionesDto,
                 null, // arqueoDto no existe en TurnoCaja actual
@@ -53,10 +53,10 @@ public final class TurnoApplicationMapper {
         return new TransaccionResponse(
                 transaccion.getId(),
                 transaccion.getTipo().name(),
-                transaccion.getMonto().valor(),
+                transaccion.getMonto().monto(),
                 "USD",
-                transaccion.getReferencia(),
-                transaccion.getFecha()
+                transaccion.getDocumentoFuenteId(),
+                transaccion.getFechaHora()
         );
     }
 
@@ -66,12 +66,12 @@ public final class TurnoApplicationMapper {
         }
 
         return new ArqueoResponse(
-                arqueo.montoInicial().valor(),
-                arqueo.totalVentas().valor(),
-                arqueo.totalDevoluciones().valor(),
-                arqueo.totalIngresos().valor(),
-                arqueo.totalEgresos().valor(),
-                arqueo.balanceEsperado().valor(),
+                arqueo.montoApertura().monto(),
+                arqueo.totalVentas().monto(),
+                arqueo.totalDevoluciones().monto(),
+                arqueo.totalIngresos().monto(),
+                arqueo.totalEgresos().monto(),
+                arqueo.totalTeoricoEsperado().monto(),
                 "USD"
         );
     }

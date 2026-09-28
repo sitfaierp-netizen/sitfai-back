@@ -1,5 +1,5 @@
 # SITFAI ERP — Api_Tienda (com.SITFAI_CORE_ERP_TIENDA)
-> **Versión:** 1.0.0 | **Fecha:** 2026-08-07 | **Estado:** 🟢 COMPLETADO Y VALIDADO
+> **Versión:** 2.0.0 | **Fecha:** 2026-09-28 | **Estado:** 🟢 IMPLEMENTADO Y CONGELADO
 
 ---
 
@@ -12,8 +12,8 @@
 | **Package raíz**   | `com.SITFAI_CORE_ERP_TIENDA.Api_Tienda`  |
 | **Puerto**         | `8084`                                   |
 | **Context Path**   | `/api/v1`                                |
-| **Spring Boot**    | `4.0.7`                                  |
-| **Java**           | `25`                                     |
+| **Spring Boot**    | `3.4.0` (LTS — ADR-011)               |
+| **Java**           | `21 LTS` (ADR-011)                    |
 | **BD**             | MySQL 8+ (esquema: `tienda`)             |
 | **Migración BD**   | Flyway (`V9__init_api_tienda_schema.sql`) |
 

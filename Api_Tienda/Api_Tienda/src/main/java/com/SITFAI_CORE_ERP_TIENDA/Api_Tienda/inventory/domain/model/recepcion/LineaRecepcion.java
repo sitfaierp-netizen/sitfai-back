@@ -1,29 +1,26 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.recepcion;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.recepcion.vo.Lote;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Cantidad;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.ProductoId;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.recepcion.vo.CantidadRecepcion;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.recepcion.vo.ProductoId;
 
+import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Entidad interna del Agregado Recepcion.
- */
 public class LineaRecepcion {
     private final UUID id;
     private final ProductoId productoId;
-    private final Cantidad cantidadRecibida;
-    private final Lote lote;
+    private final CantidadRecepcion cantidadEsperada;
+    private CantidadRecepcion cantidadRecibida;
 
-    public LineaRecepcion(ProductoId productoId, Cantidad cantidadRecibida, Lote lote) {
-        if (productoId == null) throw new IllegalArgumentException("La línea debe tener un ProductoId.");
-        if (cantidadRecibida == null) throw new IllegalArgumentException("La línea debe tener una Cantidad.");
-        if (lote == null) throw new IllegalArgumentException("La línea debe tener un Lote asignado.");
-        
-        this.id = UUID.randomUUID();
-        this.productoId = productoId;
-        this.cantidadRecibida = cantidadRecibida;
-        this.lote = lote;
+    public LineaRecepcion(UUID id, ProductoId productoId, CantidadRecepcion cantidadEsperada, CantidadRecepcion cantidadRecibida) {
+        this.id = id != null ? id : UUID.randomUUID();
+        this.productoId = Objects.requireNonNull(productoId, "ProductoId no puede ser nulo.");
+        this.cantidadEsperada = Objects.requireNonNull(cantidadEsperada, "Cantidad esperada no puede ser nula.");
+        this.cantidadRecibida = cantidadRecibida != null ? cantidadRecibida : new CantidadRecepcion(0);
+    }
+
+    public LineaRecepcion(ProductoId productoId, CantidadRecepcion cantidadEsperada) {
+        this(UUID.randomUUID(), productoId, cantidadEsperada, new CantidadRecepcion(0));
     }
 
     public UUID getId() {
@@ -34,11 +31,26 @@ public class LineaRecepcion {
         return productoId;
     }
 
-    public Cantidad getCantidadRecibida() {
+    public CantidadRecepcion getCantidadEsperada() {
+        return cantidadEsperada;
+    }
+
+    public CantidadRecepcion getCantidadRecibida() {
         return cantidadRecibida;
     }
 
-    public Lote getLote() {
-        return lote;
+    public void recibir(CantidadRecepcion cantidadAdicional) {
+        if (cantidadAdicional == null) {
+            throw new IllegalArgumentException("La cantidad a recibir no puede ser nula.");
+        }
+        CantidadRecepcion nuevaCantidad = this.cantidadRecibida.sumar(cantidadAdicional);
+        if (nuevaCantidad.valor() > this.cantidadEsperada.valor()) {
+            throw new IllegalStateException("Sobre-entrega rechazada: La cantidad recibida excede la cantidad esperada.");
+        }
+        this.cantidadRecibida = nuevaCantidad;
+    }
+
+    public boolean estaCompleta() {
+        return this.cantidadRecibida.valor() == this.cantidadEsperada.valor();
     }
 }

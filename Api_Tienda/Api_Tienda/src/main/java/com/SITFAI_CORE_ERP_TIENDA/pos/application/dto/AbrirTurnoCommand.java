@@ -28,7 +28,7 @@ public record AbrirTurnoCommand(
         Objects.requireNonNull(montoApertura, "El monto de apertura es obligatorio");
     }
 
-    public UUID usuarioId() {
+    public UUID CajeroId() {
         return cajeroId;
     }
 }

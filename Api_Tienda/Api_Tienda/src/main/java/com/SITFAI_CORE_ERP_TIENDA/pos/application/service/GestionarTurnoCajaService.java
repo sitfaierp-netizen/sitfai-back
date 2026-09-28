@@ -104,7 +104,7 @@ public class GestionarTurnoCajaService implements GestionarTurnoCajaUseCase, Abr
         for (Object evento : turno.getDomainEvents()) {
             eventPublisher.publishEvent(evento);
         }
-        turno.clearDomainEvents();
+
 
         return mapearAResponse(guardado);
     }

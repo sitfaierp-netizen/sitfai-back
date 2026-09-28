@@ -85,46 +85,5 @@ public record TurnoCerradoEvent(
         );
     }
 
-    /**
-     * Sobrecarga de compatibilidad para integración con componentes legados.
-     */
-    public static TurnoCerradoEvent of(
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId turnoId,
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId empresaId,
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.CajaId cajaId,
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.UsuarioId usuarioId,
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero consolidadoFinal,
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero montoDeclarado,
-            com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero diferencia
-    ) {
-        TurnoId tId = TurnoId.of(turnoId.value());
-        EmpresaId eId = EmpresaId.of(empresaId.value());
-        CajaId cId = CajaId.of(cajaId.value());
-        CajeroId cajeroId = CajeroId.of(usuarioId.value());
-        Dinero apertura = Dinero.cero();
-        Dinero ventas = Dinero.de(consolidadoFinal.valor());
-        Dinero ingresos = Dinero.cero();
-        Dinero devoluciones = Dinero.cero();
-        Dinero egresos = Dinero.cero();
-        Dinero teorico = Dinero.de(consolidadoFinal.valor());
-        Dinero declarado = Dinero.de(montoDeclarado.valor());
-        Dinero descuadre = Dinero.de(diferencia.valor());
 
-        return new TurnoCerradoEvent(
-                UUID.randomUUID(),
-                tId,
-                eId,
-                cId,
-                cajeroId,
-                apertura,
-                ventas,
-                ingresos,
-                devoluciones,
-                egresos,
-                teorico,
-                declarado,
-                descuadre,
-                Instant.now()
-        );
-    }
 }

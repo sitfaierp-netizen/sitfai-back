@@ -5,7 +5,5 @@ import java.util.UUID;
 public record LineaDespachoResponse(
         UUID id,
         UUID productoId,
-        int cantidadSolicitada,
-        int cantidadPreparada
-) {
-}
+        int cantidad
+) {}

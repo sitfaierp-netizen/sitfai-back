@@ -1,0 +1,9 @@
+package com.SITFAI_CORE_ERP_TIENDA.returns.domain.model.rma.vo;
+
+public enum EstadoRma {
+    AUTORIZADA,
+    RECIBIDA_EN_CUARENTENA,
+    INSPECCION_APROBADA,
+    INSPECCION_RECHAZADA,
+    INSPECCION_PARCIAL
+}

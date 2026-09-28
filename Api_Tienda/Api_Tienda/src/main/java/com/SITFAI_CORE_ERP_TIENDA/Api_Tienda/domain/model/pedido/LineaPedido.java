@@ -7,10 +7,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Entidad de Dominio: Representa una línea o ítem de detalle dentro del Agregado {@link Pedido}.
+ * Entidad de Dominio: Representa una lÃ­nea o Ã­tem de detalle dentro del Agregado {@link Pedido}.
  * <p>
  * Encapsula la cantidad solicitada, el producto y su precio unitario al momento de la venta.
- * Inmutable en su cálculo de subtotal.
+ * Inmutable en su cÃ¡lculo de subtotal.
  * <p>
  * Regla REGLA-3: Entidad interna protegida por el Aggregate Root.
  */
@@ -39,19 +39,10 @@ public class LineaPedido {
         return new LineaPedido(productoId, cantidad, precioUnitario);
     }
 
-    public static LineaPedido crear(
-            com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId productoId,
-            int cantidad,
-            com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero precioUnitario) {
-        return new LineaPedido(
-                new ProductoId(productoId.valor()),
-                cantidad,
-                Dinero.de(precioUnitario.monto())
-        );
-    }
+
 
     /**
-     * Calcula el subtotal monetario de la línea multiplicando la cantidad por el precio unitario.
+     * Calcula el subtotal monetario de la lÃ­nea multiplicando la cantidad por el precio unitario.
      */
     public Dinero calcularSubtotal() {
         return precioUnitario.multiplicar(cantidad);
@@ -97,3 +88,4 @@ public class LineaPedido {
         return "LineaPedido{id=" + id + ", producto=" + productoId + ", cantidad=" + cantidad + ", precioUnitario=" + precioUnitario + "}";
     }
 }
+

@@ -9,7 +9,7 @@ public record TurnoCajaResponse(
         UUID empresaId,
         UUID cajaId,
         UUID sucursalId,
-        UUID usuarioId,
+        UUID CajeroId,
         String estado,
         BigDecimal montoApertura,
         BigDecimal consolidadoActual,

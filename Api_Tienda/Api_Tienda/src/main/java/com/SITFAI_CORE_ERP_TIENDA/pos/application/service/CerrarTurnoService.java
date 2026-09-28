@@ -5,13 +5,13 @@ import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.TurnoCajaResponse;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.mapper.TurnoCajaApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.input.CerrarTurnoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TurnoCajaEventPublisher;
-import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TurnoCajaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.port.output.TurnoCajaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.DomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.exception.TurnoNoEncontradoException;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.TurnoCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.TurnoId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,13 +42,13 @@ public class CerrarTurnoService implements CerrarTurnoUseCase {
         TurnoCaja turno = repository.buscarPorId(turnoId, empresaId)
                 .orElseThrow(() -> new TurnoNoEncontradoException(turnoId, empresaId));
 
-        turno.cerrarTurno(montoDeclarado);
+        turno.cerrar(montoDeclarado);
 
-        TurnoCaja turnoActualizado = repository.guardar(turno);
+        TurnoCaja turnoActualizado = repository.guardar(turno, turno.getEmpresaId());
 
         // Extracción de eventos de dominio
         List<DomainEvent> eventos = new ArrayList<>(turnoActualizado.getDomainEvents());
-        // En una implementación real con AggregateRoot base class, tendríamos un método clearDomainEvents()
+
         
         eventPublisher.publicarTodos(eventos);
 

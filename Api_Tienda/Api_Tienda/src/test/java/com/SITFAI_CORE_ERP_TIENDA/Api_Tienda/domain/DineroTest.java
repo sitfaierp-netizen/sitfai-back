@@ -1,6 +1,6 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -63,3 +63,4 @@ class DineroTest {
         assertThrows(IllegalArgumentException.class, () -> Dinero.de(-10.0));
     }
 }
+

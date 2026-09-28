@@ -20,12 +20,12 @@ import java.util.UUID;
  * <p>
  * Responsabilidades e invariantes:
  * <ul>
- *   <li><b>Aislamiento Multi-Tenant (MT-01):</b> Encapsula {@link EmpresaId} como clave de partición raíz.</li>
+ *   <li><b>Aislamiento Multi-Tenant (MT-01):</b> Encapsula {@link EmpresaId} como clave de particiÃ³n raÃ­z.</li>
  *   <li><b>Identidad de Dominio (REGLA-3):</b> Encapsula {@link PedidoId} como Value Object.</li>
  *   <li><b>Invariante de inicio:</b> Se instancia en estado {@link EstadoPedido#PENDIENTE} o {@link EstadoPedido#CREADO}.</li>
- *   <li><b>Modificación controlada:</b> Solo en estado modificable se pueden añadir líneas de detalle.</li>
- *   <li><b>Invariante de confirmación:</b> No se puede confirmar un pedido sin al menos una línea de producto.</li>
- *   <li><b>Transición transaccional:</b> {@link #confirmar()} transiciona a {@code CONFIRMADO} y registra el evento {@link PedidoConfirmadoEvent}.</li>
+ *   <li><b>ModificaciÃ³n controlada:</b> Solo en estado modificable se pueden aÃ±adir lÃ­neas de detalle.</li>
+ *   <li><b>Invariante de confirmaciÃ³n:</b> No se puede confirmar un pedido sin al menos una lÃ­nea de producto.</li>
+ *   <li><b>TransiciÃ³n transaccional:</b> {@link #confirmar()} transiciona a {@code CONFIRMADO} y registra el evento {@link PedidoConfirmadoEvent}.</li>
  * </ul>
  * <p>
  * Cero dependencias a frameworks, JPA o Spring (REGLA-1, Clean Architecture).
@@ -76,7 +76,7 @@ public class Pedido {
     }
 
     /**
-     * Factory Method con ID explícito.
+     * Factory Method con ID explÃ­cito.
      */
     public static Pedido crear(EmpresaId empresaId, PedidoId id, ClienteId clienteId) {
         return new Pedido(
@@ -97,21 +97,14 @@ public class Pedido {
         return crear(empresaId, clienteId);
     }
 
-    public static Pedido iniciar(
-            com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.EmpresaId empresaId,
-            com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ClienteId clienteId) {
-        return crear(
-                new EmpresaId(empresaId.valor()),
-                new ClienteId(clienteId.valor())
-        );
-    }
+
 
     public static Pedido iniciar(EmpresaId empresaId, PedidoId id, ClienteId clienteId) {
         return crear(empresaId, id, clienteId);
     }
 
     /**
-     * Factory Method para reconstitución desde capa de persistencia (sin generar eventos).
+     * Factory Method para reconstituciÃ³n desde capa de persistencia (sin generar eventos).
      */
     public static Pedido reconstituir(
             PedidoId id,
@@ -144,8 +137,8 @@ public class Pedido {
     }
 
     public void agregarLinea(LineaPedido linea) {
-        Objects.requireNonNull(linea, "Pedido: la línea a agregar no puede ser nula.");
-        validarEstadoModificable("agregar líneas");
+        Objects.requireNonNull(linea, "Pedido: la lÃ­nea a agregar no puede ser nula.");
+        validarEstadoModificable("agregar lÃ­neas");
         this.lineas.add(linea);
         this.actualizadoEn = Instant.now();
     }
@@ -154,19 +147,10 @@ public class Pedido {
         agregarLinea(productoId, cantidad, precioUnitario);
     }
 
-    public void agregarItem(
-            com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.ProductoId productoId,
-            int cantidad,
-            com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.valueobject.Dinero precioUnitario) {
-        agregarLinea(
-                new ProductoId(productoId.valor()),
-                cantidad,
-                Dinero.de(precioUnitario.monto())
-        );
-    }
+
 
     public void removerItem(UUID lineaId) {
-        validarEstadoModificable("remover líneas");
+        validarEstadoModificable("remover lÃ­neas");
         this.lineas.removeIf(l -> Objects.equals(l.getId(), lineaId));
         this.actualizadoEn = Instant.now();
     }
@@ -196,7 +180,7 @@ public class Pedido {
             throw new IllegalStateException("No se puede confirmar un pedido en estado CANCELADO.");
         }
         if (this.lineas.isEmpty()) {
-            throw new IllegalStateException("No se puede confirmar un pedido sin líneas de productos.");
+            throw new IllegalStateException("No se puede confirmar un pedido sin lÃ­neas de productos.");
         }
 
         this.estado = EstadoPedido.CONFIRMADO;
@@ -231,12 +215,12 @@ public class Pedido {
     private void validarEstadoModificable(String accion) {
         if (!this.estado.esModificable()) {
             throw new IllegalStateException(
-                    "Operación inválida: no se puede " + accion + " en un pedido con estado " + this.estado + ".");
+                    "OperaciÃ³n invÃ¡lida: no se puede " + accion + " en un pedido con estado " + this.estado + ".");
         }
     }
 
     // =========================================================================
-    // GESTIÓN DE EVENTOS DE DOMINIO (REGLA-3)
+    // GESTIÃ“N DE EVENTOS DE DOMINIO (REGLA-3)
     // =========================================================================
 
     public List<PedidoConfirmadoEvent> pullDomainEvents() {
@@ -295,3 +279,4 @@ public class Pedido {
                 ", estado=" + estado + ", total=" + calcularTotal() + ", totalLineas=" + lineas.size() + "}";
     }
 }
+
