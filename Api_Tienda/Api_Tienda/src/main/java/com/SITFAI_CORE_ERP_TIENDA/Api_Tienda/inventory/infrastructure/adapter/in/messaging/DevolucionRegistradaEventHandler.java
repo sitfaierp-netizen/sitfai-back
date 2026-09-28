@@ -30,7 +30,7 @@ public class DevolucionRegistradaEventHandler {
 
         ReingresarStockPorDevolucionCommand command = new ReingresarStockPorDevolucionCommand(
                 event.empresaId().value(),
-                event.sucursalId().value(),
+                event.cajaId().value(), // Usando cajaId temporalmente por sucursalId
                 event.ventaOrigenId(),
                 lotes
         );

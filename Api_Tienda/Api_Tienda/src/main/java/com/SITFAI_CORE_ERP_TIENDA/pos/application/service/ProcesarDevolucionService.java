@@ -4,15 +4,15 @@ import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.ProcesarDevolucionCommand;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.input.ProcesarDevolucionUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.CurrentActorProvider;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TenantProviderPort;
-import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TurnoCajaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.port.output.TurnoCajaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.DevolucionRegistradaEvent;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.TurnoCaja;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.LoteRevertido;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.TicketId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.TurnoId;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,12 +78,14 @@ public class ProcesarDevolucionService implements ProcesarDevolucionUseCase {
                 .collect(Collectors.toList());
 
         // 3. Ejecutar Lógica de Dominio
-        turno.registrarDevolucion(ticketId, montoDevolucion, lineas, lotes);
+        turno.registrarTransaccion(com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.TipoTransaccionCaja.DEVOLUCION, montoDevolucion, ticketId.value().toString());
 
         // 4. Persistir estado y publicar eventos
-        TurnoCaja turnoActualizado = repository.guardar(turno);
+        TurnoCaja turnoActualizado = repository.guardar(turno, turno.getEmpresaId());
+        
+        DevolucionRegistradaEvent eventoDevolucion = DevolucionRegistradaEvent.of(turno.getId(), turno.getCajaId(), turno.getEmpresaId(), ticketId.value(), lineas, lotes, montoDevolucion);
+        eventPublisher.publishEvent(eventoDevolucion);
         
         turnoActualizado.getDomainEvents().forEach(eventPublisher::publishEvent);
-        turnoActualizado.clearDomainEvents();
     }
 }

@@ -35,8 +35,6 @@ public class TurnoCajaJpaEntity extends AuditableJpaEntity {
     @Column(name = "sucursal_id", length = 36)
     private String sucursalId;
 
-    @Column(name = "usuario_id", length = 36)
-    private String usuarioId;
 
     @Column(name = "estado", length = 50, nullable = false)
     private String estado;
@@ -118,13 +116,6 @@ public class TurnoCajaJpaEntity extends AuditableJpaEntity {
         this.sucursalId = sucursalId;
     }
 
-    public String getUsuarioId() {
-        return usuarioId;
-    }
-
-    public void setUsuarioId(String usuarioId) {
-        this.usuarioId = usuarioId;
-    }
 
     public String getEstado() {
         return estado;

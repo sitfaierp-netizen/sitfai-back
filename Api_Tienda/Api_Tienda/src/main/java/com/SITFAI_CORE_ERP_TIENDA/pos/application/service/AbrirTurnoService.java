@@ -4,13 +4,13 @@ import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.AbrirTurnoCommand;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.TurnoCajaResponse;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.mapper.TurnoCajaApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.input.AbrirTurnoUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TurnoCajaRepository;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.CajaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.SucursalId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.UsuarioId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.port.output.TurnoCajaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.TurnoCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.CajaId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId;
+
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.CajeroId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,12 +32,12 @@ public class AbrirTurnoService implements AbrirTurnoUseCase {
 
         EmpresaId empresaId = new EmpresaId(command.empresaId());
         CajaId cajaId = new CajaId(command.cajaId());
-        SucursalId sucursalId = new SucursalId(command.sucursalId());
-        UsuarioId usuarioId = new UsuarioId(command.usuarioId());
+        
+        CajeroId CajeroId = new CajeroId(command.CajeroId());
         Dinero montoApertura = Dinero.de(command.montoApertura());
 
-        TurnoCaja turno = TurnoCaja.abrirTurno(empresaId, cajaId, sucursalId, usuarioId, montoApertura);
-        TurnoCaja turnoGuardado = repository.guardar(turno);
+        TurnoCaja turno = TurnoCaja.abrir(empresaId, cajaId, CajeroId, montoApertura);
+        TurnoCaja turnoGuardado = repository.guardar(turno, turno.getEmpresaId());
 
         return TurnoCajaApplicationMapper.toResponse(turnoGuardado);
     }

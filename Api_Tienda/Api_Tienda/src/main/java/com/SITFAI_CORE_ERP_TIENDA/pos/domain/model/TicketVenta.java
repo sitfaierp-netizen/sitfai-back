@@ -6,9 +6,9 @@ import com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.DomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.TicketEmitidoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.TicketId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.CajaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.CajaId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.TurnoId;
 import com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.DocumentStateException;
 
 import java.math.BigDecimal;

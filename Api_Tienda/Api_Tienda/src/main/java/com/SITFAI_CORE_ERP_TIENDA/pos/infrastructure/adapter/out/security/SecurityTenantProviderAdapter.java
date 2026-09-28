@@ -1,7 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.pos.infrastructure.adapter.out.security;
 
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TenantProviderPort;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;

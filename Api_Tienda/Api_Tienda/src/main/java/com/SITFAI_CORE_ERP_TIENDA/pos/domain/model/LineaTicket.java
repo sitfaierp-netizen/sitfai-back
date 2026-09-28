@@ -1,7 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.pos.domain.model;
 
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.ProductoId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.Dinero;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -39,7 +39,7 @@ public class LineaTicket {
      * MONEY-01: Usa BigDecimal.
      */
     public Dinero calcularSubtotal() {
-        return new Dinero(precioUnitario.valor().multiply(cantidad));
+        return new Dinero(precioUnitario.monto().multiply(cantidad));
     }
 
     public UUID getId() { return id; }

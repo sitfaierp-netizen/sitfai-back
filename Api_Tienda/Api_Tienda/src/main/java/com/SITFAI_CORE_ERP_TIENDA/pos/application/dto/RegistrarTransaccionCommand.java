@@ -6,7 +6,7 @@ import java.util.UUID;
 public record RegistrarTransaccionCommand(
         UUID empresaId,
         UUID turnoId,
-        String tipoTransaccion,
+        String TipoTransaccionCaja,
         BigDecimal monto,
         String referencia
 ) {

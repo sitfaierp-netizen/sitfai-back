@@ -27,13 +27,13 @@ public class VentaPosEventListener {
     public void onVentaRegistrada(VentaRegistradaEvent event) {
         Objects.requireNonNull(event, "VentaRegistradaEvent no puede ser nulo");
 
-        log.info("Inventory intercepta VentaRegistradaEvent: empresaId={}, sucursalId={}",
-                event.empresaId().value(), event.sucursalId().value());
+        log.info("Inventory intercepta VentaRegistradaEvent: empresaId={}, cajaId={}",
+                event.empresaId().value(), event.cajaId());
 
         // Resolución de Bodega (mockeada/asumida como la bodega principal de la sucursal)
         // En un entorno real, consultaríamos un servicio de dominio para resolver la BodegaId
         // asociada a la SucursalId. Aquí asignamos un UUID determinístico o extraemos de configuración.
-        UUID bodegaPrincipalSucursal = event.sucursalId().value(); // Mock: 1 a 1 Sucursal -> Bodega
+        UUID bodegaPrincipalSucursal = event.cajaId(); // Mock: 1 a 1 Sucursal -> Bodega
 
         for (VentaRegistradaEvent.LineaVenta linea : event.lineas()) {
             if (linea.productoId() == null) {

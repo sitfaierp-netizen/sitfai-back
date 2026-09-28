@@ -50,7 +50,7 @@ public class RegistrarTransaccionCajaService implements RegistrarTransaccionCaja
         TurnoCaja turno = turnoCajaRepository.buscarPorId(turnoId, empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el turno de caja"));
 
-        TipoTransaccionCaja tipo = TipoTransaccionCaja.valueOf(command.tipoTransaccion().toUpperCase());
+        TipoTransaccionCaja tipo = TipoTransaccionCaja.valueOf(command.TipoTransaccionCaja().toUpperCase());
         Dinero monto = Dinero.de(command.monto());
 
         UUID transaccionId = turno.registrarTransaccion(tipo, monto, command.referencia());
@@ -65,8 +65,7 @@ public class RegistrarTransaccionCajaService implements RegistrarTransaccionCaja
                     : Collections.emptyList();
 
             VentaRegistradaEvent evento = VentaRegistradaEvent.of(
-                    new com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId(empresaId.value()),
-                    new com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.SucursalId(turno.getCajaId().value()), // Usando cajaId como sucursalId en POS mock
+                    new com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId(empresaId.value()),
                     turno.getId().value(),
                     turno.getCajaId().value(),
                     "CONSUMIDOR_FINAL",

@@ -10,9 +10,9 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Produc
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.SucursalId;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.DevolucionRegistradaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.vo.LoteRevertido;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.CajaId;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.TurnoId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.CajaId;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.Dinero;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.TurnoId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -64,8 +64,7 @@ class ReingresoStockDevolucionIntegrationTest {
         DevolucionRegistradaEvent event = DevolucionRegistradaEvent.of(
                 new TurnoId(UUID.randomUUID()),
                 new CajaId(UUID.randomUUID()),
-                new com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId(empresaId),
-                new com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.SucursalId(sucursalId),
+                new com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId(empresaId),
                 UUID.randomUUID(),
                 List.of(), // no necesitamos simular lineas para este test de lotes
                 List.of(loteRevertido),

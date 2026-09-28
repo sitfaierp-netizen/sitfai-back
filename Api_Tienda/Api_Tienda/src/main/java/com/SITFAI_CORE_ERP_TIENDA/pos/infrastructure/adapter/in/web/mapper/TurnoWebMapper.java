@@ -34,7 +34,7 @@ public final class TurnoWebMapper {
                 empresaId,
                 request.cajaId(),
                 request.sucursalId(),
-                request.usuarioId(),
+                request.CajeroId(),
                 request.montoApertura()
         );
     }
@@ -99,7 +99,7 @@ public final class TurnoWebMapper {
 
         return new TransaccionWebResponse(
                 response.id(),
-                response.tipoTransaccion(),
+                response.TipoTransaccionCaja(),
                 response.monto(),
                 response.moneda(),
                 response.concepto(),

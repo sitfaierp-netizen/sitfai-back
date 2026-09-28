@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.DomainEvent;
 
 /**
  * Aggregate Root: TurnoCaja (Control financiero y operativo de caja - Reglas CAJ-02 a CAJ-07).
@@ -36,7 +37,7 @@ public class TurnoCaja {
     private final Instant fechaApertura;
     private Instant fechaCierre;
     private Long version;
-    private final List<Object> domainEvents;
+    private final List<DomainEvent> domainEvents;
 
     private TurnoCaja(
             TurnoId id,
@@ -265,7 +266,7 @@ public class TurnoCaja {
         return fechaCierre;
     }
 
-    public List<Object> getDomainEvents() {
+    public List<DomainEvent> getDomainEvents() {
         return Collections.unmodifiableList(domainEvents);
     }
 

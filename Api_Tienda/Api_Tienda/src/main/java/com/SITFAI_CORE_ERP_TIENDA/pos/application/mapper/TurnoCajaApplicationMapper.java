@@ -2,8 +2,8 @@ package com.SITFAI_CORE_ERP_TIENDA.pos.application.mapper;
 
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.TransaccionCajaResponse;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.TurnoCajaResponse;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TransaccionCaja;
-import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.TurnoCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.TransaccionCaja;
+import com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.TurnoCaja;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,11 +26,11 @@ public class TurnoCajaApplicationMapper {
                 turno.getId().value(),
                 turno.getEmpresaId().value(),
                 turno.getCajaId().value(),
-                turno.getSucursalId().value(),
-                turno.getUsuarioId().value(),
+                null,
+                turno.getCajeroId().value(),
                 turno.getEstado().name(),
-                turno.getMontoApertura().valor(),
-                turno.calcularConsolidado().valor(),
+                turno.getMontoApertura().monto(),
+                turno.calcularTotalTeorico().monto(),
                 transaccionesResponse
         );
     }
@@ -39,9 +39,9 @@ public class TurnoCajaApplicationMapper {
         return new TransaccionCajaResponse(
                 transaccion.getId(),
                 transaccion.getTipo().name(),
-                transaccion.getMonto().valor(),
-                transaccion.getReferencia(),
-                transaccion.getFecha()
+                transaccion.getMonto().monto(),
+                transaccion.getDocumentoFuenteId(),
+                transaccion.getFechaHora()
         );
     }
 }

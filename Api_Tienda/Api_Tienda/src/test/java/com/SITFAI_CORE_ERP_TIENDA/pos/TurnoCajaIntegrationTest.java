@@ -102,7 +102,7 @@ public class TurnoCajaIntegrationTest {
         cajeroUuid = UUID.randomUUID();
 
         when(tenantProviderPort.getEmpresaIdAutenticada())
-                .thenReturn(new com.SITFAI_CORE_ERP_TIENDA.pos.domain.valueobject.EmpresaId(tenantUuid));
+                .thenReturn(new com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId(tenantUuid));
         when(currentActorProvider.getActorActual()).thenReturn("cajero_test_user");
     }
 
