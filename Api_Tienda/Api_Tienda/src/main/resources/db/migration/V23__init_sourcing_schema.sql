@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS sourcing_proveedores (
 
     CONSTRAINT pk_sourcing_proveedores PRIMARY KEY (id),
     CONSTRAINT uq_sourcing_prov_empresa_ruc UNIQUE (empresa_id, ruc)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_sourcing_prov_empresa ON sourcing_proveedores(empresa_id);
 CREATE INDEX idx_sourcing_prov_empresa_estado ON sourcing_proveedores(empresa_id, estado);

@@ -13,7 +13,7 @@ CREATE TABLE inventory_recepcion (
     creado_por VARCHAR(255) NOT NULL,
     actualizado_en TIMESTAMP,
     actualizado_por VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Indexing for multi-tenant isolation
 CREATE INDEX idx_inventory_recepcion_empresa ON inventory_recepcion(empresa_id);
@@ -35,6 +35,6 @@ CREATE TABLE inventory_linea_recepcion (
         FOREIGN KEY (recepcion_id) 
         REFERENCES inventory_recepcion(id) 
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_inventory_linea_recepcion_recepcion ON inventory_linea_recepcion(recepcion_id);

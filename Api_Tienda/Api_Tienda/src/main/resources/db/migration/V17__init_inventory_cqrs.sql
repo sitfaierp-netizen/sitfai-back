@@ -12,7 +12,7 @@ CREATE TABLE inventory_stock_view (
     cantidad_total DECIMAL(19, 4) NOT NULL,
     ultima_actualizacion TIMESTAMP(6) NOT NULL,
     PRIMARY KEY (empresa_id, bodega_id, producto_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Índice compuesto para acelerar las consultas del modelo de lectura
 CREATE INDEX idx_inv_view_empresa_bodega ON inventory_stock_view (empresa_id, bodega_id);

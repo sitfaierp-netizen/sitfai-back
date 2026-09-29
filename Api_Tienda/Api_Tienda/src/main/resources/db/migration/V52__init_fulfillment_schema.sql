@@ -9,7 +9,7 @@ CREATE TABLE fulfillment_orden_despacho (
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     CONSTRAINT uk_fulfillment_despacho_empresa_id UNIQUE (empresa_id, id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE fulfillment_linea_despacho (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
@@ -21,7 +21,7 @@ CREATE TABLE fulfillment_linea_despacho (
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     CONSTRAINT fk_linea_orden_despacho FOREIGN KEY (orden_despacho_id) REFERENCES fulfillment_orden_despacho(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_fulfillment_despacho_empresa ON fulfillment_orden_despacho(empresa_id);
 CREATE INDEX idx_fulfillment_despacho_empresa_estado ON fulfillment_orden_despacho(empresa_id, estado);

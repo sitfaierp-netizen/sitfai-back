@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS iam_usuario (
     CONSTRAINT pk_iam_usuario PRIMARY KEY (id),
     CONSTRAINT uq_iam_usuario_empresa_username UNIQUE (empresa_id, username),
     CONSTRAINT uq_iam_usuario_empresa_email UNIQUE (empresa_id, email)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Índices para optimización de consultas multitenant
 CREATE INDEX idx_iam_usuario_empresa_id ON iam_usuario (empresa_id);

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS billing_factura (
     actualizado_por VARCHAR(100),
     CONSTRAINT pk_billing_factura PRIMARY KEY (id),
     CONSTRAINT uq_billing_factura_empresa_id_uuid UNIQUE (empresa_id, id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS billing_linea_factura (
     id BINARY(16) NOT NULL,
@@ -27,4 +27,4 @@ CREATE TABLE IF NOT EXISTS billing_linea_factura (
     total_impuestos DECIMAL(19,4) NOT NULL,
     CONSTRAINT pk_billing_linea_factura PRIMARY KEY (id),
     CONSTRAINT fk_billing_linea_factura_factura FOREIGN KEY (factura_id) REFERENCES billing_factura (id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

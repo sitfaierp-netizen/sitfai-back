@@ -14,7 +14,7 @@ CREATE TABLE billing_nota_credito (
     subtotal DECIMAL(19, 4) NOT NULL,
     total_impuestos DECIMAL(19, 4) NOT NULL,
     total_general DECIMAL(19, 4) NOT NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE billing_linea_nota_credito (
     id VARCHAR(36) PRIMARY KEY,
@@ -26,6 +26,6 @@ CREATE TABLE billing_linea_nota_credito (
     subtotal DECIMAL(19, 4) NOT NULL,
     total_impuestos DECIMAL(19, 4) NOT NULL,
     CONSTRAINT fk_linea_nota_credito FOREIGN KEY (nota_credito_id) REFERENCES billing_nota_credito(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_nota_credito_empresa_factura ON billing_nota_credito(empresa_id, factura_afectada_id);

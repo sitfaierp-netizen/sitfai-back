@@ -13,4 +13,4 @@ CREATE TABLE core_idempotency_record (
     
     CONSTRAINT pk_core_idempotency PRIMARY KEY (id),
     CONSTRAINT uq_core_idempotency_empresa_key UNIQUE (empresa_id, idempotency_key)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

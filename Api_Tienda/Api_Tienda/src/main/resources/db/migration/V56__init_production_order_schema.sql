@@ -9,6 +9,6 @@ CREATE TABLE orden_produccion (
     updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_orden_produccion_empresa ON orden_produccion(empresa_id);

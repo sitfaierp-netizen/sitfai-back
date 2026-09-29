@@ -9,7 +9,7 @@ CREATE TABLE orders_pedido (
     creado_por VARCHAR(50) NOT NULL,
     actualizado_en TIMESTAMP,
     actualizado_por VARCHAR(50)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE orders_linea_pedido (
     id BINARY(16) PRIMARY KEY,
@@ -18,4 +18,4 @@ CREATE TABLE orders_linea_pedido (
     cantidad INT NOT NULL,
     precio_unitario DECIMAL(19,2) NOT NULL,
     CONSTRAINT fk_orders_linea_pedido_pedido FOREIGN KEY (pedido_id) REFERENCES orders_pedido(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

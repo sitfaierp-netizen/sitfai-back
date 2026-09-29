@@ -12,7 +12,7 @@ CREATE TABLE billing_resolucion (
     rango_final BIGINT NOT NULL,
     vigencia_hasta DATE NOT NULL,
     activa BOOLEAN NOT NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Índices de aislamiento y rendimiento (MT-01)
 CREATE INDEX idx_resolucion_empresa ON billing_resolucion(empresa_id, activa);

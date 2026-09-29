@@ -14,7 +14,7 @@ CREATE TABLE inventory_despacho (
     creado_por VARCHAR(255) NOT NULL,
     actualizado_en TIMESTAMP,
     actualizado_por VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_inv_despacho_empresa ON inventory_despacho(empresa_id);
 CREATE INDEX idx_inv_despacho_pedido ON inventory_despacho(pedido_id);
@@ -34,7 +34,7 @@ CREATE TABLE inventory_linea_despacho (
         FOREIGN KEY (despacho_id) 
         REFERENCES inventory_despacho(id) 
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_inv_linea_despacho_despacho ON inventory_linea_despacho(despacho_id);
 CREATE INDEX idx_inv_linea_despacho_empresa ON inventory_linea_despacho(empresa_id);

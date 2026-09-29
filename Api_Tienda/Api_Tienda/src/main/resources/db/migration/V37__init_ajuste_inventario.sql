@@ -13,7 +13,7 @@ CREATE TABLE inv_ajustes_inventario (
     actualizado_por VARCHAR(255),
     version BIGINT NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE inv_lineas_ajuste (
     id VARCHAR(36) NOT NULL,
@@ -24,4 +24,4 @@ CREATE TABLE inv_lineas_ajuste (
     diferencia DECIMAL(19,4) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_inv_lineas_ajuste_ajuste FOREIGN KEY (ajuste_id) REFERENCES inv_ajustes_inventario(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS audit_domain_events (
     occurred_on DATETIME(6) NOT NULL,
 
     CONSTRAINT pk_audit_domain_events PRIMARY KEY (id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Índices para trazabilidad y consultas multitenant
 CREATE INDEX idx_audit_domain_events_empresa_occurred ON audit_domain_events (empresa_id, occurred_on);

@@ -8,7 +8,7 @@ CREATE TABLE recepcion_mercancia (
     updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_recepcion_empresa ON recepcion_mercancia(empresa_id);
 CREATE INDEX idx_recepcion_orden_compra ON recepcion_mercancia(orden_compra_id);
@@ -27,6 +27,6 @@ CREATE TABLE linea_recepcion_mercancia (
         FOREIGN KEY (recepcion_id)
         REFERENCES recepcion_mercancia (id)
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_linea_recepcion_recepcion_id ON linea_recepcion_mercancia(recepcion_id);

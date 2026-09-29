@@ -6,7 +6,7 @@ CREATE TABLE purchasing_orden_compra (
     estado VARCHAR(50) NOT NULL,
     costo_total_calculado DECIMAL(19,4) NOT NULL,
     CONSTRAINT pk_purchasing_orden_compra PRIMARY KEY (id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_purchasing_oc_empresa ON purchasing_orden_compra (empresa_id);
 
@@ -20,6 +20,6 @@ CREATE TABLE purchasing_linea_orden (
     subtotal DECIMAL(19,4) NOT NULL,
     CONSTRAINT pk_purchasing_linea_orden PRIMARY KEY (id),
     CONSTRAINT fk_purchasing_linea_oc FOREIGN KEY (orden_compra_id) REFERENCES purchasing_orden_compra (id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_purchasing_lo_empresa ON purchasing_linea_orden (empresa_id);

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS core_audit_event_store (
 
     CONSTRAINT pk_core_audit_event_store PRIMARY KEY (id),
     CONSTRAINT uq_core_audit_event_store_empresa_id UNIQUE (empresa_id, id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Índices de partición multi-tenant (MT-01) y despacho Outbox
 CREATE INDEX idx_core_audit_event_store_empresa_estado ON core_audit_event_store (empresa_id, estado);

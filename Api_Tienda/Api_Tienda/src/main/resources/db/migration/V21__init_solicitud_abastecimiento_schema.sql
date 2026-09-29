@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS purchasing_solicitud (
     creado_en  DATETIME(6)  NOT NULL,
 
     CONSTRAINT pk_purchasing_solicitud PRIMARY KEY (id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Índices de rendimiento y aislamiento multitenant (MT-01)
 CREATE INDEX idx_purchasing_sol_empresa
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS purchasing_linea_solicitud (
     CONSTRAINT fk_purchasing_linea_solicitud_solicitud
         FOREIGN KEY (solicitud_id) REFERENCES purchasing_solicitud (id)
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Índices de rendimiento en líneas
 CREATE INDEX idx_purchasing_lsol_solicitud

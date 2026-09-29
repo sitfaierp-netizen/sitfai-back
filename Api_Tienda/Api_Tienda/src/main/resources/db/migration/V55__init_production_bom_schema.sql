@@ -7,7 +7,7 @@ CREATE TABLE lista_materiales (
     updated_at TIMESTAMP NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_lista_materiales_empresa ON lista_materiales(empresa_id);
 
@@ -24,6 +24,6 @@ CREATE TABLE componente_receta (
         FOREIGN KEY (receta_id)
         REFERENCES lista_materiales (id)
         ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_componente_receta_id ON componente_receta(receta_id);

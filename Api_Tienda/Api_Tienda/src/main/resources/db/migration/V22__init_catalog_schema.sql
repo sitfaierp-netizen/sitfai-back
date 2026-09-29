@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS catalog_categorias (
 
     CONSTRAINT pk_catalog_categorias PRIMARY KEY (id),
     CONSTRAINT uq_catalog_cat_empresa_nombre UNIQUE (empresa_id, nombre)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_catalog_cat_empresa ON catalog_categorias(empresa_id);
 
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS catalog_productos (
     CONSTRAINT fk_catalog_productos_categoria FOREIGN KEY (categoria_id) REFERENCES catalog_categorias(id),
     CONSTRAINT chk_catalog_prod_precio_venta CHECK (precio_venta > 0),
     CONSTRAINT chk_catalog_prod_precio_compra CHECK (precio_compra >= 0)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_catalog_prod_empresa ON catalog_productos(empresa_id);
 CREATE INDEX idx_catalog_prod_empresa_estado ON catalog_productos(empresa_id, estado);
