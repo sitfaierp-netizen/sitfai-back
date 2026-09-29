@@ -116,7 +116,6 @@ public class PurchasingIntegrationTest extends AbstractIntegrationTest {
         assertThat(ordenGuardada.getEmitidoEn()).isNotNull();
 
         // 4. ASSERT: Verificación de disparo del Evento de Dominio en el bus de Spring
-        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
-            .publishEvent(org.mockito.ArgumentMatchers.any(OrdenCompraEmitidaEvent.class));
+        org.junit.jupiter.api.Assertions.assertEquals(1, applicationEvents.stream(OrdenCompraEmitidaEvent.class).count());
     }
 }

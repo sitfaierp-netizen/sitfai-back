@@ -90,8 +90,7 @@ public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
         applicationEventPublisher.publishEvent(stockEvent);
 
         // THEN: El sensor asíncrono debe capturar el evento de necesidad de abastecimiento
-        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
-            .publishEvent(org.mockito.ArgumentMatchers.any(NecesidadAbastecimientoDetectadaEvent.class));
+        org.junit.jupiter.api.Assertions.assertEquals(1, applicationEvents.stream(NecesidadAbastecimientoDetectadaEvent.class).count());
     }
 
     @Test
@@ -121,8 +120,7 @@ public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
 
         // THEN: Esperamos un tiempo razonable y no debe haber ningún evento de necesidad
         Thread.sleep(1000);
-        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.never())
-            .publishEvent(org.mockito.ArgumentMatchers.any(NecesidadAbastecimientoDetectadaEvent.class));
+        org.junit.jupiter.api.Assertions.assertEquals(0, applicationEvents.stream(NecesidadAbastecimientoDetectadaEvent.class).count());
     }
 
 }

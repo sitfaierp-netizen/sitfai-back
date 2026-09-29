@@ -126,8 +126,7 @@ public class InboundLogisticsIntegrationTest extends AbstractIntegrationTest {
         assertThat(stockActualizado).isEqualByComparingTo(cantidadIngresada);
 
         // THEN: Se verificó la publicación del evento IngresoStockRegistradoEvent
-        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
-            .publishEvent(org.mockito.ArgumentMatchers.any(IngresoStockRegistradoEvent.class));
+        org.junit.jupiter.api.Assertions.assertEquals(1, applicationEvents.stream(IngresoStockRegistradoEvent.class).count());
     }
 
 }

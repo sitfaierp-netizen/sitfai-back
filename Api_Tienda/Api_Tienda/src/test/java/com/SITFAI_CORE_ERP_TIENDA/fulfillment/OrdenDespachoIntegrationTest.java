@@ -92,10 +92,10 @@ public class OrdenDespachoIntegrationTest extends AbstractIntegrationTest {
         assertThat(ordenGuardada.getEstado()).isEqualTo(EstadoDespacho.DESPACHADO);
 
         // Verificar evento de dominio
-        ArgumentCaptor<DespachoCompletadoEvent> captor = ArgumentCaptor.forClass(DespachoCompletadoEvent.class);
-        verify(applicationEventPublisher).publishEvent(captor.capture());
-        
-        DespachoCompletadoEvent event = captor.getValue();
+        org.junit.jupiter.api.Assertions.assertEquals(1, applicationEvents.stream(DespachoCompletadoEvent.class).count());
+        DespachoCompletadoEvent event = applicationEvents.stream(DespachoCompletadoEvent.class)
+            .findFirst()
+            .orElseThrow();
         assertThat(event.empresaId().valor()).isEqualTo(empresaId);
         assertThat(event.despachoId()).isEqualTo(despachoId);
     }

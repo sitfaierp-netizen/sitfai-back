@@ -155,7 +155,6 @@ public class TurnoCajaIntegrationTest extends AbstractIntegrationTest {
         assertTrue(arqueo.tieneSobrante());
 
         // 5. Assert: Verificar disparo del evento de dominio TurnoCerradoEvent
-        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
-            .publishEvent(org.mockito.ArgumentMatchers.any(TurnoCerradoEvent.class));
+        org.junit.jupiter.api.Assertions.assertEquals(1, applicationEvents.stream(TurnoCerradoEvent.class).count());
     }
 }

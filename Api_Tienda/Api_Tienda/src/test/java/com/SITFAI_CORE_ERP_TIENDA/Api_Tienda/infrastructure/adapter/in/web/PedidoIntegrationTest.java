@@ -122,8 +122,7 @@ public class PedidoIntegrationTest extends AbstractIntegrationTest {
         assertThat(pedidoConfirmado.get().getEstado()).isEqualTo("CONFIRMADO");
 
         // 3. Verificar que se despacha el evento de dominio hacia el contexto de Spring
-        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
-            .publishEvent(org.mockito.ArgumentMatchers.any(PedidoConfirmadoEvent.class));
+        org.junit.jupiter.api.Assertions.assertEquals(1, applicationEvents.stream(PedidoConfirmadoEvent.class).count());
     }
 
 }

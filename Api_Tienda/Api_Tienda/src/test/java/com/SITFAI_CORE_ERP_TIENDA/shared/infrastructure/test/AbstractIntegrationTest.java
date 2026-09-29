@@ -23,11 +23,14 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
+@org.springframework.test.context.event.RecordApplicationEvents
 public abstract class AbstractIntegrationTest {
 
-    @SpyBean
-    protected ApplicationEventPublisher applicationEventPublisher;
+    @org.springframework.beans.factory.annotation.Autowired
+    protected org.springframework.test.context.event.ApplicationEvents applicationEvents;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    protected ApplicationEventPublisher applicationEventPublisher;
 
     @MockBean
     protected com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.TenantProviderPort purchasingTenantProviderPort;

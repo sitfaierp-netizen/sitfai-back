@@ -128,10 +128,8 @@ public class AutorizacionDevolucionIntegrationTest extends AbstractIntegrationTe
         assertThat(rmaDb.getEstado()).isEqualTo(EstadoRma.INSPECCION_PARCIAL);
         
         // Check Event propagation
-        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-        verify(applicationEventPublisher, times(2)).publishEvent(captor.capture());
-        
-        List<Object> allEvents = captor.getAllValues();
+        org.junit.jupiter.api.Assertions.assertTrue(applicationEvents.stream().count() >= 2);
+        List<Object> allEvents = applicationEvents.stream().toList();
         assertThat(allEvents).hasSize(2);
         
         // 1er Evento

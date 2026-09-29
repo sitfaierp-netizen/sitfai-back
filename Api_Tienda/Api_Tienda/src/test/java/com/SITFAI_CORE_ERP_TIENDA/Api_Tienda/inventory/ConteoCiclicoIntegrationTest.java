@@ -150,12 +150,11 @@ public class ConteoCiclicoIntegrationTest extends AbstractIntegrationTest {
         assertThat(detalleB.calcularDiferencia()).isEqualTo(-8);
         assertThat(detalleB.tieneDiscrepancia()).isTrue();
 
-        // 6. Assert: Verificar propagación del evento de dominio hacia el ApplicationEventPublisher
-        ArgumentCaptor<DiscrepanciaInventarioDetectadaEvent> captor =
-                ArgumentCaptor.forClass(DiscrepanciaInventarioDetectadaEvent.class);
-        verify(applicationEventPublisher).publishEvent(captor.capture());
-
-        DiscrepanciaInventarioDetectadaEvent eventEmitido = captor.getValue();
+        // 6. Assert: Verificar propagación del evento de dominio
+        org.junit.jupiter.api.Assertions.assertEquals(1, applicationEvents.stream(DiscrepanciaInventarioDetectadaEvent.class).count());
+        DiscrepanciaInventarioDetectadaEvent eventEmitido = applicationEvents.stream(DiscrepanciaInventarioDetectadaEvent.class)
+            .findFirst()
+            .orElseThrow();
         assertThat(eventEmitido.empresaId().valor()).isEqualTo(empresaId);
         assertThat(eventEmitido.conteoId()).isEqualTo(conteoId);
         assertThat(eventEmitido.bodegaId().valor()).isEqualTo(bodegaId);
