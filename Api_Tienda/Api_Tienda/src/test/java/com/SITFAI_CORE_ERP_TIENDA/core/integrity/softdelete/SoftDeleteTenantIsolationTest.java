@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 @SpringBootTest(classes = ApiTiendaApplication.class)
 @ActiveProfiles("test")
-@org.springframework.context.annotation.Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 class SoftDeleteTenantIsolationTest {
 
     @Autowired
