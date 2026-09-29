@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.purchasing;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.CurrentActorProvider;
@@ -48,12 +50,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 2. La Orden de Compra y sus líneas se persisten atómicamente en MySQL con aislamiento multitenant (MT-01).
  * 3. El evento de dominio {@link OrdenCompraEmitidaEvent} se dispara y entrega en el bus de Spring.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import({TestcontainersConfiguration.class, PurchasingIntegrationTest.TestPurchasingEventListener.class})
-@ActiveProfiles("test")
 @Transactional
-public class PurchasingIntegrationTest {
+public class PurchasingIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

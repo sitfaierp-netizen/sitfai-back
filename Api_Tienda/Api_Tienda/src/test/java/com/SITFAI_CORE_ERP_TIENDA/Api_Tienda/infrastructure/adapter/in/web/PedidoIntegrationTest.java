@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.infrastructure.adapter.in.web;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort;
@@ -49,12 +51,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 3. Persistencia en base de datos con clave de particiÃ³n empresa_id (MT-01).
  * 4. Despacho del evento PedidoConfirmadoEvent hacia el contexto de Spring (CoreografÃ­a con Bodega/Inventario).
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import({TestcontainersConfiguration.class, PedidoIntegrationTest.TestEventConfig.class})
-@ActiveProfiles("test")
 @Transactional
-public class PedidoIntegrationTest {
+public class PedidoIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

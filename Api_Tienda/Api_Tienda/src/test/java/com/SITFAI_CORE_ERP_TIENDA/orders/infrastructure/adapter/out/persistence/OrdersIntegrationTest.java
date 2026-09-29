@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.orders.infrastructure.adapter.out.persistence;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.orders.domain.model.Pedido;
@@ -23,10 +25,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
-class OrdersIntegrationTest {
+class OrdersIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PedidoJpaAdapter pedidoJpaAdapter;

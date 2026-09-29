@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort;
@@ -52,12 +54,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 3. Finalización y cálculo analítico de discrepancias vía REST (POST /inventory/conteos/{id}/finalizar).
  * 4. Propagación de DiscrepanciaInventarioDetectadaEvent hacia el ApplicationEventPublisher.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import(TestcontainersConfiguration.class)
-@ActiveProfiles("test")
 @Transactional
-public class ConteoCiclicoIntegrationTest {
+public class ConteoCiclicoIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

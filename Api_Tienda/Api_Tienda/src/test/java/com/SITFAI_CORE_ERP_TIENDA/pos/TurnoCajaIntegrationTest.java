@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.pos;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.pos.application.dto.TurnoCajaResponse;
@@ -47,12 +49,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 4. Verificación de persistencia del arqueo inmutable en MySQL
  * 5. Verificación de publicación del evento de dominio TurnoCerradoEvent
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import({TestcontainersConfiguration.class, TurnoCajaIntegrationTest.TestTurnoCerradoEventListener.class})
-@ActiveProfiles("test")
 @Transactional
-public class TurnoCajaIntegrationTest {
+public class TurnoCajaIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

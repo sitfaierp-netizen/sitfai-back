@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort;
@@ -52,12 +54,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 2. El stock disponible del producto aumenta en la base de datos viva.
  * 3. El evento de dominio {@link IngresoStockRegistradoEvent} es emitido.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import({TestcontainersConfiguration.class, InboundLogisticsIntegrationTest.TestInboundEventListener.class})
-@ActiveProfiles("test")
 @Transactional
-public class InboundLogisticsIntegrationTest {
+public class InboundLogisticsIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

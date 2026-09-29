@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.out.persistence;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import org.springframework.context.annotation.Import;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
@@ -24,19 +26,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Pruebas de Integración de Infraestructura: {@link UsuarioJpaRepository}.
  * <p>
- * Regla 8: @org.springframework.test.context.ActiveProfiles("test")
-@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
-@org.springframework.test.context.ActiveProfiles("test")
-@SpringBootTest + Testcontainers MySQL, validando esquema Flyway (V6) y aislamiento multitenant (MT-01).
+ * Regla 8: + Testcontainers MySQL, validando esquema Flyway (V6) y aislamiento multitenant (MT-01).
  * Nota: Se especifica classes = ApiTiendaApplication.class porque este módulo vive fuera del paquete raíz
  * del componente @SpringBootApplication (com.SITFAI_CORE_ERP_TIENDA.Api_Tienda).
  */
-@org.springframework.test.context.ActiveProfiles("test")
-@SpringBootTest(classes = ApiTiendaApplication.class)
 @Transactional
-@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 @DisplayName("Infraestructura: UsuarioJpaRepository con Testcontainers MySQL (Flyway V6)")
-class UsuarioJpaRepositoryIT {
+class UsuarioJpaRepositoryIT extends AbstractIntegrationTest {
 
 
 

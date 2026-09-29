@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_audit;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import org.springframework.context.annotation.Import;
 
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.event.FacturaEmitidaEvent;
@@ -37,10 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 3. El payload contiene la serialización JSON del evento.
  * 4. El aislamiento multi-tenant por {@code empresa_id} se preserva estrictamente.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
-@ActiveProfiles("test")
-class EventStoreIntegrationTest {
+class EventStoreIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;

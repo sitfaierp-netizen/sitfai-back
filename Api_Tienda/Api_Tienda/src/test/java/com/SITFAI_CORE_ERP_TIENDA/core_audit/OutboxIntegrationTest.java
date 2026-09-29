@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_audit;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import org.springframework.context.annotation.Import;
 
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.application.dto.ProcesarEventosPendientesCommand;
@@ -38,10 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 2. Lo despacha vía EventDispatcherPort hacia los suscriptores.
  * 3. Actualiza y sella su estado a PROCESADO en la tabla {@code core_audit_event_store}.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
-@ActiveProfiles("test")
-class OutboxIntegrationTest {
+class OutboxIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private EventStoreRepository eventStoreRepository;

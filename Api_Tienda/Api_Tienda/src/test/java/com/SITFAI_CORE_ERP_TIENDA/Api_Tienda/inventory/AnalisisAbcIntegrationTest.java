@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort;
@@ -44,12 +46,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 2. Los productos se clasifican en categorías A, B y C de acuerdo a la Ley de Pareto.
  * 3. Las métricas de movimiento y la categoría calculada se persisten correctamente en MySQL.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import(TestcontainersConfiguration.class)
-@ActiveProfiles("test")
 @Transactional
-public class AnalisisAbcIntegrationTest {
+public class AnalisisAbcIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

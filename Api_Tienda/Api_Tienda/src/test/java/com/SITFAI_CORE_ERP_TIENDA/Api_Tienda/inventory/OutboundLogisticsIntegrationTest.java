@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort;
@@ -54,12 +56,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 3. El oyente de eventos (DespachoConfirmadoEventHandler) deduce definitivamente las unidades físicas
  *    reservadas en la Bodega viva, disminuyendo el stock reservado a cero.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@Import(TestcontainersConfiguration.class)
-@ActiveProfiles("test")
 @Transactional
-public class OutboundLogisticsIntegrationTest {
+public class OutboundLogisticsIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

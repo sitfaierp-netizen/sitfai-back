@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.replenishment;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.StockDescontadoPorVentaEvent;
@@ -44,11 +46,8 @@ import static org.awaitility.Awaitility.await;
  * 3. El sensor asíncrono {@code StockMovimientoEventListener} intercepta el evento.
  * 4. El caso de uso evalúa el stock y emite {@link NecesidadAbastecimientoDetectadaEvent}.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@Import({TestcontainersConfiguration.class, ReplenishmentIntegrationTest.TestReplenishmentEventCaptor.class})
-@ActiveProfiles("test")
 @Transactional
-public class ReplenishmentIntegrationTest {
+public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PoliticaInventarioRepository politicaRepository;

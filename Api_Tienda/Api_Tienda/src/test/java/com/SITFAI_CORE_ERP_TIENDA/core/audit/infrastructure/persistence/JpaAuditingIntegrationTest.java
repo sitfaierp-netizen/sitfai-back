@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.core.audit.infrastructure.persistence;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.core.audit.domain.port.ActorProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.core.audit.infrastructure.persistence.config.JpaAuditingConfig;
 import com.SITFAI_CORE_ERP_TIENDA.core.audit.infrastructure.persistence.entity.AuditableJpaEntity;
@@ -30,12 +32,8 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 
-@SpringBootTest(classes = ApiTiendaApplication.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@org.springframework.test.context.ActiveProfiles("test")
-@ContextConfiguration(classes = com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication.class)
-@Import({JpaAuditingConfig.class, JpaAuditingIntegrationTest.Config.class, TestcontainersConfiguration.class})
-class JpaAuditingIntegrationTest {
+class JpaAuditingIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private org.springframework.data.repository.CrudRepository<com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity.EmpresaJpaEntity, String> repository;

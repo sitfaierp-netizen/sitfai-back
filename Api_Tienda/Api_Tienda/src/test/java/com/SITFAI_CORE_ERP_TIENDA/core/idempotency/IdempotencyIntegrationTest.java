@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.core.idempotency;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.infrastructure.adapter.in.web.Idempotent;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.infrastructure.adapter.out.persistence.SpringDataIdempotencyRepository;
@@ -37,11 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import org.springframework.context.annotation.Import;
 
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
-@ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
-class IdempotencyIntegrationTest {
+class IdempotencyIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

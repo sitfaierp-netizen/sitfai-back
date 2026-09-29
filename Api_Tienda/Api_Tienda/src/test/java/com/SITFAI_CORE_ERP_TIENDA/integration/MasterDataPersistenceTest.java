@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.integration;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import org.springframework.context.annotation.Import;
 
 import com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.persistence.entity.ProductoJpaEntity;
@@ -25,11 +27,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@org.springframework.test.context.ActiveProfiles("test")
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 @Disabled("Docker is not available in the IDE environment")
-class MasterDataPersistenceTest {
+class MasterDataPersistenceTest extends AbstractIntegrationTest {
 
 
 

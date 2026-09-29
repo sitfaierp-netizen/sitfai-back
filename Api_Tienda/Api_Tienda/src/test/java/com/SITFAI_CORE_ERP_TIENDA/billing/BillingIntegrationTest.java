@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.billing;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import org.springframework.context.annotation.Import;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
@@ -38,10 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * se genera en estado {@link EstadoFactura#EMITIDA}, con sus totales calculados,
  * vinculada al documento origen y almacenada con aislamiento MT-01.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
-@ActiveProfiles("test")
-public class BillingIntegrationTest {
+public class BillingIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PedidoConfirmadoEventHandler pedidoConfirmadoEventHandler;

@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.purchasing;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.SolicitudAbastecimientoRepository;
@@ -39,10 +41,7 @@ import static org.awaitility.Awaitility.await;
  * Protocolo-5 (MCP § 5): Los bounded contexts se comunican EXCLUSIVAMENTE a través de Domain Events.
  * Regla MT-01: Toda entidad persiste con su {@code empresa_id} como clave de partición.
  */
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@Import(TestcontainersConfiguration.class)
-@ActiveProfiles("test")
-public class ReplenishmentToPurchasingIntegrationTest {
+public class ReplenishmentToPurchasingIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;

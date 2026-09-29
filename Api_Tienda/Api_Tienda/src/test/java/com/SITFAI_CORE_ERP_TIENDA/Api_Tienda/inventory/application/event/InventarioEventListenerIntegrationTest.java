@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.event;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.Bodega;
@@ -31,10 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@ActiveProfiles("test")
-@org.springframework.context.annotation.Import(TestcontainersConfiguration.class)
-class InventarioEventListenerIntegrationTest {
+class InventarioEventListenerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;

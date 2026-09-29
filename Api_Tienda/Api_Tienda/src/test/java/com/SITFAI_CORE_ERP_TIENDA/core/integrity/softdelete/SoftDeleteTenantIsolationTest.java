@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.core.integrity.softdelete;
 
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
+
 import org.springframework.context.annotation.Import;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity.SucursalJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity.EmpresaJpaEntity;
@@ -16,10 +18,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
-@SpringBootTest(classes = ApiTiendaApplication.class)
-@ActiveProfiles("test")
-class SoftDeleteTenantIsolationTest {
+class SoftDeleteTenantIsolationTest extends AbstractIntegrationTest {
 
     @Autowired
     private EntityManager entityManager;
