@@ -48,11 +48,7 @@ public class OrdenDespachoIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private OrdenDespachoRepository repository;
 
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
 
-    @MockitoBean
-    private ApplicationEventPublisher eventPublisher;
 
     private UUID empresaId;
     private DespachoId despachoId;
@@ -61,7 +57,7 @@ public class OrdenDespachoIntegrationTest extends AbstractIntegrationTest {
     void setUp() {
         empresaId = UUID.randomUUID();
         despachoId = DespachoId.generar();
-        when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
+        when(fulfillmentTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
 
         OrdenDespacho orden = OrdenDespacho.crear(
                 EmpresaId.de(empresaId),
@@ -97,7 +93,7 @@ public class OrdenDespachoIntegrationTest extends AbstractIntegrationTest {
 
         // Verificar evento de dominio
         ArgumentCaptor<DespachoCompletadoEvent> captor = ArgumentCaptor.forClass(DespachoCompletadoEvent.class);
-        verify(eventPublisher).publishEvent(captor.capture());
+        verify(applicationEventPublisher).publishEvent(captor.capture());
         
         DespachoCompletadoEvent event = captor.getValue();
         assertThat(event.empresaId().valor()).isEqualTo(empresaId);

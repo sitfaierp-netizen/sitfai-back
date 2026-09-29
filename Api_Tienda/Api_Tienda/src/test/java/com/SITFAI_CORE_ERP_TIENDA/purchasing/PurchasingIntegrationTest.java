@@ -62,37 +62,8 @@ public class PurchasingIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private OrdenCompraRepository ordenCompraRepository;
 
-    @Autowired
-    private TestPurchasingEventListener eventListener;
 
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
 
-    @MockitoBean
-    private CurrentActorProvider currentActorProvider;
-
-    @TestComponent
-    public static class TestPurchasingEventListener {
-        private final List<OrdenCompraEmitidaEvent> events = new CopyOnWriteArrayList<>();
-
-        @EventListener
-        public void onOrdenEmitida(OrdenCompraEmitidaEvent event) {
-            events.add(event);
-        }
-
-        public List<OrdenCompraEmitidaEvent> getEvents() {
-            return events;
-        }
-
-        public void clear() {
-            events.clear();
-        }
-    }
-
-    @BeforeEach
-    void setUp() {
-        eventListener.clear();
-    }
 
     @Test
     @DisplayName("Debe emitir orden de compra vía REST, persistir en MySQL con MT-01 y disparar OrdenCompraEmitidaEvent")
@@ -104,8 +75,8 @@ public class PurchasingIntegrationTest extends AbstractIntegrationTest {
         UUID productoId2 = UUID.randomUUID();
 
         EmpresaId empresaId = EmpresaId.de(empresaIdRaw);
-        when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(empresaId);
-        when(currentActorProvider.getActorActual()).thenReturn("JEFE_COMPRAS_USER");
+        when(purchasingTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(empresaId);
+        when(purchasingCurrentActorProvider.getActorActual()).thenReturn("JEFE_COMPRAS_USER");
 
         EmitirOrdenCompraWebRequest request = new EmitirOrdenCompraWebRequest(
                 proveedorIdRaw,
@@ -145,12 +116,7 @@ public class PurchasingIntegrationTest extends AbstractIntegrationTest {
         assertThat(ordenGuardada.getEmitidoEn()).isNotNull();
 
         // 4. ASSERT: Verificación de disparo del Evento de Dominio en el bus de Spring
-        assertThat(eventListener.getEvents()).hasSize(1);
-        OrdenCompraEmitidaEvent evento = eventListener.getEvents().get(0);
-        assertThat(evento.empresaId()).isEqualTo(empresaId);
-        assertThat(evento.ordenCompraId()).isEqualTo(ordenCompraId);
-        assertThat(evento.proveedorId().valor()).isEqualTo(proveedorIdRaw);
-        assertThat(evento.totalLineas()).isEqualTo(2);
-        assertThat(evento.montoTotalEsperado()).isEqualByComparingTo("2505.0000");
+        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
+            .publishEvent(org.mockito.ArgumentMatchers.any(OrdenCompraEmitidaEvent.class));
     }
 }

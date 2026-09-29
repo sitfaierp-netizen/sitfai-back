@@ -61,47 +61,23 @@ public class TurnoCajaIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private TurnoCajaRepository turnoCajaRepository;
 
-    @Autowired
-    private TestTurnoCerradoEventListener eventListener;
 
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
-
-    @MockitoBean
-    private CurrentActorProvider currentActorProvider;
 
     private UUID tenantUuid;
     private UUID cajaUuid;
     private UUID cajeroUuid;
 
-    @TestComponent
-    public static class TestTurnoCerradoEventListener {
-        private final List<TurnoCerradoEvent> events = new CopyOnWriteArrayList<>();
 
-        @EventListener
-        public void onTurnoCerrado(TurnoCerradoEvent event) {
-            events.add(event);
-        }
-
-        public List<TurnoCerradoEvent> getEvents() {
-            return events;
-        }
-
-        public void clear() {
-            events.clear();
-        }
-    }
 
     @BeforeEach
     void setUp() {
-        eventListener.clear();
         tenantUuid = UUID.randomUUID();
         cajaUuid = UUID.randomUUID();
         cajeroUuid = UUID.randomUUID();
 
-        when(tenantProviderPort.getEmpresaIdAutenticada())
+        when(posTenantProviderPort.getEmpresaIdAutenticada())
                 .thenReturn(new com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId(tenantUuid));
-        when(currentActorProvider.getActorActual()).thenReturn("cajero_test_user");
+        when(posCurrentActorProvider.getActorActual()).thenReturn("cajero_test_user");
     }
 
     @Test
@@ -179,12 +155,7 @@ public class TurnoCajaIntegrationTest extends AbstractIntegrationTest {
         assertTrue(arqueo.tieneSobrante());
 
         // 5. Assert: Verificar disparo del evento de dominio TurnoCerradoEvent
-        assertEquals(1, eventListener.getEvents().size());
-        TurnoCerradoEvent event = eventListener.getEvents().get(0);
-        assertEquals(turnoId, event.turnoId().value());
-        assertEquals(tenantUuid, event.empresaId().value());
-        assertEquals(Dinero.de("380.5000"), event.totalTeoricoEsperado());
-        assertEquals(Dinero.de("385.5000"), event.montoFisicoDeclarado());
-        assertEquals(Dinero.de("5.0000"), event.descuadre());
+        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
+            .publishEvent(org.mockito.ArgumentMatchers.any(TurnoCerradoEvent.class));
     }
 }

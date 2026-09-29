@@ -32,7 +32,6 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class JpaAuditingIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -40,6 +39,7 @@ class JpaAuditingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void debeEstamparAuditoriaAlGuardar() {
+        org.mockito.Mockito.when(auditActorProviderPort.getCurrentActorId()).thenReturn("test_actor");
         var entity = new com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity.EmpresaJpaEntity();
         entity.setId(UUID.randomUUID().toString());
         entity.setRuc("1234567890123");
@@ -55,12 +55,4 @@ class JpaAuditingIntegrationTest extends AbstractIntegrationTest {
         assertEquals("test_actor", saved.getActualizadoPor());
     }
 
-    @TestConfiguration
-    @EntityScan(basePackageClasses = com.SITFAI_CORE_ERP_TIENDA.core_empresa.infrastructure.adapter.out.persistence.entity.EmpresaJpaEntity.class)
-    static class Config {
-        @Bean
-        public ActorProviderPort dummyActorProvider() {
-            return () -> "test_actor";
-        }
-    }
 }

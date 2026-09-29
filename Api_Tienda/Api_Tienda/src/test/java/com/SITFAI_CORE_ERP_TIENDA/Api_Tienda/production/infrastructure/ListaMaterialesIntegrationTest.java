@@ -47,8 +47,7 @@ public class ListaMaterialesIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ApplicationEvents applicationEvents;
 
-    @MockBean
-    private TenantProviderPort tenantProviderPort;
+
 
     private final UUID EMPRESA_ID = UUID.randomUUID();
     private final UUID PRODUCTO_FINAL_ID = UUID.randomUUID();
@@ -57,7 +56,7 @@ public class ListaMaterialesIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         repository.deleteAll();
-        Mockito.when(tenantProviderPort.getEmpresaIdAutenticada())
+        Mockito.when(productionTenantProviderPort.getEmpresaIdAutenticada())
                .thenReturn(new EmpresaId(EMPRESA_ID));
     }
 

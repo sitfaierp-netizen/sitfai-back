@@ -47,8 +47,7 @@ class IdempotencyIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private SpringDataIdempotencyRepository repository;
 
-    @MockBean
-    private TenantProviderPort tenantProviderPort;
+
 
     private static final String TENANT_ID = UUID.randomUUID().toString();
     private static final String TENANT_ID_2 = UUID.randomUUID().toString();
@@ -56,7 +55,7 @@ class IdempotencyIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         repository.deleteAll();
-        Mockito.when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId.de(TENANT_ID));
+        Mockito.when(inventoryTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId.de(TENANT_ID));
         DummyController.callCount.set(0);
     }
 

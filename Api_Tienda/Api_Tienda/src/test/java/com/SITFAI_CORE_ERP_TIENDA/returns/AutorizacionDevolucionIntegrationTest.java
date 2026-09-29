@@ -54,18 +54,14 @@ public class AutorizacionDevolucionIntegrationTest extends AbstractIntegrationTe
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
 
-    @MockitoBean
-    private ApplicationEventPublisher eventPublisher;
 
     private UUID empresaId;
 
     @BeforeEach
     void setUp() {
         empresaId = UUID.randomUUID();
-        when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
+        when(returnsTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
     }
 
     @Test
@@ -133,7 +129,7 @@ public class AutorizacionDevolucionIntegrationTest extends AbstractIntegrationTe
         
         // Check Event propagation
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-        verify(eventPublisher, times(2)).publishEvent(captor.capture());
+        verify(applicationEventPublisher, times(2)).publishEvent(captor.capture());
         
         List<Object> allEvents = captor.getAllValues();
         assertThat(allEvents).hasSize(2);

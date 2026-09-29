@@ -47,8 +47,7 @@ public class OrdenProduccionIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ApplicationEvents applicationEvents;
 
-    @MockBean
-    private TenantProviderPort tenantProviderPort;
+
 
     private final UUID EMPRESA_ID = UUID.randomUUID();
     private final UUID RECETA_ID = UUID.randomUUID();
@@ -58,7 +57,7 @@ public class OrdenProduccionIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         repository.deleteAll();
-        Mockito.when(tenantProviderPort.getEmpresaIdAutenticada())
+        Mockito.when(productionTenantProviderPort.getEmpresaIdAutenticada())
                .thenReturn(new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.bom.vo.EmpresaId(EMPRESA_ID));
     }
 

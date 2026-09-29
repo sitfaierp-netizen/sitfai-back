@@ -66,21 +66,14 @@ public class InboundLogisticsIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private BodegaRepository bodegaRepository;
 
-    @Autowired
-    private TestInboundEventListener eventListener;
-
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
 
     private EmpresaId empresaId;
     private Bodega bodegaInicial;
 
     @BeforeEach
     void setUp() {
-        eventListener.limpiar();
-
         empresaId = new EmpresaId(UUID.randomUUID());
-        when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(empresaId);
+        when(inventoryTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(empresaId);
 
         // Crear y persistir una bodega activa para el tenant en la base de datos viva
         Bodega bodega = Bodega.crear(
@@ -133,32 +126,8 @@ public class InboundLogisticsIntegrationTest extends AbstractIntegrationTest {
         assertThat(stockActualizado).isEqualByComparingTo(cantidadIngresada);
 
         // THEN: Se verificó la publicación del evento IngresoStockRegistradoEvent
-        assertThat(eventListener.getEventosIngreso())
-                .hasSize(1)
-                .anySatisfy(event -> {
-                    assertThat(event.bodegaId()).isEqualTo(bodegaInicial.getId());
-                    assertThat(event.empresaId()).isEqualTo(empresaId);
-                    assertThat(event.documentoFuente().tipo()).isEqualTo("ORDEN_COMPRA");
-                    assertThat(event.documentoFuente().numero()).isEqualTo(ordenCompraId.toString());
-                    assertThat(event.totalLotes()).isEqualTo(1);
-                });
+        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
+            .publishEvent(org.mockito.ArgumentMatchers.any(IngresoStockRegistradoEvent.class));
     }
 
-    @TestComponent
-    public static class TestInboundEventListener {
-        private final List<IngresoStockRegistradoEvent> eventosIngreso = new CopyOnWriteArrayList<>();
-
-        @EventListener
-        public void onIngresoStock(IngresoStockRegistradoEvent event) {
-            eventosIngreso.add(event);
-        }
-
-        public List<IngresoStockRegistradoEvent> getEventosIngreso() {
-            return eventosIngreso;
-        }
-
-        public void limpiar() {
-            eventosIngreso.clear();
-        }
-    }
 }

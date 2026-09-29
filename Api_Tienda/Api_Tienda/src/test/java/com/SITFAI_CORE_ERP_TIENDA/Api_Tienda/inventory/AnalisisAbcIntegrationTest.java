@@ -58,8 +58,7 @@ public class AnalisisAbcIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ClasificacionProductoRepository clasificacionRepository;
 
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
+
 
     private UUID empresaId;
     private UUID bodegaId;
@@ -75,7 +74,7 @@ public class AnalisisAbcIntegrationTest extends AbstractIntegrationTest {
         productoBId = UUID.randomUUID();
         productoCId = UUID.randomUUID();
 
-        when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
+        when(inventoryTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
 
         // 1. Crear bodega en base de datos para satisfacer FKs de movimientos
         String insertBodegaSql = """

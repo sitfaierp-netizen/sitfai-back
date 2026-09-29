@@ -71,8 +71,7 @@ public class OutboundLogisticsIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private DespachoRepository despachoRepository;
 
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
+
 
     private EmpresaId empresaId;
     private Bodega bodegaInicial;
@@ -81,7 +80,7 @@ public class OutboundLogisticsIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         empresaId = EmpresaId.de(UUID.randomUUID());
-        when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(empresaId);
+        when(inventoryTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(empresaId);
 
         productoId = ProductoId.de(UUID.randomUUID());
 

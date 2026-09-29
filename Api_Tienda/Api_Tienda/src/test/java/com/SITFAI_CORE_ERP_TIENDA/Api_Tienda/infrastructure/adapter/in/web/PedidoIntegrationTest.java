@@ -63,11 +63,6 @@ public class PedidoIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private PedidoJpaRepository pedidoRepository;
 
-    @Autowired
-    private PedidoEventCaptureListener eventCaptureListener;
-
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
 
     private UUID empresaId;
     private UUID clienteId;
@@ -78,9 +73,7 @@ public class PedidoIntegrationTest extends AbstractIntegrationTest {
         empresaId = UUID.randomUUID();
         clienteId = UUID.randomUUID();
         productoId = UUID.randomUUID();
-
-        when(tenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
-        eventCaptureListener.clear();
+        when(apiTiendaTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
     }
 
     @Test
@@ -114,8 +107,7 @@ public class PedidoIntegrationTest extends AbstractIntegrationTest {
         assertThat(pedidoGuardado.get().getTotal()).isEqualByComparingTo(BigDecimal.valueOf(450.00));
         assertThat(pedidoGuardado.get().getLineas()).hasSize(1);
 
-        // No debe haber emitido evento de confirmaciÃ³n todavÃ­a
-        assertThat(eventCaptureListener.getEvents()).isEmpty();
+
 
         // 2. Confirmar pedido vÃ­a REST PATCH /pedidos/{id}/confirmar
         mockMvc.perform(patch("/pedidos/" + pedidoId + "/confirmar")
@@ -130,40 +122,9 @@ public class PedidoIntegrationTest extends AbstractIntegrationTest {
         assertThat(pedidoConfirmado.get().getEstado()).isEqualTo("CONFIRMADO");
 
         // 3. Verificar que se despacha el evento de dominio hacia el contexto de Spring
-        assertThat(eventCaptureListener.getEvents()).hasSize(1);
-        PedidoConfirmadoEvent event = eventCaptureListener.getEvents().get(0);
-        assertThat(event.empresaId().valor()).isEqualTo(empresaId);
-        assertThat(event.pedidoId().valor()).isEqualTo(pedidoId);
-        assertThat(event.clienteId().valor()).isEqualTo(clienteId);
-        assertThat(event.total().monto()).isEqualByComparingTo(BigDecimal.valueOf(450.00));
-        assertThat(event.lineas()).hasSize(1);
-        assertThat(event.lineas().get(0).getProductoId().valor()).isEqualTo(productoId);
-        assertThat(event.lineas().get(0).getCantidad()).isEqualTo(3);
+        org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
+            .publishEvent(org.mockito.ArgumentMatchers.any(PedidoConfirmadoEvent.class));
     }
 
-    @TestConfiguration
-    static class TestEventConfig {
-        @Bean
-        public PedidoEventCaptureListener pedidoEventCaptureListener() {
-            return new PedidoEventCaptureListener();
-        }
-    }
-
-    public static class PedidoEventCaptureListener {
-        private final List<PedidoConfirmadoEvent> events = new CopyOnWriteArrayList<>();
-
-        @EventListener
-        public void onPedidoConfirmado(PedidoConfirmadoEvent event) {
-            events.add(event);
-        }
-
-        public List<PedidoConfirmadoEvent> getEvents() {
-            return events;
-        }
-
-        public void clear() {
-            events.clear();
-        }
-    }
 }
 

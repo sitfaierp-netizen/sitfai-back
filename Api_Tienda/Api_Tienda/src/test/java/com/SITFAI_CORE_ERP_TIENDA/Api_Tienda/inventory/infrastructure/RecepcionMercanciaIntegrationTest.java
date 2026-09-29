@@ -46,8 +46,7 @@ public class RecepcionMercanciaIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ApplicationEvents applicationEvents;
 
-    @MockBean
-    private TenantProviderPort tenantProviderPort;
+
 
     private final UUID EMPRESA_ID = UUID.randomUUID();
     private final UUID RECEPCION_ID = UUID.randomUUID();
@@ -58,7 +57,7 @@ public class RecepcionMercanciaIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         repository.deleteAll();
-        Mockito.when(tenantProviderPort.getEmpresaIdAutenticada())
+        Mockito.when(inventoryTenantProviderPort.getEmpresaIdAutenticada())
                .thenReturn(new com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId(EMPRESA_ID));
 
         // Crear una recepción planificada directamente en BD para la prueba

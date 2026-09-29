@@ -66,11 +66,7 @@ public class ConteoCiclicoIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ConteoCiclicoRepository conteoRepository;
 
-    @MockitoBean
-    private TenantProviderPort tenantProviderPort;
 
-    @MockitoBean
-    private ApplicationEventPublisher eventPublisher;
 
     private UUID empresaId;
     private UUID bodegaId;
@@ -84,7 +80,7 @@ public class ConteoCiclicoIntegrationTest extends AbstractIntegrationTest {
         productoAId = UUID.randomUUID();
         productoBId = UUID.randomUUID();
 
-        when(tenantProviderPort.getEmpresaIdAutenticada())
+        when(inventoryTenantProviderPort.getEmpresaIdAutenticada())
                 .thenReturn(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId.de(empresaId));
     }
 
@@ -157,7 +153,7 @@ public class ConteoCiclicoIntegrationTest extends AbstractIntegrationTest {
         // 6. Assert: Verificar propagación del evento de dominio hacia el ApplicationEventPublisher
         ArgumentCaptor<DiscrepanciaInventarioDetectadaEvent> captor =
                 ArgumentCaptor.forClass(DiscrepanciaInventarioDetectadaEvent.class);
-        verify(eventPublisher).publishEvent(captor.capture());
+        verify(applicationEventPublisher).publishEvent(captor.capture());
 
         DiscrepanciaInventarioDetectadaEvent eventEmitido = captor.getValue();
         assertThat(eventEmitido.empresaId().valor()).isEqualTo(empresaId);
