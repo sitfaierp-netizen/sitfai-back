@@ -36,9 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ReservaStockIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
     private BodegaRepository bodegaRepository;
 
     @Autowired
@@ -95,7 +92,7 @@ class ReservaStockIntegrationTest extends AbstractIntegrationTest {
 
         // Act
         transactionTemplate.execute(status -> {
-            eventPublisher.publishEvent(event);
+            applicationEventPublisher.publishEvent(event);
             return null;
         });
 

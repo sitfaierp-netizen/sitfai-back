@@ -52,9 +52,6 @@ public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private PoliticaInventarioRepository politicaRepository;
 
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
 
     private UUID empresaId;
     private UUID bodegaId;
@@ -90,7 +87,7 @@ public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
                 new Cantidad(BigDecimal.valueOf(5)),
                 new DocumentoFuenteId("POS_VENTA", UUID.randomUUID().toString())
         );
-        eventPublisher.publishEvent(stockEvent);
+        applicationEventPublisher.publishEvent(stockEvent);
 
         // THEN: El sensor asíncrono debe capturar el evento de necesidad de abastecimiento
         org.mockito.Mockito.verify(applicationEventPublisher, org.mockito.Mockito.times(1))
@@ -120,7 +117,7 @@ public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
                 new Cantidad(BigDecimal.valueOf(3)),
                 new DocumentoFuenteId("POS_VENTA", UUID.randomUUID().toString())
         );
-        eventPublisher.publishEvent(stockEvent);
+        applicationEventPublisher.publishEvent(stockEvent);
 
         // THEN: Esperamos un tiempo razonable y no debe haber ningún evento de necesidad
         Thread.sleep(1000);

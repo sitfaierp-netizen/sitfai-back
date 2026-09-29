@@ -43,8 +43,6 @@ import static org.awaitility.Awaitility.await;
  */
 public class ReplenishmentToPurchasingIntegrationTest extends AbstractIntegrationTest {
 
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
 
     @Autowired
     private SolicitudAbastecimientoRepository solicitudRepository;
@@ -75,7 +73,7 @@ public class ReplenishmentToPurchasingIntegrationTest extends AbstractIntegratio
         );
 
         // WHEN: Se publica el evento en el bus de Spring (como lo haría el módulo replenishment)
-        eventPublisher.publishEvent(evento);
+        applicationEventPublisher.publishEvent(evento);
 
         // THEN: Esperamos (máximo 5 s) a que el listener asíncrono procese y persista la solicitud
         await().atMost(5, TimeUnit.SECONDS)
@@ -112,7 +110,7 @@ public class ReplenishmentToPurchasingIntegrationTest extends AbstractIntegratio
         );
 
         // WHEN
-        eventPublisher.publishEvent(evento);
+        applicationEventPublisher.publishEvent(evento);
 
         // THEN: Verificar todos los invariantes de la solicitud creada
         await().atMost(5, TimeUnit.SECONDS)
@@ -173,8 +171,8 @@ public class ReplenishmentToPurchasingIntegrationTest extends AbstractIntegratio
                 UUID.randomUUID(), Instant.now(), empresa2, mismaBodega, mismoProducto, 35);
 
         // WHEN: Ambos eventos se disparan
-        eventPublisher.publishEvent(eventoEmpresa1);
-        eventPublisher.publishEvent(eventoEmpresa2);
+        applicationEventPublisher.publishEvent(eventoEmpresa1);
+        applicationEventPublisher.publishEvent(eventoEmpresa2);
 
         // THEN: Cada empresa debe tener su propia solicitud independiente
         await().atMost(8, TimeUnit.SECONDS)

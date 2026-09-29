@@ -36,9 +36,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class InventarioEventListenerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
     private BodegaRepository bodegaRepository;
 
     @Autowired
@@ -99,7 +96,7 @@ class InventarioEventListenerIntegrationTest extends AbstractIntegrationTest {
         // Act
         // Publicar evento en transaccion para que el AFTER_COMMIT listener se ejecute
         transactionTemplate.execute(status -> {
-            eventPublisher.publishEvent(event);
+            applicationEventPublisher.publishEvent(event);
             return null;
         });
 

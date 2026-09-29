@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.MySQLContainer;
@@ -42,9 +41,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EventStoreIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
     private StoredEventJpaRepository jpaRepository;
 
     @Autowired
@@ -65,7 +61,7 @@ class EventStoreIntegrationTest extends AbstractIntegrationTest {
 
         // ACT: Publicar evento dentro de un límite transaccional para activar BEFORE_COMMIT
         transactionTemplate.executeWithoutResult(status -> {
-            eventPublisher.publishEvent(evento);
+            applicationEventPublisher.publishEvent(evento);
         });
 
         // ASSERT: Verificación directa en base de datos viva (Caja Negra)

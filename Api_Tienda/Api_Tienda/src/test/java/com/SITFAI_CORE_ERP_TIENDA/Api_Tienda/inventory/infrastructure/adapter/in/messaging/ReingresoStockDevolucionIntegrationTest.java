@@ -32,9 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ReingresoStockDevolucionIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
     private BodegaRepository bodegaRepository;
 
     @Test
@@ -71,7 +68,7 @@ class ReingresoStockDevolucionIntegrationTest extends AbstractIntegrationTest {
                 Dinero.de(new BigDecimal("50.00"))
         );
 
-        eventPublisher.publishEvent(event);
+        applicationEventPublisher.publishEvent(event);
 
         // 3. Verificar que el stock se haya incrementado
         Bodega bodegaActualizada = bodegaRepository.buscarPorId(bodega.getId(), new EmpresaId(empresaId)).orElseThrow();
