@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.out.persistence;
 
+import org.springframework.context.annotation.Import;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,31 +24,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Pruebas de Integración de Infraestructura: {@link UsuarioJpaRepository}.
  * <p>
- * Regla 8: @SpringBootTest + Testcontainers MySQL, validando esquema Flyway (V6) y aislamiento multitenant (MT-01).
+ * Regla 8: @org.springframework.test.context.ActiveProfiles("test")
+@SpringBootTest + Testcontainers MySQL, validando esquema Flyway (V6) y aislamiento multitenant (MT-01).
  * Nota: Se especifica classes = ApiTiendaApplication.class porque este módulo vive fuera del paquete raíz
  * del componente @SpringBootApplication (com.SITFAI_CORE_ERP_TIENDA.Api_Tienda).
  */
+@org.springframework.test.context.ActiveProfiles("test")
 @SpringBootTest(classes = ApiTiendaApplication.class)
 @Transactional
-@Testcontainers
+@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 @DisplayName("Infraestructura: UsuarioJpaRepository con Testcontainers MySQL (Flyway V6)")
 class UsuarioJpaRepositoryIT {
 
-    @Container
-    private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.4.0")
-            .withDatabaseName("testdb")
-            .withUsername("testuser")
-            .withPassword("testpass");
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
-        registry.add("spring.flyway.enabled", () -> "true");
-    }
 
     @Autowired
     private UsuarioJpaRepository repository;

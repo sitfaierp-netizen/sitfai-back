@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.billing;
 
+import org.springframework.context.annotation.Import;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
@@ -37,16 +39,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * vinculada al documento origen y almacenada con aislamiento MT-01.
  */
 @SpringBootTest(classes = ApiTiendaApplication.class)
-@Testcontainers
+@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 public class BillingIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.4.0")
-            .withDatabaseName("sitfai_tienda")
-            .withUsername("sitfai_user")
-            .withPassword("sitfai_secret_pwd");
 
     @Autowired
     private PedidoConfirmadoEventHandler pedidoConfirmadoEventHandler;

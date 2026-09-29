@@ -44,3 +44,12 @@ jobs:
         with:
           name: dependency-check-report
           path: Api_Tienda/Api_Tienda/target/dependency-check-report.html
+
+      - name: Print Surefire Reports on Failure
+        if: failure()
+        working-directory: Api_Tienda/Api_Tienda
+        run: |
+          for file in target/surefire-reports/*.txt; do
+            echo "=== $file ==="
+            cat "$file" || true
+          done

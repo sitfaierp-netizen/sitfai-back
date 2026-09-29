@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure;
 
+import org.springframework.context.annotation.Import;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.recepcion.event.MercanciaRecibidaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.out.persistence.RecepcionMercanciaSpringDataRepository;
@@ -34,15 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @RecordApplicationEvents
-@Testcontainers
+@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 public class RecepcionMercanciaIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
 
     @Autowired
     private MockMvc mockMvc;

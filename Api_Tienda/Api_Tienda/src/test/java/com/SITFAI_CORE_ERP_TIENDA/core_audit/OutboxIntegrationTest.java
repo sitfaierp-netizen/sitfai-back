@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_audit;
 
+import org.springframework.context.annotation.Import;
+
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.application.dto.ProcesarEventosPendientesCommand;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.application.dto.ProcesarEventosResponse;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.application.port.input.ProcesarEventosPendientesUseCase;
@@ -37,16 +39,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 3. Actualiza y sella su estado a PROCESADO en la tabla {@code core_audit_event_store}.
  */
 @SpringBootTest(classes = ApiTiendaApplication.class)
-@Testcontainers
+@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 class OutboxIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.4.0")
-            .withDatabaseName("sitfai_tienda")
-            .withUsername("sitfai_user")
-            .withPassword("sitfai_secret_pwd");
 
     @Autowired
     private EventStoreRepository eventStoreRepository;

@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_audit;
 
+import org.springframework.context.annotation.Import;
+
 import com.SITFAI_CORE_ERP_TIENDA.billing.domain.event.FacturaEmitidaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.StoredDomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.vo.EmpresaId;
@@ -36,16 +38,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 4. El aislamiento multi-tenant por {@code empresa_id} se preserva estrictamente.
  */
 @SpringBootTest(classes = ApiTiendaApplication.class)
-@Testcontainers
+@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 class EventStoreIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.4.0")
-            .withDatabaseName("sitfai_tienda")
-            .withUsername("sitfai_user")
-            .withPassword("sitfai_secret_pwd");
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;

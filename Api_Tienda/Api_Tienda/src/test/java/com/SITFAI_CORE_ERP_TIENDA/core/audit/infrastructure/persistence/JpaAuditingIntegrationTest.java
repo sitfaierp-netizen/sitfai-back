@@ -32,6 +32,7 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration;
 
 @SpringBootTest(classes = ApiTiendaApplication.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@org.springframework.test.context.ActiveProfiles("test")
 @ContextConfiguration(classes = com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication.class)
 @Import({JpaAuditingConfig.class, JpaAuditingIntegrationTest.Config.class, TestcontainersConfiguration.class})
 class JpaAuditingIntegrationTest {

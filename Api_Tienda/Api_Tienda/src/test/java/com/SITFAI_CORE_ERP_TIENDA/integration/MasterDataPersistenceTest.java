@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.integration;
 
+import org.springframework.context.annotation.Import;
+
 import com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.persistence.entity.ProductoJpaEntity;
 import com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.persistence.repository.ProductoJpaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.sourcing.infrastructure.adapter.out.persistence.entity.ProveedorJpaEntity;
@@ -23,27 +25,13 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@org.springframework.test.context.ActiveProfiles("test")
 @SpringBootTest(classes = ApiTiendaApplication.class)
-@Testcontainers
+@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 @Disabled("Docker is not available in the IDE environment")
 class MasterDataPersistenceTest {
 
-    @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.4.0")
-            .withDatabaseName("sitfai_erp")
-            .withUsername("sitfai")
-            .withPassword("sitfaipass");
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
-        registry.add("spring.flyway.url", mysql::getJdbcUrl);
-        registry.add("spring.flyway.user", mysql::getUsername);
-        registry.add("spring.flyway.password", mysql::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
-    }
 
     @Autowired
     private ProductoJpaRepository productoRepository;

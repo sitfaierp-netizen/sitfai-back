@@ -1,5 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.infrastructure;
 
+import org.springframework.context.annotation.Import;
+
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.application.port.output.TenantProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.orden.event.ProduccionCompletadaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.orden.event.ProduccionIniciadaEvent;
@@ -35,15 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @RecordApplicationEvents
-@Testcontainers
+@Import(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.TestcontainersConfiguration.class)
 public class OrdenProduccionIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb_orden")
-            .withUsername("test")
-            .withPassword("test");
 
     @Autowired
     private MockMvc mockMvc;
