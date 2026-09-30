@@ -267,10 +267,11 @@
 				<configuration>
 					<!--
 						NVD and CISA remain mandatory sources for the OWASP gate. OSS Index
-						is an optional remote enrichment source; without repository credentials,
-						its HTTP failures must not mask the NVD-based vulnerability report.
+						is optional enrichment, but its public endpoint rejects this repository's
+						unauthenticated requests with HTTP 401. Keep it disabled until a valid
+						serverId-backed credential is provisioned.
 					-->
-					<ossIndexWarnOnlyOnRemoteErrors>true</ossIndexWarnOnlyOnRemoteErrors>
+					<ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
 					<nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
 				</configuration>
 				<executions>
