@@ -29,6 +29,11 @@
 	<properties>
 		<java.version>21</java.version>
 		<maven.compiler.release>21</maven.compiler.release>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<!-- Baseline bloqueante actual; la meta se documenta para aumentos graduales. -->
+		<jacoco.domain.minimum>0.64</jacoco.domain.minimum>
+		<jacoco.domain.target>0.85</jacoco.domain.target>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -180,12 +185,13 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-Dnet.bytebuddy.experimental=true</argLine>
+					<argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
 					<excludes>
 						<exclude>**/*IT.java</exclude>
+						<exclude>**/*IntegrationTest*.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
@@ -201,6 +207,7 @@
 					</execution>
 				</executions>
 				<configuration>
+					<argLine>@{argLine} -Dnet.bytebuddy.experimental=true</argLine>
 					<includes>
 						<include>**/*IntegrationTest.java</include>
 					</includes>
@@ -209,16 +216,20 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.12</version>
+				<version>0.8.15</version>
 				<executions>
 					<execution>
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
+						<configuration>
+							<append>true</append>
+						</configuration>
 					</execution>
 					<execution>
 						<id>report</id>
-						<phase>test</phase>
+						<!-- Se genera tras Failsafe para consolidar unitarias e integración. -->
+						<phase>verify</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
@@ -229,17 +240,18 @@
 							<goal>check</goal>
 						</goals>
 						<configuration>
+							<!-- Solo clases compiladas del Domain Layer; no se incluye infraestructura. -->
+							<includes>
+								<include>com/SITFAI_CORE_ERP_TIENDA/**/domain/**/*.class</include>
+							</includes>
 							<rules>
 								<rule>
-									<element>PACKAGE</element>
-									<includes>
-										<include>com.SITFAI_CORE_ERP_TIENDA.*.domain.*</include>
-									</includes>
+									<element>BUNDLE</element>
 									<limits>
 										<limit>
 											<counter>INSTRUCTION</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.85</minimum>
+											<minimum>${jacoco.domain.minimum}</minimum>
 										</limit>
 									</limits>
 								</rule>

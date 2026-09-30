@@ -1,0 +1,4 @@
+root = true
+
+[*.{java,xml,properties,sql,yml,yaml,md}]
+charset = utf-8
