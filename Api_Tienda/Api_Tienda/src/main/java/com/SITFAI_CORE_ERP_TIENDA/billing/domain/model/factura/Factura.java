@@ -116,8 +116,8 @@ public class Factura {
         }
 
         // Validación fail-fast y cálculo matemático exacto de totales
-        Dinero subtotalAcumulado = Dinero.cero();
-        Dinero impuestosAcumulados = Dinero.cero();
+        Dinero subtotalAcumulado = null;
+        Dinero impuestosAcumulados = null;
 
         for (LineaFactura linea : lineas) {
             if (linea == null) {
@@ -128,6 +128,10 @@ public class Factura {
             }
             if (linea.getPrecioUnitario() == null || linea.getPrecioUnitario().monto().compareTo(BigDecimal.ZERO) < 0) {
                 throw new FacturaInvalidaException("El precio unitario no puede ser negativo.");
+            }
+            if (subtotalAcumulado == null) {
+                subtotalAcumulado = Dinero.cero(linea.getPrecioUnitario().moneda());
+                impuestosAcumulados = Dinero.cero(linea.getPrecioUnitario().moneda());
             }
             subtotalAcumulado = subtotalAcumulado.sumar(linea.calcularSubtotal());
             impuestosAcumulados = impuestosAcumulados.sumar(linea.calcularTotalImpuestos());

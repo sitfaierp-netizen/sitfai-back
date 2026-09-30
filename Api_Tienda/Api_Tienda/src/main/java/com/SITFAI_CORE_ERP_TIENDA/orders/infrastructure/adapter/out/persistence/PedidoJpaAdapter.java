@@ -23,7 +23,10 @@ public class PedidoJpaAdapter implements PedidoRepository {
     @Override
     public void save(Pedido pedido) {
         PedidoJpaEntity entity = PedidoPersistenceMapper.toEntity(pedido);
-        repository.save(entity);
+        if (!repository.existsById(entity.getId())) {
+            entity.setVersion(null);
+        }
+        repository.saveAndFlush(entity);
     }
 
     @Override

@@ -44,14 +44,18 @@ public class AutorizacionDevolucion {
     }
 
     public void inspeccionar(ProductoId productoId, boolean aprobado) {
-        if (this.estado != EstadoRma.RECIBIDA_EN_CUARENTENA && this.estado != EstadoRma.INSPECCION_PARCIAL) {
-            throw new IllegalStateException("Solo se puede inspeccionar en estado RECIBIDA_EN_CUARENTENA o INSPECCION_PARCIAL");
-        }
-
         LineaDevolucion linea = this.lineas.stream()
                 .filter(l -> l.getProductoId().equals(productoId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado en esta devolución"));
+
+        if (linea.getEstadoInspeccion() != LineaDevolucion.EstadoInspeccion.PENDIENTE) {
+            throw new IllegalStateException("La línea ya fue inspeccionada");
+        }
+
+        if (this.estado != EstadoRma.RECIBIDA_EN_CUARENTENA && this.estado != EstadoRma.INSPECCION_PARCIAL) {
+            throw new IllegalStateException("Solo se puede inspeccionar en estado RECIBIDA_EN_CUARENTENA o INSPECCION_PARCIAL");
+        }
 
         linea.inspeccionar(aprobado);
 

@@ -22,13 +22,16 @@ import java.util.UUID;
 public class PedidoJpaEntity extends AuditableJpaEntity {
 
     @Id
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.BINARY)
     @Column(name = "id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
     private UUID id;
 
     @Column(name = "empresa_id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.BINARY)
     private UUID empresaId;
 
     @Column(name = "cliente_id", nullable = false, columnDefinition = "BINARY(16)")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.BINARY)
     private UUID clienteId;
 
     @Column(name = "total_monetario", nullable = false, precision = 19, scale = 2)

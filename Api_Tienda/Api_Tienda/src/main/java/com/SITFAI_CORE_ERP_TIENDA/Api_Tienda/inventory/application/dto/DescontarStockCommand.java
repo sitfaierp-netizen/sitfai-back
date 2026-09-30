@@ -12,6 +12,15 @@ public record DescontarStockCommand(
         UUID productoId,
         BigDecimal cantidad,
         String docFuenteTipo,
-        String docFuenteNumero
+        String docFuenteNumero,
+        UUID empresaId
 ) {
+    public DescontarStockCommand(
+            UUID bodegaId,
+            UUID productoId,
+            BigDecimal cantidad,
+            String docFuenteTipo,
+            String docFuenteNumero) {
+        this(bodegaId, productoId, cantidad, docFuenteTipo, docFuenteNumero, null);
+    }
 }

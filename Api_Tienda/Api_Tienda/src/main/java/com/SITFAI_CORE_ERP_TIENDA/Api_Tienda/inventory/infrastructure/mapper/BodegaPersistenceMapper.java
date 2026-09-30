@@ -50,6 +50,7 @@ public class BodegaPersistenceMapper {
                         new ProductoId(loteJpa.getProductoId()),
                         LoteId.de(loteJpa.getLoteId()),
                         loteJpa.getCantidad(),
+                        loteJpa.getCantidadReservada(),
                         loteJpa.getFechaCaducidad()
                 ));
             }
@@ -128,6 +129,7 @@ public class BodegaPersistenceMapper {
                         loteDominio.getProductoId().valor(),
                         loteDominio.getLoteId().valor(),
                         loteDominio.getCantidad(),
+                        loteDominio.getCantidadReservada(),
                         loteDominio.getFechaCaducidad()
                 );
                 lotesJpa.add(loteJpa);

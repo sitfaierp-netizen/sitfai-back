@@ -33,6 +33,7 @@ public class ReservarStockService implements ReservarStockUseCase {
     }
 
     @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void ejecutar(ReservarStockCommand command) {
         EmpresaId empresaId = command.toEmpresaId();
 

@@ -27,7 +27,7 @@ import java.util.UUID;
  *   <li><b>Invariante de inicio:</b> Se instancia en estado {@link EstadoPedido#PENDIENTE} o {@link EstadoPedido#CREADO}.</li>
  *   <li><b>ModificaciÃ³n controlada:</b> Solo en estado modificable se pueden aÃ±adir lÃ­neas de detalle.</li>
  *   <li><b>Invariante de confirmaciÃ³n:</b> No se puede confirmar un pedido sin al menos una lÃ­nea de producto.</li>
- *   <li><b>TransiciÃ³n transaccional:</b> {@link #confirmar()} transiciona a {@code CONFIRMADO} y registra el evento {@link PedidoConfirmadoEvent}.</li>
+ *   <li><b>Transición transaccional:</b> {@link #confirmar()} transiciona a {@code CONFIRMADO} y registra el evento {@link PedidoConfirmadoEvent}.</li>
  * </ul>
  * <p>
  * Cero dependencias a frameworks, JPA o Spring (REGLA-1, Clean Architecture).
@@ -139,8 +139,8 @@ public class Pedido {
     }
 
     public void agregarLinea(LineaPedido linea) {
-        Objects.requireNonNull(linea, "Pedido: la lÃ­nea a agregar no puede ser nula.");
-        validarEstadoModificable("agregar lÃ­neas");
+        Objects.requireNonNull(linea, "Pedido: la línea a agregar no puede ser nula.");
+        validarEstadoModificable("agregar líneas");
         this.lineas.add(linea);
         this.actualizadoEn = Instant.now();
     }
@@ -152,7 +152,7 @@ public class Pedido {
 
 
     public void removerItem(UUID lineaId) {
-        validarEstadoModificable("remover lÃ­neas");
+        validarEstadoModificable("remover líneas");
         this.lineas.removeIf(l -> Objects.equals(l.getId(), lineaId));
         this.actualizadoEn = Instant.now();
     }
@@ -182,7 +182,7 @@ public class Pedido {
             throw new IllegalStateException("No se puede confirmar un pedido en estado CANCELADO.");
         }
         if (this.lineas.isEmpty()) {
-            throw new IllegalStateException("No se puede confirmar un pedido sin lÃ­neas de productos.");
+            throw new IllegalStateException("No se puede confirmar un pedido sin líneas de productos.");
         }
 
         this.estado = EstadoPedido.CONFIRMADO;
@@ -218,7 +218,7 @@ public class Pedido {
     private void validarEstadoModificable(String accion) {
         if (!this.estado.esModificable()) {
             throw new IllegalStateException(
-                    "OperaciÃ³n invÃ¡lida: no se puede " + accion + " en un pedido con estado " + this.estado + ".");
+                    "Operación inválida: no se puede " + accion + " en un pedido con estado " + this.estado + ".");
         }
     }
 

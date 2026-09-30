@@ -13,7 +13,6 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.output.Bodega
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,18 +35,15 @@ public class RecepcionarMercanciaService implements RecepcionarMercanciaUseCase 
     private final BodegaRepository bodegaRepository;
     private final TenantProviderPort tenantProviderPort;
     private final BodegaEventPublisher eventPublisher;
-    private final ApplicationEventPublisher springEventPublisher;
 
     public RecepcionarMercanciaService(
             BodegaRepository bodegaRepository,
             TenantProviderPort tenantProviderPort,
-            BodegaEventPublisher eventPublisher,
-            ApplicationEventPublisher springEventPublisher
+            BodegaEventPublisher eventPublisher
     ) {
         this.bodegaRepository = Objects.requireNonNull(bodegaRepository, "BodegaRepository es obligatorio");
         this.tenantProviderPort = Objects.requireNonNull(tenantProviderPort, "TenantProviderPort es obligatorio");
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "BodegaEventPublisher es obligatorio");
-        this.springEventPublisher = Objects.requireNonNull(springEventPublisher, "ApplicationEventPublisher es obligatorio");
     }
 
     @Override
@@ -85,7 +81,6 @@ public class RecepcionarMercanciaService implements RecepcionarMercanciaUseCase 
         // 5. Publicar los eventos resultantes (Domain Events acumulados + IngresoStockRegistradoEvent)
         List<DomainEvent> domainEvents = guardada.drainDomainEvents();
         eventPublisher.publicarTodos(domainEvents);
-        domainEvents.forEach(springEventPublisher::publishEvent);
 
         IngresoStockRegistradoEvent ingresoEvent = IngresoStockRegistradoEvent.of(
                 empresaId,
@@ -94,7 +89,6 @@ public class RecepcionarMercanciaService implements RecepcionarMercanciaUseCase 
                 command.lotes().size()
         );
         eventPublisher.publicar(ingresoEvent);
-        springEventPublisher.publishEvent(ingresoEvent);
 
         log.info("Recepción de mercancía completada exitosamente en Bodega [{}]. [{}] lotes ingresados.",
                 bodegaId.valor(), command.lotes().size());

@@ -41,19 +41,24 @@ public class StockLoteJpaEntity {
     @Column(name = "cantidad", nullable = false, precision = 19, scale = 4)
     private BigDecimal cantidad;
 
+    @Column(name = "cantidad_reservada", nullable = false, precision = 19, scale = 4)
+    private BigDecimal cantidadReservada;
+
     @Column(name = "fecha_caducidad")
     private Instant fechaCaducidad;
 
     public StockLoteJpaEntity() {
     }
 
-    public StockLoteJpaEntity(UUID id, BodegaJpaEntity bodega, UUID empresaId, UUID productoId, String loteId, BigDecimal cantidad, Instant fechaCaducidad) {
+    public StockLoteJpaEntity(UUID id, BodegaJpaEntity bodega, UUID empresaId, UUID productoId, String loteId,
+                             BigDecimal cantidad, BigDecimal cantidadReservada, Instant fechaCaducidad) {
         this.id = id;
         this.bodega = bodega;
         this.empresaId = empresaId;
         this.productoId = productoId;
         this.loteId = loteId;
         this.cantidad = cantidad;
+        this.cantidadReservada = cantidadReservada;
         this.fechaCaducidad = fechaCaducidad;
     }
 
@@ -103,6 +108,14 @@ public class StockLoteJpaEntity {
 
     public void setCantidad(BigDecimal cantidad) {
         this.cantidad = cantidad;
+    }
+
+    public BigDecimal getCantidadReservada() {
+        return cantidadReservada;
+    }
+
+    public void setCantidadReservada(BigDecimal cantidadReservada) {
+        this.cantidadReservada = cantidadReservada;
     }
 
     public Instant getFechaCaducidad() {

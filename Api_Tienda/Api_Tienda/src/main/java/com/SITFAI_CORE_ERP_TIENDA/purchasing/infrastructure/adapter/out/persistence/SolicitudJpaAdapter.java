@@ -22,6 +22,7 @@ import java.util.UUID;
  * Traduce Dominio ↔ JPA Entity. El Dominio nunca ve esta clase.
  */
 @Repository
+@org.springframework.transaction.annotation.Transactional
 public class SolicitudJpaAdapter implements SolicitudAbastecimientoRepository {
 
     private final SolicitudJpaRepository jpaRepository;

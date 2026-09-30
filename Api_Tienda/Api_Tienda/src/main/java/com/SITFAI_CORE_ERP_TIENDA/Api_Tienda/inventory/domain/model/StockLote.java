@@ -18,12 +18,20 @@ public class StockLote {
     private final Instant fechaCaducidad;
 
     public StockLote(ProductoId productoId, LoteId loteId, BigDecimal cantidadInicial, Instant fechaCaducidad) {
+        this(productoId, loteId, cantidadInicial, BigDecimal.ZERO, fechaCaducidad);
+    }
+
+    public StockLote(ProductoId productoId, LoteId loteId, BigDecimal cantidadInicial,
+                     BigDecimal cantidadReservada, Instant fechaCaducidad) {
         this.productoId = Objects.requireNonNull(productoId, "StockLote: productoId es obligatorio.");
         this.loteId = Objects.requireNonNull(loteId, "StockLote: loteId es obligatorio.");
         this.cantidad = Objects.requireNonNull(cantidadInicial, "StockLote: cantidadInicial es obligatoria.");
-        this.cantidadReservada = BigDecimal.ZERO;
+        this.cantidadReservada = Objects.requireNonNull(cantidadReservada, "StockLote: cantidadReservada es obligatoria.");
         if (this.cantidad.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("StockLote: La cantidad inicial no puede ser negativa.");
+        }
+        if (this.cantidadReservada.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("StockLote: La cantidad reservada no puede ser negativa.");
         }
         this.fechaCaducidad = fechaCaducidad;
     }
