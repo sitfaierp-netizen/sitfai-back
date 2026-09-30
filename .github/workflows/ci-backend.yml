@@ -28,8 +28,18 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Cache OWASP Dependency-Check data
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data/
+          key: ${{ runner.os }}-dependency-check-v12
+          restore-keys: |
+            ${{ runner.os }}-dependency-check-
+
       - name: Build, Test and Verify with Maven
         working-directory: Api_Tienda/Api_Tienda
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           chmod +x mvnw
           ./mvnw --batch-mode --no-transfer-progress clean verify

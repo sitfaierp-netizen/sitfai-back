@@ -39,4 +39,6 @@ La revisión de cobertura debe conservar esta separación. No se aceptan tests m
 1. `jacoco-report`: informe HTML consolidado de JaCoCo.
 2. `dependency-check-report`: informe HTML de vulnerabilidades conocidas.
 
+El gate conserva NVD y CISA como fuentes obligatorias. OSS Index es enriquecimiento remoto: si el repositorio no dispone de credenciales válidas, sus errores remotos se registran como advertencias y no sustituyen ni anulan el informe NVD. `NVD_API_KEY` es un secreto opcional de GitHub Actions; si se configura, Dependency-Check lo utiliza sin exponerlo en el log. La caché de su base de datos se conserva entre ejecuciones para que una actualización completa de NVD no se repita innecesariamente.
+
 No hay CD configurado. Cualquier cambio al despliegue productivo se documentará en una iteración posterior.
