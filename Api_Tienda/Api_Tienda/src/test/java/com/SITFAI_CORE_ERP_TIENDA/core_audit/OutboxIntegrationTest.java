@@ -62,11 +62,13 @@ class OutboxIntegrationTest extends AbstractIntegrationTest {
         StoredEventId eventId = StoredEventId.generar();
         String jsonPayload = "{\"tipo\":\"INTEGRACION\",\"total\":75000.00}";
 
+        // El poller toma el lote por ocurridoEn ascendente. Una fecha estable
+        // garantiza que este evento, y no uno pendiente de otro escenario, sea procesado.
         StoredDomainEvent eventoPendiente = StoredDomainEvent.notariar(
                 eventId,
                 EmpresaId.de(empresaId),
                 "PedidoConfirmadoEvent",
-                Instant.now(),
+                Instant.parse("2000-01-01T00:00:00Z"),
                 jsonPayload
         );
         eventStoreRepository.guardar(eventoPendiente);
