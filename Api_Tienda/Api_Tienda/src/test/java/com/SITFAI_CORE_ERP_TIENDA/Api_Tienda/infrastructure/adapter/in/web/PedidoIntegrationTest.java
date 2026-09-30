@@ -63,6 +63,12 @@ public class PedidoIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private PedidoJpaRepository pedidoRepository;
 
+    @MockitoBean
+    private com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.event.PedidoConfirmadoEventListener inventoryPedidoConfirmadoEventListener;
+
+    @MockitoBean
+    private com.SITFAI_CORE_ERP_TIENDA.billing.infrastructure.adapter.in.messaging.PedidoConfirmadoEventHandler billingPedidoConfirmadoEventHandler;
+
 
     private UUID empresaId;
     private UUID clienteId;
@@ -74,6 +80,7 @@ public class PedidoIntegrationTest extends AbstractIntegrationTest {
         clienteId = UUID.randomUUID();
         productoId = UUID.randomUUID();
         when(apiTiendaTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(EmpresaId.de(empresaId));
+        when(apiTiendaCurrentActorProvider.getActorActual()).thenReturn("pedido-integration-test");
     }
 
     @Test

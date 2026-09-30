@@ -51,7 +51,7 @@ public class GlobalDomainEventAuditListener {
             String aggregateId = extractAggregateId(event);
             String payload = objectMapper.writeValueAsString(event);
 
-            DomainEventAuditJpaEntity auditEntity = new DomainEventAuditJpaEntity(
+            int inserted = repository.insertIfAbsent(
                     id,
                     aggregateId,
                     eventType,
@@ -60,9 +60,13 @@ public class GlobalDomainEventAuditListener {
                     occurredOn
             );
 
-            repository.save(auditEntity);
-            log.debug("Evento de Dominio auditado exitosamente: eventType={}, id={}, empresaId={}, aggregateId={}",
-                    eventType, id, empresaId, aggregateId);
+            if (inserted == 0) {
+                log.debug("Evento de Dominio ya auditado; se omite replay idempotente: eventType={}, id={}",
+                        eventType, id);
+            } else {
+                log.debug("Evento de Dominio auditado exitosamente: eventType={}, id={}, empresaId={}, aggregateId={}",
+                        eventType, id, empresaId, aggregateId);
+            }
 
         } catch (Exception e) {
             log.error("Error al persistir auditoría de evento de dominio [{}]: {}",

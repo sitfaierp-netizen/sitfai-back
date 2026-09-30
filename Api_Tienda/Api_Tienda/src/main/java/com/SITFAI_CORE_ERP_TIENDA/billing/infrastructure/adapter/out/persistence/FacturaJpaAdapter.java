@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  */
 @Component("billingFacturaJpaAdapter")
 @Primary
+@org.springframework.transaction.annotation.Transactional
 public class FacturaJpaAdapter implements FacturaRepository, com.SITFAI_CORE_ERP_TIENDA.billing.domain.port.output.FacturaRepository {
 
     private final SpringDataFacturaRepository repository;

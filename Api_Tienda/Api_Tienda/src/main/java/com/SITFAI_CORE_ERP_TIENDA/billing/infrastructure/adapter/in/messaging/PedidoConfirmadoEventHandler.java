@@ -1,6 +1,6 @@
 package com.SITFAI_CORE_ERP_TIENDA.billing.infrastructure.adapter.in.messaging;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.EmitirFacturaCommand;
 import com.SITFAI_CORE_ERP_TIENDA.billing.application.dto.FacturaResponse;

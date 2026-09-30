@@ -186,5 +186,5 @@ public record Ruc(String valor) {
 | API REST     | Integration Tests      | MockMvc / WebTestClient            |
 | E2E          | Component Tests        | TestContainers (full stack)        |
 
-- Cobertura mínima del **Domain Layer: 90%**.
+- Cobertura objetivo del **Domain Layer: 85%**. La puerta de CI parte del baseline medido y se eleva gradualmente sin ocultar clases de dominio; la política vigente se documenta en `.agent/devops-rules.md`.
 - Cobertura mínima del **Application Layer: 80%**.

@@ -63,7 +63,8 @@ public class DescontarStockPorVentaEventHandler {
                     linea.getProductoId().value(),
                     linea.getCantidad(),
                     "TICKET_VENTA",
-                    event.ticketId().value().toString()
+                    event.ticketId().value().toString(),
+                    event.empresaId()
             );
             
             try {

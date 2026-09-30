@@ -60,7 +60,7 @@ class ReingresoStockDevolucionIntegrationTest extends AbstractIntegrationTest {
 
         DevolucionRegistradaEvent event = DevolucionRegistradaEvent.of(
                 new TurnoId(UUID.randomUUID()),
-                new CajaId(UUID.randomUUID()),
+                new CajaId(sucursalId),
                 new com.SITFAI_CORE_ERP_TIENDA.pos.domain.model.turno.vo.EmpresaId(empresaId),
                 UUID.randomUUID(),
                 List.of(), // no necesitamos simular lineas para este test de lotes

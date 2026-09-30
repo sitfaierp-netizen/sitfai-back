@@ -43,9 +43,9 @@ public class StockConsolidadoProjector {
         """;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("empresaId", event.empresaId().valor())
-                .addValue("bodegaId", event.bodegaId().valor())
-                .addValue("productoId", event.productoId().valor())
+                .addValue("empresaId", event.empresaId().valor().toString())
+                .addValue("bodegaId", event.bodegaId().valor().toString())
+                .addValue("productoId", event.productoId().valor().toString())
                 .addValue("cantidad", event.stockNuevo())
                 .addValue("fecha", java.sql.Timestamp.from(event.ocurridoEn()));
 

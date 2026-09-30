@@ -20,21 +20,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestComponent;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.EventListener;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 /**
@@ -46,12 +41,14 @@ import static org.awaitility.Awaitility.await;
  * 3. El sensor asíncrono {@code StockMovimientoEventListener} intercepta el evento.
  * 4. El caso de uso evalúa el stock y emite {@link NecesidadAbastecimientoDetectadaEvent}.
  */
-@Transactional
+@Import(ReplenishmentIntegrationTest.EventCollectorConfiguration.class)
 public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private PoliticaInventarioRepository politicaRepository;
 
+    @Autowired
+    private NecesidadEventCollector eventCollector;
 
     private UUID empresaId;
     private UUID bodegaId;
@@ -59,6 +56,7 @@ public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        eventCollector.clear();
         empresaId = UUID.randomUUID();
         bodegaId  = UUID.randomUUID();
         productoId = UUID.randomUUID();
@@ -90,7 +88,9 @@ public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
         applicationEventPublisher.publishEvent(stockEvent);
 
         // THEN: El sensor asíncrono debe capturar el evento de necesidad de abastecimiento
-        org.junit.jupiter.api.Assertions.assertEquals(1, applicationEvents.stream(NecesidadAbastecimientoDetectadaEvent.class).count());
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+                org.junit.jupiter.api.Assertions.assertEquals(1,
+                        eventCollector.count()));
     }
 
     @Test
@@ -120,7 +120,33 @@ public class ReplenishmentIntegrationTest extends AbstractIntegrationTest {
 
         // THEN: Esperamos un tiempo razonable y no debe haber ningún evento de necesidad
         Thread.sleep(1000);
-        org.junit.jupiter.api.Assertions.assertEquals(0, applicationEvents.stream(NecesidadAbastecimientoDetectadaEvent.class).count());
+        org.junit.jupiter.api.Assertions.assertEquals(0, eventCollector.count());
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class EventCollectorConfiguration {
+        @Bean
+        NecesidadEventCollector necesidadEventCollector() {
+            return new NecesidadEventCollector();
+        }
+    }
+
+    static class NecesidadEventCollector {
+        private final CopyOnWriteArrayList<NecesidadAbastecimientoDetectadaEvent> events =
+                new CopyOnWriteArrayList<>();
+
+        @EventListener
+        void onNecesidadAbastecimiento(NecesidadAbastecimientoDetectadaEvent event) {
+            events.add(event);
+        }
+
+        long count() {
+            return events.size();
+        }
+
+        void clear() {
+            events.clear();
+        }
     }
 
 }

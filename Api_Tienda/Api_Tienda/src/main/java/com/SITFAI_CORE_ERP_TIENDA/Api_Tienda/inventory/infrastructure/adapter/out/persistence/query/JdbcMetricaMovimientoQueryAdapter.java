@@ -53,7 +53,7 @@ public class JdbcMetricaMovimientoQueryAdapter implements MetricaMovimientoQuery
                     s.producto_id AS p_id,
                     0 AS frecuencia,
                     0.0000 AS valor
-                FROM inventory_bodega_stock s
+                FROM inventory_bodega_lote s
                 JOIN inventory_bodega b 
                     ON s.bodega_id = b.id AND b.empresa_id = :empresaId
                 WHERE s.bodega_id = :bodegaId

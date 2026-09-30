@@ -88,6 +88,7 @@ public class PurchasingIntegrationTest extends AbstractIntegrationTest {
 
         // 2. ACT: Invocar POST /api/v1/purchasing/ordenes
         MvcResult result = mockMvc.perform(post("/api/v1/purchasing/ordenes")
+                        .contextPath("/api/v1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

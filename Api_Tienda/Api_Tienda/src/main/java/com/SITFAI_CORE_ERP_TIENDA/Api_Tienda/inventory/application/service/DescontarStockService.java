@@ -34,7 +34,9 @@ public class DescontarStockService implements DescontarStockUseCase {
     @Override
     public void descontarStock(DescontarStockCommand command) {
         // 1. Extraer tenant seguro (MT-01)
-        EmpresaId empresaId = tenantProvider.getEmpresaIdAutenticada();
+        EmpresaId empresaId = command.empresaId() != null
+                ? new EmpresaId(command.empresaId())
+                : tenantProvider.getEmpresaIdAutenticada();
         BodegaId bodegaId = new BodegaId(command.bodegaId());
         ProductoId productoId = new ProductoId(command.productoId());
         Cantidad cantidad = Cantidad.de(command.cantidad());

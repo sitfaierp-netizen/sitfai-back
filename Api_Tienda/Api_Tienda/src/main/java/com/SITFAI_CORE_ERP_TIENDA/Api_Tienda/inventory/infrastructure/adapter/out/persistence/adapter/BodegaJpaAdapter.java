@@ -59,6 +59,8 @@ public class BodegaJpaAdapter implements BodegaRepository {
         Throwable cause = e;
         while (cause != null) {
             if (cause instanceof org.springframework.dao.OptimisticLockingFailureException ||
+                cause instanceof org.springframework.dao.CannotAcquireLockException ||
+                cause instanceof org.springframework.dao.PessimisticLockingFailureException ||
                 cause instanceof jakarta.persistence.OptimisticLockException ||
                 cause instanceof org.hibernate.StaleObjectStateException ||
                 cause instanceof org.springframework.orm.jpa.JpaSystemException) {

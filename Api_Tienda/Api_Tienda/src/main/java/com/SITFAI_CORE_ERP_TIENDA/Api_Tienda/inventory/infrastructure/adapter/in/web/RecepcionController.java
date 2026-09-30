@@ -2,15 +2,12 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.i
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.RecepcionMercanciaResponse;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RecepcionarMercanciaUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarRecepcionUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.RecepcionarMercanciaWebRequest;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.RegistrarRecepcionRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -24,23 +21,10 @@ import java.util.UUID;
 @RequestMapping("/inventory")
 public class RecepcionController {
 
-    private final RegistrarRecepcionUseCase registrarRecepcionUseCase;
     private final RecepcionarMercanciaUseCase recepcionarMercanciaUseCase;
 
-    public RecepcionController(
-            RegistrarRecepcionUseCase registrarRecepcionUseCase,
-            RecepcionarMercanciaUseCase recepcionarMercanciaUseCase) {
-        this.registrarRecepcionUseCase = Objects.requireNonNull(registrarRecepcionUseCase, "RegistrarRecepcionUseCase es obligatorio");
+    public RecepcionController(RecepcionarMercanciaUseCase recepcionarMercanciaUseCase) {
         this.recepcionarMercanciaUseCase = Objects.requireNonNull(recepcionarMercanciaUseCase, "RecepcionarMercanciaUseCase es obligatorio");
-    }
-
-    /**
-     * Endpoint legado para registrar una recepción general de mercancía.
-     */
-    @PostMapping("/recepciones")
-    public ResponseEntity<Void> registrarRecepcion(@Valid @RequestBody RegistrarRecepcionRequest request) {
-        UUID recepcionId = registrarRecepcionUseCase.registrar(request.toCommand());
-        return ResponseEntity.created(URI.create("/inventory/recepciones/" + recepcionId)).build();
     }
 
     /**

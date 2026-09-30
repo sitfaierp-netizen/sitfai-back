@@ -16,6 +16,7 @@ import java.util.UUID;
 public class LineaPedidoJpaEntity {
 
     @Id
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.BINARY)
     @Column(name = "id", updatable = false, nullable = false, columnDefinition = "BINARY(16)")
     private UUID id;
 
@@ -24,6 +25,7 @@ public class LineaPedidoJpaEntity {
     private PedidoJpaEntity pedido;
 
     @Column(name = "producto_id", nullable = false, columnDefinition = "BINARY(16)")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.BINARY)
     private UUID productoId;
 
     @Column(name = "cantidad", nullable = false)
