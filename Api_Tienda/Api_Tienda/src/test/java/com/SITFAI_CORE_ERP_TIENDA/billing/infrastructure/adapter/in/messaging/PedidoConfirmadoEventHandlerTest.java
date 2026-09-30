@@ -1,6 +1,6 @@
 package com.SITFAI_CORE_ERP_TIENDA.billing.infrastructure.adapter.in.messaging;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
@@ -56,8 +56,8 @@ class PedidoConfirmadoEventHandlerTest {
         );
 
         PedidoConfirmadoEvent event = PedidoConfirmadoEvent.of(
-                PedidoId.de(pedidoIdRaw),
                 EmpresaId.de(empresaIdRaw),
+                PedidoId.de(pedidoIdRaw),
                 ClienteId.de(clienteIdRaw),
                 Dinero.de(new BigDecimal("75000.00"), "COP"),
                 List.of(linea)

@@ -94,6 +94,7 @@ public class TurnoCajaIntegrationTest extends AbstractIntegrationTest {
         );
 
         String abrirJson = mockMvc.perform(post("/api/v1/pos/turnos/abrir")
+                        .contextPath("/api/v1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(abrirRequest)))
                 .andExpect(status().isCreated())
@@ -127,6 +128,7 @@ public class TurnoCajaIntegrationTest extends AbstractIntegrationTest {
 
         // 3. Cierre de Turno vía POST /api/v1/pos/turnos/{id}/cerrar
         String cerrarJson = mockMvc.perform(post("/api/v1/pos/turnos/" + turnoId + "/cerrar")
+                        .contextPath("/api/v1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cerrarRequest)))
                 .andExpect(status().isOk())

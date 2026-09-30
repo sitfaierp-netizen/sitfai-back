@@ -5,14 +5,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,17 +59,15 @@ class GlobalDomainEventAuditListenerTest {
 
         listener.onDomainEvent(event);
 
-        ArgumentCaptor<DomainEventAuditJpaEntity> captor = ArgumentCaptor.forClass(DomainEventAuditJpaEntity.class);
-        verify(repository).save(captor.capture());
-
-        DomainEventAuditJpaEntity savedEntity = captor.getValue();
-        assertThat(savedEntity.getId()).isEqualTo(eventoId.toString());
-        assertThat(savedEntity.getAggregateId()).isEqualTo(pedidoId.toString());
-        assertThat(savedEntity.getEventType()).isEqualTo("PEDIDO_CREADO");
-        assertThat(savedEntity.getEmpresaId()).isEqualTo(empresaId.toString());
-        assertThat(savedEntity.getOccurredOn()).isEqualTo(ahora);
-        assertThat(savedEntity.getPayload()).contains("Cliente Juan Perez");
-        assertThat(savedEntity.getPayload()).contains(pedidoId.toString());
+        verify(repository).insertIfAbsent(
+                eq(eventoId.toString()),
+                eq(pedidoId.toString()),
+                eq("PEDIDO_CREADO"),
+                argThat(payload -> payload.contains("Cliente Juan Perez")
+                        && payload.contains(pedidoId.toString())),
+                eq(empresaId.toString()),
+                eq(ahora)
+        );
     }
 
     @Test
@@ -79,5 +75,23 @@ class GlobalDomainEventAuditListenerTest {
     void debeIgnorarEventoNulo() {
         listener.onDomainEvent(null);
         verifyNoInteractions(repository);
+    }
+
+    @Test
+    @DisplayName("Debe ignorar de forma idempotente un replay ya auditado")
+    void debeIgnorarReplayYaAuditado() {
+        TestPedidoCreadoEvent event = new TestPedidoCreadoEvent(
+                eventoId,
+                pedidoId,
+                empresaId,
+                "Cliente Juan Perez",
+                Instant.now()
+        );
+        when(repository.insertIfAbsent(any(), any(), any(), any(), any(), any())).thenReturn(0);
+
+        listener.onDomainEvent(event);
+
+        verify(repository).insertIfAbsent(
+                eq(eventoId.toString()), any(), any(), any(), any(), any());
     }
 }

@@ -110,6 +110,7 @@ public class InboundLogisticsIntegrationTest extends AbstractIntegrationTest {
 
         // WHEN: El operador envía el POST al endpoint de recepciones
         mockMvc.perform(post("/api/v1/inventory/bodegas/" + bodegaInicial.getId().valor() + "/recepciones")
+                        .contextPath("/api/v1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

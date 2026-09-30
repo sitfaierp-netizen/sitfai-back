@@ -138,6 +138,7 @@ public class OutboundLogisticsIntegrationTest extends AbstractIntegrationTest {
 
         // WHEN: Envío del POST al endpoint REST de despachos
         mockMvc.perform(post("/api/v1/inventory/despachos")
+                        .contextPath("/api/v1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

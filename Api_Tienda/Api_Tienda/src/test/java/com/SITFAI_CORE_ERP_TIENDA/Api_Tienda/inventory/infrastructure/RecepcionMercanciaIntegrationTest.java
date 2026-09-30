@@ -35,6 +35,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
+@org.springframework.transaction.annotation.Transactional
 public class RecepcionMercanciaIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired

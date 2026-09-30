@@ -4,7 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegration
 
 import org.springframework.context.annotation.Import;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.LineaPedido;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
@@ -72,8 +72,8 @@ public class BillingIntegrationTest extends AbstractIntegrationTest {
         );
 
         PedidoConfirmadoEvent event = PedidoConfirmadoEvent.of(
-                pedidoId,
                 empresaId,
+                pedidoId,
                 clienteId,
                 Dinero.de(new BigDecimal("100000.00"), "COP"),
                 List.of(linea)

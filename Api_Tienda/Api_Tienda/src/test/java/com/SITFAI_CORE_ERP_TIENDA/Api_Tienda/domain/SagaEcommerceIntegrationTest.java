@@ -7,7 +7,7 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.service.CancelarPedidoS
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.service.ConfirmarPedidoService;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCanceladoEvent;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoConfirmadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoInvalidoException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.exception.PedidoNoEncontradoException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EstadoPedido;

@@ -9,8 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.ApplicationEventPublisher;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarIngresoStockUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.DescontarStockUseCase;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 /**
@@ -59,17 +57,19 @@ public abstract class AbstractIntegrationTest {
     @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort apiTiendaTenantProviderPort;
 
-
-
     @MockitoBean
-    protected RegistrarIngresoStockUseCase registrarIngresoStockUseCase;
+    protected com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.CurrentActorProvider apiTiendaCurrentActorProvider;
 
-    @MockitoBean
-    protected DescontarStockUseCase descontarStockUseCase;
+
 
     @MockitoBean
     protected JwtDecoder jwtDecoder;
 
     @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.core.audit.domain.port.ActorProviderPort auditActorProviderPort;
+
+    @org.junit.jupiter.api.BeforeEach
+    void configureDefaultAuditor() {
+        org.mockito.Mockito.when(auditActorProviderPort.getCurrentActorId()).thenReturn("integration-test");
+    }
 }
