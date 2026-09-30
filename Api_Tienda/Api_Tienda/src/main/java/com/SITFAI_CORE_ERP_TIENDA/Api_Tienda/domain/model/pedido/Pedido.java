@@ -1,6 +1,8 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.PedidoCanceladoEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.ClienteId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.vo.EmpresaId;
@@ -37,7 +39,7 @@ public class Pedido {
     private final ClienteId clienteId;
     private EstadoPedido estado;
     private final List<LineaPedido> lineas;
-    private final List<PedidoConfirmadoEvent> domainEvents;
+    private final List<DomainEvent> domainEvents;
     private final Instant creadoEn;
     private Instant actualizadoEn;
 
@@ -210,6 +212,7 @@ public class Pedido {
 
     public void cancelarPorFaltaDeStock(String motivo) {
         cancelar();
+        this.domainEvents.add(PedidoCanceladoEvent.of(this.id, this.empresaId, this.clienteId, motivo));
     }
 
     private void validarEstadoModificable(String accion) {
@@ -223,17 +226,17 @@ public class Pedido {
     // GESTIÃ“N DE EVENTOS DE DOMINIO (REGLA-3)
     // =========================================================================
 
-    public List<PedidoConfirmadoEvent> pullDomainEvents() {
-        List<PedidoConfirmadoEvent> eventos = Collections.unmodifiableList(new ArrayList<>(domainEvents));
+    public List<DomainEvent> pullDomainEvents() {
+        List<DomainEvent> eventos = Collections.unmodifiableList(new ArrayList<>(domainEvents));
         domainEvents.clear();
         return eventos;
     }
 
-    public List<PedidoConfirmadoEvent> drainDomainEvents() {
+    public List<DomainEvent> drainDomainEvents() {
         return pullDomainEvents();
     }
 
-    public List<PedidoConfirmadoEvent> peekDomainEvents() {
+    public List<DomainEvent> peekDomainEvents() {
         return Collections.unmodifiableList(domainEvents);
     }
 

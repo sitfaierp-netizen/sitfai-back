@@ -6,7 +6,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.ApplicationEventPublisher;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarIngresoStockUseCase;
@@ -32,44 +32,44 @@ public abstract class AbstractIntegrationTest {
     @org.springframework.beans.factory.annotation.Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.TenantProviderPort purchasingTenantProviderPort;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.CurrentActorProvider purchasingCurrentActorProvider;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.TenantProviderPort posTenantProviderPort;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.pos.application.port.output.CurrentActorProvider posCurrentActorProvider;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.fulfillment.application.port.output.TenantProviderPort fulfillmentTenantProviderPort;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.returns.application.port.output.TenantProviderPort returnsTenantProviderPort;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.application.port.output.TenantProviderPort productionTenantProviderPort;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort inventoryTenantProviderPort;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort apiTiendaTenantProviderPort;
 
 
 
-    @MockBean
+    @MockitoBean
     protected RegistrarIngresoStockUseCase registrarIngresoStockUseCase;
 
-    @MockBean
+    @MockitoBean
     protected DescontarStockUseCase descontarStockUseCase;
 
-    @MockBean
+    @MockitoBean
     protected JwtDecoder jwtDecoder;
 
-    @MockBean
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.core.audit.domain.port.ActorProviderPort auditActorProviderPort;
 }

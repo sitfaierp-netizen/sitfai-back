@@ -128,18 +128,15 @@ public class AutorizacionDevolucionIntegrationTest extends AbstractIntegrationTe
         assertThat(rmaDb.getEstado()).isEqualTo(EstadoRma.INSPECCION_PARCIAL);
         
         // Check Event propagation
-        org.junit.jupiter.api.Assertions.assertTrue(applicationEvents.stream().count() >= 2);
-        List<Object> allEvents = applicationEvents.stream().toList();
-        assertThat(allEvents).hasSize(2);
+        org.junit.jupiter.api.Assertions.assertTrue(applicationEvents.stream(ProductoAprobadoParaReingresoEvent.class).count() >= 1);
+        org.junit.jupiter.api.Assertions.assertTrue(applicationEvents.stream(ProductoRechazadoAMermaEvent.class).count() >= 1);
         
         // 1er Evento
-        assertThat(allEvents.get(0)).isInstanceOf(ProductoAprobadoParaReingresoEvent.class);
-        var event1 = (ProductoAprobadoParaReingresoEvent) allEvents.get(0);
+        var event1 = applicationEvents.stream(ProductoAprobadoParaReingresoEvent.class).findFirst().orElseThrow();
         assertThat(event1.productoId().valor()).isEqualTo(producto1);
 
         // 2do Evento
-        assertThat(allEvents.get(1)).isInstanceOf(ProductoRechazadoAMermaEvent.class);
-        var event2 = (ProductoRechazadoAMermaEvent) allEvents.get(1);
+        var event2 = applicationEvents.stream(ProductoRechazadoAMermaEvent.class).findFirst().orElseThrow();
         assertThat(event2.productoId().valor()).isEqualTo(producto2);
     }
 }

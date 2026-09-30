@@ -14,7 +14,7 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -54,13 +54,13 @@ class InventoryControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private RegistrarIngresoStockUseCase registrarIngresoStockUseCase;
 
-    @MockBean
+    @MockitoBean
     private DescontarStockUseCase descontarStockUseCase;
 
-    @MockBean
+    @MockitoBean
     private JwtDecoder jwtDecoder;
 
     private Jwt createMockJwt(String role) {

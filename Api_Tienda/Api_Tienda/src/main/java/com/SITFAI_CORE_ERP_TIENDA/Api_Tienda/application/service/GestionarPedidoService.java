@@ -83,8 +83,8 @@ public class GestionarPedidoService implements GestionarPedidoUseCase {
         pedidoRepository.guardar(pedido);
 
         // Despachar eventos de dominio acumulados hacia el contexto de Spring (Coreografía con Inventario)
-        List<PedidoConfirmadoEvent> eventos = pedido.pullDomainEvents();
-        for (PedidoConfirmadoEvent evento : eventos) {
+        List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent> eventos = pedido.pullDomainEvents();
+        for (com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent evento : eventos) {
             eventPublisher.publishEvent(evento);
         }
 

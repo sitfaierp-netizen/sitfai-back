@@ -152,10 +152,10 @@ class PedidoTest {
 
             assertThat(pedido.getEstado()).isEqualTo(EstadoPedido.CONFIRMADO);
 
-            List<PedidoConfirmadoEvent> eventos = pedido.pullDomainEvents();
+            List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent> eventos = pedido.pullDomainEvents();
             assertThat(eventos).hasSize(1);
 
-            PedidoConfirmadoEvent evento = eventos.get(0);
+            PedidoConfirmadoEvent evento = (PedidoConfirmadoEvent) eventos.get(0);
             assertThat(evento.empresaId()).isEqualTo(empresaId);
             assertThat(evento.pedidoId()).isEqualTo(pedido.getId());
             assertThat(evento.clienteId()).isEqualTo(clienteId);
@@ -198,7 +198,7 @@ class PedidoTest {
             pedido.confirmar();
 
             // Consumir el primer evento
-            List<PedidoConfirmadoEvent> eventosIniciales = pedido.pullDomainEvents();
+            List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent> eventosIniciales = pedido.pullDomainEvents();
             assertThat(eventosIniciales).hasSize(1);
 
             // Segunda confirmación

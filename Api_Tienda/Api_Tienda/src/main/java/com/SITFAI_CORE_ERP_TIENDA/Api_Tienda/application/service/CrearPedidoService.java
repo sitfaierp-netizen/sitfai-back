@@ -64,7 +64,7 @@ public class CrearPedidoService implements CrearPedidoUseCase {
 
         Pedido pedidoGuardado = pedidoRepository.guardar(pedido);
 
-        List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.model.pedido.event.PedidoConfirmadoEvent> events = pedidoGuardado.drainDomainEvents();
+        List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.domain.event.DomainEvent> events = pedidoGuardado.drainDomainEvents();
         events.forEach(eventPublisher::publicar);
 
         List<com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.dto.LineaPedidoResponse> lineasResp = pedidoGuardado.getLineas().stream()
