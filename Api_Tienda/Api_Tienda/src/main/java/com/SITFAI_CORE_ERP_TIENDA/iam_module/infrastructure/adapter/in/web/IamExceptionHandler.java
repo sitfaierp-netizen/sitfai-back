@@ -1,11 +1,14 @@
 package com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.in.web;
 
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.exception.IdentityConflictException;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.exception.IdentityProvisioningException;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.exception.DomainException;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.exception.UsuarioInvalidoException;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.exception.UsuarioNoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -18,6 +21,46 @@ import java.time.Instant;
  */
 @RestControllerAdvice(basePackages = "com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.in.web")
 public class IamExceptionHandler {
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAuthorizationDenied(AuthorizationDeniedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN,
+                "No tiene permisos para ejecutar esta operación."
+        );
+        problem.setTitle("Acceso Denegado");
+        problem.setType(URI.create("urn:problem-type:access-denied"));
+        problem.setProperty("codigoError", "ACCESS_DENIED");
+        problem.setProperty("timestamp", Instant.now());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
+    }
+
+    @ExceptionHandler(IdentityConflictException.class)
+    public ResponseEntity<ProblemDetail> handleIdentityConflict(IdentityConflictException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "La identidad externa existente no corresponde al usuario solicitado."
+        );
+        problem.setTitle("Conflicto de Identidad Externa");
+        problem.setType(URI.create("urn:problem-type:identity-conflict"));
+        problem.setProperty("codigoError", "IDENTITY_CONFLICT");
+        problem.setProperty("timestamp", Instant.now());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    }
+
+    @ExceptionHandler(IdentityProvisioningException.class)
+    public ResponseEntity<ProblemDetail> handleIdentityUnavailable(IdentityProvisioningException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "El proveedor de identidad no está disponible. La operación puede reintentarse de forma segura."
+        );
+        problem.setTitle("Proveedor de Identidad No Disponible");
+        problem.setType(URI.create("urn:problem-type:identity-provider-unavailable"));
+        problem.setProperty("codigoError", "IDENTITY_PROVIDER_UNAVAILABLE");
+        problem.setProperty("retryable", true);
+        problem.setProperty("timestamp", Instant.now());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(problem);
+    }
 
     @ExceptionHandler(UsuarioNoEncontradoException.class)
     public ResponseEntity<ProblemDetail> handleUsuarioNoEncontrado(UsuarioNoEncontradoException ex) {
@@ -83,7 +126,6 @@ public class IamExceptionHandler {
         );
         problem.setTitle("Error Interno del Servidor");
         problem.setType(URI.create("urn:problem-type:internal-server-error"));
-        problem.setProperty("detalle", ex.getMessage());
         problem.setProperty("timestamp", Instant.now());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem);

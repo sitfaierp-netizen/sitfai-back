@@ -9,6 +9,7 @@ import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.CambiarRolUs
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.ConsultarUsuarioUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.DesactivarUsuarioUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.ReactivarUsuarioUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.ReconciliarIdentidadUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.RegistrarUsuarioUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.exception.UsuarioInvalidoException;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.exception.UsuarioNoEncontradoException;
@@ -28,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 
 import java.time.Instant;
 import java.util.List;
@@ -59,6 +61,9 @@ class UsuarioControllerTest {
     private ConsultarUsuarioUseCase consultarUsuarioUseCase;
 
     @Mock
+    private ReconciliarIdentidadUseCase reconciliarIdentidadUseCase;
+
+    @Mock
     private CurrentTenantProvider currentTenantProvider;
 
     private UsuarioController controller;
@@ -75,6 +80,7 @@ class UsuarioControllerTest {
                 reactivarUsuarioUseCase,
                 cambiarRolUsuarioUseCase,
                 consultarUsuarioUseCase,
+                reconciliarIdentidadUseCase,
                 currentTenantProvider
         );
         org.mockito.Mockito.lenient()
@@ -201,6 +207,22 @@ class UsuarioControllerTest {
         }
 
         @Test
+        @DisplayName("PATCH /api/v1/iam/usuarios/{id}/reconciliar-identidad debe ser idempotente")
+        void debeReconciliarIdentidad() {
+            UsuarioResponse mockResponse = new UsuarioResponse(
+                    usuarioId, empresaId, "cajero01", "cajero@sitfai.com",
+                    "CAJERO", "ACTIVO", Instant.now(), Instant.now()
+            );
+            when(reconciliarIdentidadUseCase.ejecutar(empresaId, usuarioId)).thenReturn(mockResponse);
+
+            ResponseEntity<UsuarioResponse> response = controller.reconciliarIdentidad(usuarioId, empresaId);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isEqualTo(mockResponse);
+            verify(reconciliarIdentidadUseCase).ejecutar(empresaId, usuarioId);
+        }
+
+        @Test
         @DisplayName("GET /api/v1/iam/usuarios/{id} debe obtener usuario por ID")
         void debeObtenerPorId() {
             UsuarioResponse mockResponse = new UsuarioResponse(
@@ -277,6 +299,17 @@ class UsuarioControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getTitle()).isEqualTo("Violación de Invariante de Usuario");
+        }
+
+        @Test
+        @DisplayName("Debe preservar HTTP 403 para autorización insuficiente")
+        void debeManejarAccesoDenegado() {
+            ResponseEntity<ProblemDetail> response = exceptionHandler.handleAuthorizationDenied(
+                    new AuthorizationDeniedException("denied"));
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getDetail()).doesNotContain("denied");
         }
     }
 }

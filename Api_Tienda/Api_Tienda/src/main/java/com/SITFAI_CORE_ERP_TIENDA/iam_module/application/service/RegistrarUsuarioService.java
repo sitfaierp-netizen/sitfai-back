@@ -4,6 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.dto.RegistrarUsuarioCom
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.dto.UsuarioResponse;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.mapper.UsuarioApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.RegistrarUsuarioUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.IdentityProvisioningPort;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioEventPublisher;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioRepository;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.exception.UsuarioInvalidoException;
@@ -27,13 +28,16 @@ public class RegistrarUsuarioService implements RegistrarUsuarioUseCase {
 
     private final UsuarioRepository usuarioRepository;
     private final UsuarioEventPublisher usuarioEventPublisher;
+    private final IdentityProvisioningPort identityProvisioningPort;
 
     public RegistrarUsuarioService(
             UsuarioRepository usuarioRepository,
-            UsuarioEventPublisher usuarioEventPublisher
+            UsuarioEventPublisher usuarioEventPublisher,
+            IdentityProvisioningPort identityProvisioningPort
     ) {
         this.usuarioRepository = Objects.requireNonNull(usuarioRepository, "usuarioRepository no puede ser null.");
         this.usuarioEventPublisher = Objects.requireNonNull(usuarioEventPublisher, "usuarioEventPublisher no puede ser null.");
+        this.identityProvisioningPort = Objects.requireNonNull(identityProvisioningPort, "identityProvisioningPort no puede ser null.");
     }
 
     @Override
@@ -68,6 +72,9 @@ public class RegistrarUsuarioService implements RegistrarUsuarioUseCase {
 
         Usuario usuario = Usuario.registrar(usuarioId, empresaId, username, email, rol);
 
+        // Keycloak se reconcilia antes del commit local. Si la llamada falla, la
+        // transacción local revierte y el mismo comando puede reintentarse.
+        identityProvisioningPort.provisionar(usuario);
         Usuario guardado = usuarioRepository.guardar(usuario);
         usuarioEventPublisher.publicarTodos(usuario.pullDomainEvents());
 

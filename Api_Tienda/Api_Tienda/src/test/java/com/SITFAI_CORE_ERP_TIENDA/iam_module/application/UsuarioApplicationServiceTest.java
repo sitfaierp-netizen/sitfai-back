@@ -1,6 +1,8 @@
 package com.SITFAI_CORE_ERP_TIENDA.iam_module.application;
 
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.dto.*;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.exception.IdentityProvisioningException;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.IdentityProvisioningPort;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioEventPublisher;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioRepository;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.service.CambiarRolUsuarioService;
@@ -43,6 +45,9 @@ class UsuarioApplicationServiceTest {
     @Mock
     private UsuarioEventPublisher usuarioEventPublisher;
 
+    @Mock
+    private IdentityProvisioningPort identityProvisioningPort;
+
     private RegistrarUsuarioService registrarUsuarioService;
     private GestionarEstadoUsuarioService gestionarEstadoUsuarioService;
     private CambiarRolUsuarioService cambiarRolUsuarioService;
@@ -53,9 +58,9 @@ class UsuarioApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        registrarUsuarioService = new RegistrarUsuarioService(usuarioRepository, usuarioEventPublisher);
-        gestionarEstadoUsuarioService = new GestionarEstadoUsuarioService(usuarioRepository, usuarioEventPublisher);
-        cambiarRolUsuarioService = new CambiarRolUsuarioService(usuarioRepository, usuarioEventPublisher);
+        registrarUsuarioService = new RegistrarUsuarioService(usuarioRepository, usuarioEventPublisher, identityProvisioningPort);
+        gestionarEstadoUsuarioService = new GestionarEstadoUsuarioService(usuarioRepository, usuarioEventPublisher, identityProvisioningPort);
+        cambiarRolUsuarioService = new CambiarRolUsuarioService(usuarioRepository, usuarioEventPublisher, identityProvisioningPort);
         consultarUsuarioService = new ConsultarUsuarioService(usuarioRepository);
     }
 
@@ -90,6 +95,34 @@ class UsuarioApplicationServiceTest {
 
             verify(usuarioRepository).guardar(any(Usuario.class));
             verify(usuarioEventPublisher).publicarTodos(anyList());
+            verify(identityProvisioningPort).provisionar(any(Usuario.class));
+        }
+
+        @Test
+        @DisplayName("Debe revertir el alta local si Keycloak no está disponible y permitir reintento")
+        void debeFallarSinPersistirCuandoKeycloakNoEstaDisponible() {
+            RegistrarUsuarioCommand command = new RegistrarUsuarioCommand(
+                    usuarioId,
+                    empresaId,
+                    "cajero01",
+                    "cajero01@empresa.com",
+                    "CAJERO"
+            );
+            when(usuarioRepository.existePorUsername(any(), any())).thenReturn(false);
+            when(usuarioRepository.existePorEmail(any(), any())).thenReturn(false);
+            doThrow(new IdentityProvisioningException("Keycloak no está disponible."))
+                    .doNothing()
+                    .when(identityProvisioningPort).provisionar(any(Usuario.class));
+            when(usuarioRepository.guardar(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            assertThatThrownBy(() -> registrarUsuarioService.ejecutar(command))
+                    .isInstanceOf(IdentityProvisioningException.class);
+            verify(usuarioRepository, never()).guardar(any());
+
+            UsuarioResponse response = registrarUsuarioService.ejecutar(command);
+            assertThat(response.id()).isEqualTo(usuarioId);
+            verify(identityProvisioningPort, times(2)).provisionar(any(Usuario.class));
+            verify(usuarioRepository).guardar(any(Usuario.class));
         }
 
         @Test
@@ -180,6 +213,7 @@ class UsuarioApplicationServiceTest {
             assertThat(response.estado()).isEqualTo("INACTIVO");
             verify(usuarioRepository).guardar(usuario);
             verify(usuarioEventPublisher).publicarTodos(anyList());
+            verify(identityProvisioningPort).sincronizarEstado(usuario);
         }
 
         @Test
@@ -205,6 +239,7 @@ class UsuarioApplicationServiceTest {
             assertThat(response.estado()).isEqualTo("ACTIVO");
             verify(usuarioRepository).guardar(usuario);
             verify(usuarioEventPublisher).publicarTodos(anyList());
+            verify(identityProvisioningPort).sincronizarEstado(usuario);
         }
 
         @Test
@@ -244,6 +279,7 @@ class UsuarioApplicationServiceTest {
             assertThat(response.rol()).isEqualTo("SUCURSAL_MANAGER");
             verify(usuarioRepository).guardar(usuario);
             verify(usuarioEventPublisher).publicarTodos(anyList());
+            verify(identityProvisioningPort).sincronizarRol(usuario);
         }
     }
 

@@ -618,7 +618,36 @@
                                                 }
                                             ]
                             },
+    "users":  [
+                   {
+                       "username":  "service-account-sitfai-backend-admin",
+                       "enabled":  true,
+                       "serviceAccountClientId":  "sitfai-backend-admin",
+                       "clientRoles":  {
+                                             "realm-management":  [
+                                                                        "manage-users",
+                                                                        "view-users",
+                                                                        "query-users",
+                                                                        "view-realm"
+                                                                    ]
+                                         }
+                   }
+               ],
     "clients":  [
+                    {
+                        "clientId":  "sitfai-backend-admin",
+                        "name":  "SITFAI Backend Identity Provisioning",
+                        "enabled":  true,
+                        "clientAuthenticatorType":  "client-secret",
+                        "secret":  "${SITFAI_BACKEND_ADMIN_CLIENT_SECRET}",
+                        "standardFlowEnabled":  false,
+                        "implicitFlowEnabled":  false,
+                        "directAccessGrantsEnabled":  false,
+                        "serviceAccountsEnabled":  true,
+                        "publicClient":  false,
+                        "protocol":  "openid-connect",
+                        "fullScopeAllowed":  true
+                    },
                     {
                         "id":  "0d32038a-892b-4f0c-9611-9730d5376f8a",
                         "clientId":  "account",
@@ -1802,7 +1831,14 @@
                                    "strictTransportSecurity":  "max-age=31536000; includeSubDomains"
                                },
     "smtpServer":  {
-
+                       "host":  "${KEYCLOAK_SMTP_HOST}",
+                       "port":  "${KEYCLOAK_SMTP_PORT}",
+                       "from":  "${KEYCLOAK_SMTP_FROM}",
+                       "auth":  "${KEYCLOAK_SMTP_AUTH}",
+                       "starttls":  "${KEYCLOAK_SMTP_STARTTLS}",
+                       "ssl":  "${KEYCLOAK_SMTP_SSL}",
+                       "user":  "${KEYCLOAK_SMTP_USERNAME}",
+                       "password":  "${KEYCLOAK_SMTP_PASSWORD}"
                    },
     "eventsEnabled":  false,
     "eventsListeners":  [
@@ -1820,6 +1856,20 @@
 
                                 ],
     "components":  {
+                       "org.keycloak.userprofile.UserProfileProvider":  [
+                                                                                 {
+                                                                                     "name":  "SITFAI Managed User Profile",
+                                                                                     "providerId":  "declarative-user-profile",
+                                                                                     "subComponents":  {
+
+                                                                                                        },
+                                                                                     "config":  {
+                                                                                                    "kc.user.profile.config":  [
+                                                                                                                                   "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"Username\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"Email\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"First name\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"Last name\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"empresa_id\",\"displayName\":\"SITFAI tenant identifier\",\"validations\":{\"length\":{\"min\":36,\"max\":36}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"sitfai_usuario_id\",\"displayName\":\"SITFAI user identifier\",\"validations\":{\"length\":{\"min\":36,\"max\":36}},\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]},\"multivalued\":false}],\"groups\":[]}"
+                                                                                                                               ]
+                                                                                                }
+                                                                                 }
+                                                                             ],
                        "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy":  [
                                                                                                         {
                                                                                                             "id":  "6158c279-f717-4185-b3f0-91bd028a2230",

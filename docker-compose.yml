@@ -55,9 +55,19 @@ services:
       - ./docker/keycloak:/opt/keycloak/data/import:ro
       - ./keycloak/themes/sitfai-theme:/opt/keycloak/themes/sitfai-theme:ro
     environment:
-      # Credenciales de Administrador de Keycloak
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      # Bootstrap humano sólo para instalación; no es usado por el backend.
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME:?Set KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD:?Set KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD}
+      SITFAI_BACKEND_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
+      JAVA_OPTS_APPEND: -Dkeycloak.migration.replace-placeholders=true
+      KEYCLOAK_SMTP_HOST: ${KEYCLOAK_SMTP_HOST:?Set KEYCLOAK_SMTP_HOST}
+      KEYCLOAK_SMTP_PORT: ${KEYCLOAK_SMTP_PORT:-25}
+      KEYCLOAK_SMTP_FROM: ${KEYCLOAK_SMTP_FROM:?Set KEYCLOAK_SMTP_FROM}
+      KEYCLOAK_SMTP_AUTH: ${KEYCLOAK_SMTP_AUTH:-false}
+      KEYCLOAK_SMTP_STARTTLS: ${KEYCLOAK_SMTP_STARTTLS:-true}
+      KEYCLOAK_SMTP_SSL: ${KEYCLOAK_SMTP_SSL:-false}
+      KEYCLOAK_SMTP_USERNAME: ${KEYCLOAK_SMTP_USERNAME:-}
+      KEYCLOAK_SMTP_PASSWORD: ${KEYCLOAK_SMTP_PASSWORD:-}
 
       # ConexiÃ³n a Base de Datos MySQL
       KC_DB: mysql
@@ -104,8 +114,9 @@ services:
       KEYCLOAK_HOST: keycloak-iam
       KEYCLOAK_URL: http://keycloak-iam:8080
       KEYCLOAK_REALM: sitfai-erp
-      KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      KEYCLOAK_ADMIN_AUTH_REALM: sitfai-erp
+      KEYCLOAK_ADMIN_CLIENT: sitfai-backend-admin
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
       IAM_PORT: 8080
     depends_on:
       keycloak-iam:
@@ -182,5 +193,3 @@ volumes:
   mysql_data:
     name: sitfai_mysql_data
     driver: local
-
-
