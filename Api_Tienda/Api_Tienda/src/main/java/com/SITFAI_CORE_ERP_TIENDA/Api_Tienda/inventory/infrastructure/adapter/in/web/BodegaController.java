@@ -2,8 +2,8 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.i
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.BodegaResponse;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.MovimientoResponse;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.CrearBodegaUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.RegistrarMovimientoUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.CrearBodegaUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarMovimientoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.BodegaWebResponse;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.CrearBodegaWebRequest;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.MovimientoWebResponse;

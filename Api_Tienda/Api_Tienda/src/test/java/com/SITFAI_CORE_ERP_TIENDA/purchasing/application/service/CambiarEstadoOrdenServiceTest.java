@@ -12,6 +12,7 @@ import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.Dinero;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProveedorId;
+import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +42,9 @@ class CambiarEstadoOrdenServiceTest {
     @Mock
     private ActorProviderPort actorProviderPort;
 
+    @Mock
+    private CurrentTenantProvider currentTenantProvider;
+
     @InjectMocks
     private CambiarEstadoOrdenService service;
 
@@ -63,6 +67,7 @@ class CambiarEstadoOrdenServiceTest {
 
         when(repository.buscarPorIdYEmpresaId(any(OrdenCompraId.class), any(UUID.class))).thenReturn(Optional.of(ordenSimulada));
         when(actorProviderPort.getCurrentActorId()).thenReturn("user2");
+        when(currentTenantProvider.authorizeTenant(empresaId)).thenReturn(empresaId);
 
         OrdenCompraResponse response = service.cambiarEstado(command);
 

@@ -1,7 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.messaging;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.RegistrarMovimientoCommand;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.RegistrarMovimientoUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarMovimientoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.event.OrdenCompraRecibidaEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

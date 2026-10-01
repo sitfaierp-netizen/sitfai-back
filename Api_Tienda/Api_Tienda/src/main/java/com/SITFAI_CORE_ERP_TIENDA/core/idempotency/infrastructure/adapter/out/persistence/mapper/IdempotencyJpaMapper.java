@@ -1,6 +1,6 @@
 package com.SITFAI_CORE_ERP_TIENDA.core.idempotency.infrastructure.adapter.out.persistence.mapper;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.IdempotencyKey;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.IdempotencyRecord;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.IdempotencyStatus;

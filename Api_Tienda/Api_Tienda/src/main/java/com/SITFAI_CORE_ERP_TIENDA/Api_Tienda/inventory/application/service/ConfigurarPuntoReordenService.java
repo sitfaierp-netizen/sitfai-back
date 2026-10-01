@@ -3,7 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.service;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.ConfigurarPuntoReordenCommand;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.BodegaNoEncontradaException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.Bodega;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.ConfigurarPuntoReordenUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.ConfigurarPuntoReordenUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.output.BodegaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.BodegaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;

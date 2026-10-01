@@ -1,6 +1,7 @@
-package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input;
+package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.BodegaResponse;
+
 import java.util.List;
 
 public interface ObtenerBodegasPorSucursalUseCase {

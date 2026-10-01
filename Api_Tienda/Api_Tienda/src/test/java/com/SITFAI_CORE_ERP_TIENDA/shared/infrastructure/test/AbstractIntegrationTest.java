@@ -54,6 +54,9 @@ public abstract class AbstractIntegrationTest {
     protected com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort inventoryTenantProviderPort;
 
     @MockitoBean
+    protected com.SITFAI_CORE_ERP_TIENDA.core.idempotency.application.port.output.CurrentTenantPort idempotencyCurrentTenantPort;
+
+    @MockitoBean
     protected com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.application.port.output.TenantProviderPort apiTiendaTenantProviderPort;
 
     @MockitoBean

@@ -1,6 +1,6 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.ObtenerBodegasPorSucursalUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.ObtenerBodegasPorSucursalUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

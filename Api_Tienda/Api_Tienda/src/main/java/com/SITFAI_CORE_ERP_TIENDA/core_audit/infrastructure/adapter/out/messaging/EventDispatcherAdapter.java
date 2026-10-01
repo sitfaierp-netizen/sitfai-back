@@ -20,7 +20,7 @@ import java.util.Objects;
  * imitando la coreografía y comunicación inter-módulos.
  */
 @Component
-public class EventDispatcherAdapter implements EventDispatcherPort, com.SITFAI_CORE_ERP_TIENDA.core_audit.application.port.output.EventDispatcherPort {
+public class EventDispatcherAdapter implements EventDispatcherPort {
 
     private static final Logger log = LoggerFactory.getLogger(EventDispatcherAdapter.class);
 

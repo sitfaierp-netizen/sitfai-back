@@ -1,6 +1,5 @@
 package com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.exception.ConcurrentProcessingException;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.exception.IdempotencyConflictException;
 

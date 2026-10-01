@@ -1,8 +1,8 @@
 package com.SITFAI_CORE_ERP_TIENDA.core.idempotency.infrastructure.adapter.in.web;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.application.port.output.CurrentTenantPort;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.application.service.IdempotencyManagerService;
+import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.IdempotencyKey;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.IdempotencyRecord;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.PayloadFingerprint;
@@ -27,11 +27,11 @@ public class IdempotencyAspect {
 
     private static final String IDEMPOTENCY_HEADER = "Idempotency-Key";
     private final IdempotencyManagerService idempotencyManagerService;
-    private final TenantProviderPort tenantProviderPort;
+    private final CurrentTenantPort currentTenantPort;
 
-    public IdempotencyAspect(IdempotencyManagerService idempotencyManagerService, TenantProviderPort tenantProviderPort) {
+    public IdempotencyAspect(IdempotencyManagerService idempotencyManagerService, CurrentTenantPort currentTenantPort) {
         this.idempotencyManagerService = idempotencyManagerService;
-        this.tenantProviderPort = tenantProviderPort;
+        this.currentTenantPort = currentTenantPort;
     }
 
     @Around("@annotation(com.SITFAI_CORE_ERP_TIENDA.core.idempotency.infrastructure.adapter.in.web.Idempotent)")
@@ -46,7 +46,7 @@ public class IdempotencyAspect {
             throw new IllegalArgumentException("Header Idempotency-Key es obligatorio para esta operación.");
         }
 
-        EmpresaId empresaId = tenantProviderPort.getEmpresaIdAutenticada();
+        EmpresaId empresaId = currentTenantPort.requireCurrentTenant();
         IdempotencyKey key = new IdempotencyKey(keyHeader);
         PayloadFingerprint fingerprint = generateFingerprint(joinPoint.getArgs());
 

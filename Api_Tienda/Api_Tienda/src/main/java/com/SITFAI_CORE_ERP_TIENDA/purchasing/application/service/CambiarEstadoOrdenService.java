@@ -10,9 +10,7 @@ import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.port.output.OrdenCompraRepos
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.exception.DomainException;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
-import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.TenantAuthenticationDetails;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,27 +22,20 @@ public class CambiarEstadoOrdenService implements CambiarEstadoOrdenUseCase {
     private final OrdenCompraRepository repository;
     private final OrdenCompraEventPublisher eventPublisher;
     private final ActorProviderPort actorProviderPort;
+    private final CurrentTenantProvider currentTenantProvider;
 
-    public CambiarEstadoOrdenService(OrdenCompraRepository repository, OrdenCompraEventPublisher eventPublisher, ActorProviderPort actorProviderPort) {
+    public CambiarEstadoOrdenService(OrdenCompraRepository repository, OrdenCompraEventPublisher eventPublisher,
+                                     ActorProviderPort actorProviderPort, CurrentTenantProvider currentTenantProvider) {
         this.repository = repository;
         this.eventPublisher = eventPublisher;
         this.actorProviderPort = actorProviderPort;
+        this.currentTenantProvider = currentTenantProvider;
     }
 
     @Override
     @Transactional
     public OrdenCompraResponse cambiarEstado(CambiarEstadoCommand command) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UUID empresaId = null;
-        if (authentication != null && authentication.getDetails() instanceof TenantAuthenticationDetails details) {
-            empresaId = details.empresaUuid();
-        } else {
-            empresaId = command.empresaId();
-        }
-        
-        if (empresaId == null) {
-            throw new IllegalArgumentException("empresa_id no encontrado.");
-        }
+        UUID empresaId = currentTenantProvider.authorizeTenant(command.empresaId());
 
         OrdenCompra orden = repository.buscarPorIdYEmpresaId(
                 new OrdenCompraId(command.ordenCompraId()),

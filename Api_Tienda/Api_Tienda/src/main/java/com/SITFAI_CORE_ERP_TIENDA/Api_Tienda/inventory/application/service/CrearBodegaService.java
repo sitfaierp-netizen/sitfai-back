@@ -4,7 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.BodegaRes
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.CrearBodegaCommand;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.mapper.InventarioApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.Bodega;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.CrearBodegaUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.CrearBodegaUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.output.BodegaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.InventoryReferenceOwnershipPort;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.InventoryReferenceNotFoundException;

@@ -3,7 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.service;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.TransferirStockCommand;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.BodegaNoEncontradaException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.Bodega;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.TransferirStockUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.TransferirStockUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.output.BodegaEventPublisher;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.output.BodegaRepository;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.service.TransferenciaStockDomainService;
