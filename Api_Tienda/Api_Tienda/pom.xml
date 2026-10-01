@@ -57,6 +57,12 @@
 			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
 		</dependency>
 
+		<!--
+		  Intentional security override. Boot 4.1.1 manages Connector/J 9.7.0,
+		  which is affected by Oracle July 2026 Connector/J advisories. Version
+		  26.7.0 supersedes 9.7 and is the validated production line for SITFAI.
+		  See docs/security/phase0-security-train-upgrade.md.
+		-->
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>

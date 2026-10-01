@@ -33,13 +33,32 @@ Boot `4.1.2` was still a snapshot and Boot `4.2` was a milestone; neither was el
 | Embedded Tomcat | 10.1.33 | 11.0.24 | Boot BOM; no direct pin |
 | Jackson used by SITFAI | 2.18.1 | 3.1.5 | Boot BOM and Boot 4 native mapper |
 | Jackson 2 compatibility subtree | 2.18.1 | 2.21.5 | Boot BOM; required transitively by Keycloak 26.0.0 |
-| MySQL Connector/J | 9.1.0 | 26.7.0 | Direct runtime dependency; Oracle-recommended production line, tested with MySQL 8.4 |
+| MySQL Connector/J | 9.1.0 | 26.7.0 | `INTENTIONAL_SECURITY_OVERRIDE`; Boot 4.1.1 manages affected 9.7.0; final version tested with MySQL 8.4 |
 | Flyway | 10.20.1 | 12.4.0 | Boot BOM and dedicated Boot 4 starter |
 | Testcontainers | 1.20.4 explicit BOM | 2.0.5 Boot-managed | Boot BOM; current artifact coordinates |
 | Springdoc | 2.7.0 | 3.0.2 | Required Boot 4 compatible major |
 | Keycloak admin client | 26.0.0 | 26.0.0 | Retained; compiled and verified without functional changes |
 
 `commons-io:2.20.0` is the only additional compatibility version. Keycloak 26.0.0 introduces `2.11.0` transitively, while Testcontainers 2.0.5/Commons Compress 1.28 uses the `FileTimes` API from Commons IO 2.20. This override fixes a demonstrated runtime linkage failure and is not a Spring/Tomcat/Jackson train pin.
+
+### Connector/J security override
+
+| Decision field | Value |
+|---|---|
+| Management | `INTENTIONAL_SECURITY_OVERRIDE` |
+| Boot-managed version | `9.7.0` |
+| Final version | `26.7.0` |
+| Rationale | Boot-managed 9.7.0 was functionally compatible but rejected because Oracle July 2026 security advisories affect the 9.7.0–9.7.1 line. |
+
+The Boot-managed variant was resolved and tested rather than rejected by assumption. Connector/J `9.7.0` passed the complete 388-test `clean verify`, MySQL `8.4.0`, Flyway V1–V59, Hibernate validation, repositories and the JaCoCo gate. The regenerated Dependency-Check report nevertheless identified `CVE-2026-60586` and `CVE-2026-60623` as HIGH, plus `CVE-2026-60624` and `CVE-2026-61082` as MEDIUM. Oracle's July 2026 CPU identifies Connector/J `9.7.0–9.7.1` as affected.
+
+Connector/J `26.7.0` is the later GA line that supersedes 9.7, is recommended by Oracle for production, supports MySQL Server 8.4, and had already passed the same SITFAI integration gates without those Connector/J findings. The explicit version is therefore retained deliberately and must not be normalized back to the Boot BOM until Boot manages an unaffected line.
+
+Primary evidence:
+
+- Oracle July 2026 CPU: <https://www.oracle.com/security-alerts/cpujul2026.html>
+- Connector/J 26.7 documentation: <https://dev.mysql.com/doc/connector-j/en/>
+- Connector/J 26.7 release notes: <https://dev.mysql.com/doc/relnotes/connector-j/en/news-26-7-0.html>
 
 ## Required compatibility changes
 
@@ -135,7 +154,7 @@ Removal and fail-fast validation belong to the subsequent Identity hardening blo
 ## Residual risks
 
 - Boot-managed Tomcat 11.0.24 has nine scanner CRITICAL/HIGH findings that are not applicable to the current SITFAI configuration. Track Boot 4.1.2 or a later stable BOM that carries Tomcat 11.0.25+; do not enable the affected Tomcat features beforehand.
+- The global audit listener still listens to `Object` and filters framework lifecycle events by namespace. Consolidating it around explicit Domain/Integration Event contracts belongs to Phase 0 Block D / Outbox-Audit.
 - Keycloak admin client remains at 26.0.0 and retains a BOM-managed Jackson 2 compatibility subtree. Functional Keycloak hardening remains blocked until this PR is reviewed and merged.
 - Dependency-Check data is time-sensitive. The final report used NVD data last modified `2026-10-01T03:16:59Z` and must be regenerated in CI.
 - Credential defaults remain a known Identity Block B risk.
-
