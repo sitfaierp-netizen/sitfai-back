@@ -1,6 +1,6 @@
 package com.SITFAI_CORE_ERP_TIENDA.core_audit.infrastructure.adapter.out.messaging;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
 import java.util.UUID;

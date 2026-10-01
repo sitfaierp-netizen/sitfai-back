@@ -1,7 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.audit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -32,11 +32,13 @@ public class GlobalDomainEventAuditListener {
     public GlobalDomainEventAuditListener(DomainEventAuditJpaRepository repository, ObjectMapper objectMapper) {
         this.repository = Objects.requireNonNull(repository, "repository no puede ser null");
         this.objectMapper = objectMapper != null
-                ? objectMapper.copy().registerModule(new JavaTimeModule())
-                : new ObjectMapper().registerModule(new JavaTimeModule());
+                ? objectMapper.rebuild().findAndAddModules().build()
+                : JsonMapper.builder().findAndAddModules().build();
     }
 
-    @EventListener
+    @EventListener(condition = "!#root.args[0].getClass().getPackageName().startsWith('org.springframework')"
+            + " && !#root.args[0].getClass().getPackageName().startsWith('org.hibernate')"
+            + " && !#root.args[0].getClass().getPackageName().startsWith('org.apache')")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onDomainEvent(Object event) {
         if (event == null || isFrameworkEvent(event)) {

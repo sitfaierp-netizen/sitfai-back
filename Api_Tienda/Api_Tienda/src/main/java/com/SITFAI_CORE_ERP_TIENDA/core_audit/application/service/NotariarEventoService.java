@@ -6,9 +6,9 @@ import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.StoredDomai
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.vo.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.vo.StoredEventId;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.port.output.EventStoreRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -39,8 +39,8 @@ public class NotariarEventoService implements NotariarEventoUseCase, com.SITFAI_
     public NotariarEventoService(EventStoreRepository repository, ObjectMapper objectMapper) {
         this.repository = Objects.requireNonNull(repository, "NotariarEventoService: repository no puede ser null.");
         this.objectMapper = objectMapper != null
-                ? objectMapper.copy().registerModule(new JavaTimeModule())
-                : new ObjectMapper().registerModule(new JavaTimeModule());
+                ? objectMapper.rebuild().findAndAddModules().build()
+                : JsonMapper.builder().findAndAddModules().build();
     }
 
     @Override
@@ -77,7 +77,7 @@ public class NotariarEventoService implements NotariarEventoUseCase, com.SITFAI_
         if (command.eventoOriginal() != null) {
             try {
                 return objectMapper.writeValueAsString(command.eventoOriginal());
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error("Error al serializar el evento [{}] a JSON: {}",
                         command.nombreEvento(), e.getMessage(), e);
                 throw new IllegalArgumentException("No fue posible serializar el payload del evento a JSON", e);
