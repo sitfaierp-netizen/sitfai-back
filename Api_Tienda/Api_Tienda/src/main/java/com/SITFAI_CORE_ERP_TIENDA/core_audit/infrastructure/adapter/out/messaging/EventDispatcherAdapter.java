@@ -2,9 +2,9 @@ package com.SITFAI_CORE_ERP_TIENDA.core_audit.infrastructure.adapter.out.messagi
 
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.StoredDomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.port.output.EventDispatcherPort;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,8 +30,8 @@ public class EventDispatcherAdapter implements EventDispatcherPort, com.SITFAI_C
     public EventDispatcherAdapter(ApplicationEventPublisher eventPublisher, ObjectMapper objectMapper) {
         this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher no puede ser null");
         this.objectMapper = objectMapper != null
-                ? objectMapper.copy().registerModule(new JavaTimeModule())
-                : new ObjectMapper().registerModule(new JavaTimeModule());
+                ? objectMapper.rebuild().findAndAddModules().build()
+                : JsonMapper.builder().findAndAddModules().build();
     }
 
     @Override

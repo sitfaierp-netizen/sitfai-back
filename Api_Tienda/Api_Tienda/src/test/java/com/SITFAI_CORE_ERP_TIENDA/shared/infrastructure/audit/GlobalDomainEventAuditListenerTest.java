@@ -1,6 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.audit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ class GlobalDomainEventAuditListenerTest {
 
     @BeforeEach
     void setUp() {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = JsonMapper.builder().findAndAddModules().build();
         listener = new GlobalDomainEventAuditListener(repository, objectMapper);
     }
 

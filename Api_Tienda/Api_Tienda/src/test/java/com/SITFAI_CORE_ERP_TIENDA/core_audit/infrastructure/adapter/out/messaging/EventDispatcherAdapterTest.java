@@ -3,7 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.core_audit.infrastructure.adapter.out.messagi
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.StoredDomainEvent;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.vo.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.core_audit.domain.model.eventstore.vo.StoredEventId;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class EventDispatcherAdapterTest {
 
     @BeforeEach
     void setUp() {
-        adapter = new EventDispatcherAdapter(eventPublisher, new ObjectMapper());
+        adapter = new EventDispatcherAdapter(eventPublisher, JsonMapper.builder().findAndAddModules().build());
     }
 
     @Test

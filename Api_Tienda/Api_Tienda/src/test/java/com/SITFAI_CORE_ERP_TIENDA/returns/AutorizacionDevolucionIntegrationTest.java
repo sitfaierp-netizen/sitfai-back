@@ -14,13 +14,13 @@ import com.SITFAI_CORE_ERP_TIENDA.returns.domain.model.rma.event.ProductoAprobad
 import com.SITFAI_CORE_ERP_TIENDA.returns.domain.model.rma.event.ProductoRechazadoAMermaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.returns.infrastructure.adapter.in.web.dto.CrearRmaWebRequest;
 import com.SITFAI_CORE_ERP_TIENDA.returns.infrastructure.adapter.in.web.dto.InspeccionarRmaWebRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
