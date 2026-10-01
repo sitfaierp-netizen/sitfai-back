@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Objects;
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.web.TenantId;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Adaptador de Entrada (Driving Adapter): Controlador REST para la gestión de Bodegas y Stock.
@@ -55,8 +57,9 @@ public class BodegaController {
      * POST /api/v1/bodegas
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN', 'BODEGA_OPERATOR')")
     public ResponseEntity<BodegaWebResponse> crearBodega(
-            @RequestHeader(value = "X-Empresa-Id", required = true) String empresaId,
+            @TenantId String empresaId,
             @RequestBody CrearBodegaWebRequest request) {
 
         BodegaResponse response = crearBodegaUseCase.ejecutar(webMapper.toCommand(empresaId, request));
@@ -68,9 +71,10 @@ public class BodegaController {
      * POST /api/v1/bodegas/{id}/movimientos
      */
     @PostMapping("/{id}/movimientos")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN', 'BODEGA_OPERATOR')")
     public ResponseEntity<MovimientoWebResponse> registrarMovimiento(
             @PathVariable("id") String bodegaId,
-            @RequestHeader(value = "X-Empresa-Id", required = true) String empresaId,
+            @TenantId String empresaId,
             @RequestBody RegistrarMovimientoWebRequest request) {
 
         MovimientoResponse response = registrarMovimientoUseCase.ejecutar(webMapper.toCommand(empresaId, bodegaId, request));

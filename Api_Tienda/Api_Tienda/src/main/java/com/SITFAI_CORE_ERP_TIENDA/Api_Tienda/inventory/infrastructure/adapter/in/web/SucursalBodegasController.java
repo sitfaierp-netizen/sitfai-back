@@ -12,6 +12,8 @@ import java.util.Objects;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.mapper.InventarioWebMapper;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web.dto.BodegaWebResponse;
 import java.util.stream.Collectors;
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.web.TenantId;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/sucursales/{sucursalId}/bodegas")
@@ -26,8 +28,11 @@ public class SucursalBodegasController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BodegaWebResponse>> obtenerPorSucursal(@PathVariable String sucursalId) {
-        List<BodegaWebResponse> bodegas = obtenerBodegasPorSucursalUseCase.ejecutar(sucursalId)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN', 'BODEGA_OPERATOR')")
+    public ResponseEntity<List<BodegaWebResponse>> obtenerPorSucursal(
+            @TenantId String empresaId,
+            @PathVariable String sucursalId) {
+        List<BodegaWebResponse> bodegas = obtenerBodegasPorSucursalUseCase.ejecutar(empresaId, sucursalId)
                 .stream()
                 .map(webMapper::toWebResponse)
                 .collect(Collectors.toList());

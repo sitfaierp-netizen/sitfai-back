@@ -43,8 +43,4 @@ public interface BodegaJpaRepository extends JpaRepository<BodegaJpaEntity, UUID
      */
     List<BodegaJpaEntity> findByEmpresaIdAndSucursalId(UUID empresaId, UUID sucursalId);
 
-    /**
-     * Lista todas las Bodegas por Sucursal Id.
-     */
-    List<BodegaJpaEntity> findBySucursalId(UUID sucursalId);
 }

@@ -127,14 +127,4 @@ public class BodegaJpaAdapter implements BodegaRepository {
                 .toList();
     }
 
-    @Override
-    public List<Bodega> listarPorSucursalId(String sucursalId) {
-        Objects.requireNonNull(sucursalId, "sucursalId no puede ser null");
-
-        UUID sucursalUuid = UUID.fromString(sucursalId);
-        return bodegaJpaRepository.findBySucursalId(sucursalUuid)
-                .stream()
-                .map(mapper::toDomain)
-                .toList();
-    }
 }

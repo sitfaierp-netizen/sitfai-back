@@ -2,6 +2,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.i
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.AprobarCuarentenaCommand;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.AprobarCuarentenaUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.web.TenantId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class InspeccionCalidadController {
     @PostMapping("/aprobar")
     @PreAuthorize("hasRole('INSPECTOR') or hasRole('BODEGA_ADMIN')")
     public ResponseEntity<Void> aprobarCuarentena(
-            @RequestAttribute("TenantId") UUID tenantId,
+            @TenantId UUID tenantId,
             @RequestBody InspeccionRequest request) {
 
         AprobarCuarentenaCommand command = new AprobarCuarentenaCommand(

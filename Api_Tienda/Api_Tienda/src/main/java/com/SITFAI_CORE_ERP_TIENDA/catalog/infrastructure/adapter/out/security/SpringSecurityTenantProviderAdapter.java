@@ -1,9 +1,8 @@
 package com.SITFAI_CORE_ERP_TIENDA.catalog.infrastructure.adapter.out.security;
 
 import com.SITFAI_CORE_ERP_TIENDA.catalog.application.port.output.TenantProviderPort;
-import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.TenantAuthenticationDetails;
+import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -15,19 +14,14 @@ import java.util.UUID;
 @Component
 public class SpringSecurityTenantProviderAdapter implements TenantProviderPort {
 
+    private final CurrentTenantProvider currentTenantProvider;
+
+    public SpringSecurityTenantProviderAdapter(CurrentTenantProvider currentTenantProvider) {
+        this.currentTenantProvider = currentTenantProvider;
+    }
+
     @Override
     public UUID obtenerEmpresaIdActual() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new IllegalStateException("No hay un usuario autenticado en el contexto de seguridad.");
-        }
-
-        Object details = auth.getDetails();
-        if (details instanceof TenantAuthenticationDetails tenantDetails) {
-            return tenantDetails.empresaUuid();
-        }
-
-        throw new IllegalStateException(
-                "No se encontraron detalles de tenant (TenantAuthenticationDetails) en la autenticación actual.");
+        return currentTenantProvider.requireCurrentTenant();
     }
 }

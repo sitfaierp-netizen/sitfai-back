@@ -6,6 +6,8 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.mapper.Invent
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.Bodega;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.CrearBodegaUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.output.BodegaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.InventoryReferenceOwnershipPort;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.InventoryReferenceNotFoundException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.SucursalId;
 import org.springframework.stereotype.Service;
@@ -39,9 +41,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class CrearBodegaService implements CrearBodegaUseCase {
 
     private final BodegaRepository bodegaRepository;
+    private final InventoryReferenceOwnershipPort referenceOwnershipPort;
 
-    public CrearBodegaService(BodegaRepository bodegaRepository) {
+    public CrearBodegaService(
+            BodegaRepository bodegaRepository,
+            InventoryReferenceOwnershipPort referenceOwnershipPort) {
         this.bodegaRepository = bodegaRepository;
+        this.referenceOwnershipPort = referenceOwnershipPort;
     }
 
     /**
@@ -56,6 +62,11 @@ public class CrearBodegaService implements CrearBodegaUseCase {
         // ── 1. Construir Value Objects desde el Command ────────────────────────
         EmpresaId empresaId = EmpresaId.de(command.empresaId());
         SucursalId sucursalId = SucursalId.de(command.sucursalId());
+
+        if (!referenceOwnershipPort.sucursalPerteneceAEmpresa(
+                sucursalId.valor(), empresaId.valor())) {
+            throw new InventoryReferenceNotFoundException();
+        }
 
         // ── 2. Validar unicidad del código (BOD-02 a nivel de Empresa global) ───────────────────────────
         boolean codigoYaExiste = bodegaRepository.existeCodigoEnEmpresa(

@@ -1,14 +1,8 @@
 package com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.web;
 
-import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.KeycloakJwtAuthenticationConverter;
-import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.TenantAuthenticationDetails;
+import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.TenantScopeViolationException;
 import org.springframework.core.MethodParameter;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -31,6 +25,14 @@ import java.util.UUID;
 @Component
 public class TenantIdArgumentResolver implements HandlerMethodArgumentResolver {
 
+    private static final String TENANT_HEADER = "X-Empresa-Id";
+
+    private final CurrentTenantProvider currentTenantProvider;
+
+    public TenantIdArgumentResolver(CurrentTenantProvider currentTenantProvider) {
+        this.currentTenantProvider = currentTenantProvider;
+    }
+
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(TenantId.class);
@@ -46,43 +48,26 @@ public class TenantIdArgumentResolver implements HandlerMethodArgumentResolver {
         TenantId tenantIdAnnotation = parameter.getParameterAnnotation(TenantId.class);
         boolean required = tenantIdAnnotation == null || tenantIdAnnotation.required();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            if (required) {
-                throw new AuthenticationCredentialsNotFoundException(
-                        "No se encontró un contexto de autenticación válido para resolver @TenantId.");
-            }
-            return null;
-        }
-
-        String empresaIdStr = extractEmpresaIdFromAuthentication(authentication);
-
-        if (empresaIdStr == null || empresaIdStr.isBlank()) {
-            boolean isSuperAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
-            if (isSuperAdmin) {
-                empresaIdStr = webRequest.getHeader("X-Empresa-Id");
-            }
-            if (empresaIdStr == null || empresaIdStr.isBlank()) {
-                if (required) {
-                    throw new AccessDeniedException(
-                            "El token JWT de autenticación no contiene el claim obligatorio 'empresa_id' (MT-01, MT-06) y no se proveyó X-Empresa-Id como SUPER_ADMIN.");
-                }
+        String requestedTenant = webRequest.getHeader(TENANT_HEADER);
+        UUID empresaId;
+        try {
+            empresaId = requestedTenant == null || requestedTenant.isBlank()
+                    ? currentTenantProvider.requireCurrentTenant()
+                    : currentTenantProvider.authorizeTenant(UUID.fromString(requestedTenant.trim()));
+        } catch (TenantScopeViolationException exception) {
+            if (!required) {
                 return null;
             }
+            throw exception;
+        } catch (IllegalArgumentException exception) {
+            throw new TenantScopeViolationException(exception);
         }
 
         Class<?> paramType = parameter.getParameterType();
         if (UUID.class.isAssignableFrom(paramType)) {
-            try {
-                return UUID.fromString(empresaIdStr.trim());
-            } catch (IllegalArgumentException e) {
-                throw new AccessDeniedException(
-                        String.format("El claim 'empresa_id' en el JWT ('%s') no es un formato UUID válido.", empresaIdStr), e);
-            }
+            return empresaId;
         } else if (String.class.isAssignableFrom(paramType)) {
-            return empresaIdStr.trim();
+            return empresaId.toString();
         }
 
         throw new IllegalArgumentException(
@@ -91,37 +76,4 @@ public class TenantIdArgumentResolver implements HandlerMethodArgumentResolver {
         );
     }
 
-    /**
-     * Extrae el valor del tenant desde los detalles de autenticación o los claims del JWT.
-     */
-    private String extractEmpresaIdFromAuthentication(Authentication authentication) {
-        // 1. Intentar desde TenantAuthenticationDetails si fue asignado por KeycloakJwtAuthenticationConverter
-        if (authentication.getDetails() instanceof TenantAuthenticationDetails tenantDetails) {
-            return tenantDetails.empresaId();
-        }
-
-        // 2. Intentar directamente desde JwtAuthenticationToken
-        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            Jwt jwt = jwtAuth.getToken();
-            return extractFromJwt(jwt);
-        }
-
-        // 3. Intentar desde el Principal si es un Jwt
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            return extractFromJwt(jwt);
-        }
-
-        return null;
-    }
-
-    private String extractFromJwt(Jwt jwt) {
-        if (jwt == null) {
-            return null;
-        }
-        String claim = jwt.getClaimAsString(KeycloakJwtAuthenticationConverter.CLAIM_EMPRESA_ID);
-        if (claim == null || claim.isBlank()) {
-            claim = jwt.getClaimAsString(KeycloakJwtAuthenticationConverter.CLAIM_EMPRESA_ID_ALT);
-        }
-        return claim;
-    }
 }

@@ -6,12 +6,25 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import java.net.URI;
 import java.time.Instant;
 
 @RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @ExceptionHandler(com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.TenantScopeViolationException.class)
+    public ProblemDetail handleTenantScopeViolationException(
+            com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.security.TenantScopeViolationException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Recurso no encontrado.");
+        problemDetail.setTitle("Recurso no encontrado");
+        problemDetail.setType(URI.create("https://api.sitfai.com/errors/not-found"));
+        problemDetail.setProperty("timestamp", Instant.now());
+        return problemDetail;
+    }
 
     @ExceptionHandler(DocumentStateException.class)
     public ProblemDetail handleDocumentStateException(DocumentStateException ex) {

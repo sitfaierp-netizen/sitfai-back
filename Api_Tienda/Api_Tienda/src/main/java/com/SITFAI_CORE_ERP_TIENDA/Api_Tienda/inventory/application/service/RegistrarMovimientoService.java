@@ -8,6 +8,9 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.MovimientoIn
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.TipoMovimiento;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.RegistrarMovimientoUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.output.BodegaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.InventoryReferenceOwnershipPort;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.InventoryReferenceNotFoundException;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.BodegaNoEncontradaException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.BodegaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.Cantidad;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.DocumentoFuenteId;
@@ -45,9 +48,13 @@ import java.math.BigDecimal;
 public class RegistrarMovimientoService implements RegistrarMovimientoUseCase {
 
     private final BodegaRepository bodegaRepository;
+    private final InventoryReferenceOwnershipPort referenceOwnershipPort;
 
-    public RegistrarMovimientoService(BodegaRepository bodegaRepository) {
+    public RegistrarMovimientoService(
+            BodegaRepository bodegaRepository,
+            InventoryReferenceOwnershipPort referenceOwnershipPort) {
         this.bodegaRepository = bodegaRepository;
+        this.referenceOwnershipPort = referenceOwnershipPort;
     }
 
     /**
@@ -75,13 +82,15 @@ public class RegistrarMovimientoService implements RegistrarMovimientoUseCase {
                 command.docFuenteNumero()
         );
 
+        if (!referenceOwnershipPort.productoPerteneceAEmpresa(
+                productoId.valor(), empresaId.valor())) {
+            throw new InventoryReferenceNotFoundException();
+        }
+
         // ── 2. Buscar el Agregado Bodega (con filtro de tenant — MT-01, MT-02) ─
         Bodega bodega = bodegaRepository
                 .buscarPorId(bodegaId, empresaId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        String.format("Bodega '%s' no encontrada para la Empresa '%s'.",
-                                bodegaId, empresaId)
-                ));
+                .orElseThrow(() -> new BodegaNoEncontradaException(bodegaId, empresaId));
 
         // ── 3. Delegar al Dominio — Invariante BOD-05 aplicada aquí ──────────
         //       Si hay StockInsuficienteException, FLUYE sin capturarse.

@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 import java.util.UUID;
+import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/empresas")
@@ -22,14 +24,17 @@ public class SucursalController {
     private final AgregarSucursalUseCase agregarSucursalUseCase;
     private final ActualizarSucursalUseCase actualizarSucursalUseCase;
     private final EliminarSucursalUseCase eliminarSucursalUseCase;
+    private final CurrentTenantProvider currentTenantProvider;
 
     public SucursalController(
             AgregarSucursalUseCase agregarSucursalUseCase,
             ActualizarSucursalUseCase actualizarSucursalUseCase,
-            EliminarSucursalUseCase eliminarSucursalUseCase) {
+            EliminarSucursalUseCase eliminarSucursalUseCase,
+            CurrentTenantProvider currentTenantProvider) {
         this.agregarSucursalUseCase = Objects.requireNonNull(agregarSucursalUseCase);
         this.actualizarSucursalUseCase = Objects.requireNonNull(actualizarSucursalUseCase);
         this.eliminarSucursalUseCase = Objects.requireNonNull(eliminarSucursalUseCase);
+        this.currentTenantProvider = Objects.requireNonNull(currentTenantProvider);
     }
 
     /**
@@ -37,11 +42,13 @@ public class SucursalController {
      * Endpoint para crear una sucursal y asociarla a una empresa existente.
      */
     @PostMapping("/{empresaId}/sucursales")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<SucursalResponse> agregarSucursal(
             @PathVariable UUID empresaId,
             @RequestBody AgregarSucursalRequest request) {
         
-        AgregarSucursalCommand command = new AgregarSucursalCommand(empresaId, request.codigo(), request.nombre());
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(empresaId);
+        AgregarSucursalCommand command = new AgregarSucursalCommand(tenantAutorizado, request.codigo(), request.nombre());
         SucursalResponse response = agregarSucursalUseCase.ejecutar(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -50,12 +57,14 @@ public class SucursalController {
      * PUT /empresas/{empresaId}/sucursales/{sucursalId}
      */
     @PutMapping("/{empresaId}/sucursales/{sucursalId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<SucursalResponse> actualizarSucursal(
             @PathVariable UUID empresaId,
             @PathVariable UUID sucursalId,
             @RequestBody ActualizarSucursalRequest request) {
         
-        ActualizarSucursalCommand command = new ActualizarSucursalCommand(empresaId, sucursalId, request.codigo(), request.nombre());
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(empresaId);
+        ActualizarSucursalCommand command = new ActualizarSucursalCommand(tenantAutorizado, sucursalId, request.codigo(), request.nombre());
         SucursalResponse response = actualizarSucursalUseCase.ejecutar(command);
         return ResponseEntity.ok(response);
     }
@@ -64,11 +73,13 @@ public class SucursalController {
      * DELETE /empresas/{empresaId}/sucursales/{sucursalId}
      */
     @DeleteMapping("/{empresaId}/sucursales/{sucursalId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<Void> eliminarSucursal(
             @PathVariable UUID empresaId,
             @PathVariable UUID sucursalId) {
         
-        eliminarSucursalUseCase.ejecutar(empresaId, sucursalId);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(empresaId);
+        eliminarSucursalUseCase.ejecutar(tenantAutorizado, sucursalId);
         return ResponseEntity.noContent().build();
     }
 }
