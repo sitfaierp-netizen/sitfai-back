@@ -3,32 +3,23 @@ package com.SITFAI_CORE_ERP_TIENDA.purchasing.application.service;
 import com.SITFAI_CORE_ERP_TIENDA.core.audit.domain.port.ActorProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.AgregarLineaCommand;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.OrdenCompraResponse;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.mapper.OrdenCompraApplicationMapper;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.GestionarLineasUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.port.output.OrdenCompraRepository;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.exception.DomainException;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.LineaOrdenCompra;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.OrdenCompra;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.Dinero;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.OrdenCompraId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.vo.ProductoId;
 import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
 public class GestionarLineasService implements GestionarLineasUseCase {
 
-    private final OrdenCompraRepository repository;
+    private final OrdenCompraApplicationOperation operation;
     private final ActorProviderPort actorProviderPort;
     private final CurrentTenantProvider currentTenantProvider;
 
-    public GestionarLineasService(OrdenCompraRepository repository, ActorProviderPort actorProviderPort,
+    public GestionarLineasService(OrdenCompraApplicationOperation operation, ActorProviderPort actorProviderPort,
                                   CurrentTenantProvider currentTenantProvider) {
-        this.repository = repository;
+        this.operation = operation;
         this.actorProviderPort = actorProviderPort;
         this.currentTenantProvider = currentTenantProvider;
     }
@@ -38,23 +29,13 @@ public class GestionarLineasService implements GestionarLineasUseCase {
     public OrdenCompraResponse agregarLinea(AgregarLineaCommand command) {
         UUID empresaId = currentTenantProvider.authorizeTenant(command.empresaId());
 
-        OrdenCompra orden = repository.buscarPorIdYEmpresaId(
-                new OrdenCompraId(command.ordenCompraId()),
-                empresaId
-        ).orElseThrow(() -> new DomainException("Orden de Compra no encontrada o no pertenece al tenant."));
-
-        orden.setUpdatedBy(actorProviderPort.getCurrentActorId());
-
-        LineaOrdenCompra linea = new LineaOrdenCompra(
-                UUID.randomUUID(),
-                new ProductoId(command.productoId()),
-                command.cantidad().intValue(),
-                new Dinero(command.costoUnitario())
+        return operation.agregarLinea(
+                command.ordenCompraId(),
+                empresaId,
+                command.productoId(),
+                command.cantidad(),
+                command.costoUnitario(),
+                actorProviderPort.getCurrentActorId()
         );
-
-        orden.agregarLinea(linea);
-        repository.guardar(orden);
-        
-        return OrdenCompraApplicationMapper.aResponse(orden);
     }
 }

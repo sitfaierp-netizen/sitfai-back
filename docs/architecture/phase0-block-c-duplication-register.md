@@ -40,6 +40,7 @@ The audit's 67 duplicated simple names were screened. Twelve priority families r
 5. Three Spring Data aggregate bases were replaced by pure-Java event collections without changing event contracts.
 6. Three Purchasing application services now depend on the shared application tenant contract, not Spring Security infrastructure.
 7. Replenishment web now calls an application use case rather than a repository.
+8. Inventory `PuntoReordenAlcanzadoEvent` now enters Purchasing through a dedicated trusted input port. Authenticated Purchasing commands and internal events share a tenant-agnostic application operation without sharing their trust decision.
 
 ## Dead code confirmed and removed
 
@@ -61,6 +62,8 @@ No table or migration was deleted. `fulfillment_orden_despacho` and `fulfillment
 | Tienda Pedido | Active REST path, application services, JPA adapter, saga test and `tienda_*` data | data migration, API compatibility, event consumer migration, rollback plan |
 | Root Billing Factura | Active services/repository compatibility and credit-note dependency over shared table | service/consumer migration plus historical reconstitution tests |
 | Root Purchasing OrdenCompra | Application services and a distinct state machine still compile as beans | API/consumer inventory and state/data migration |
+
+The point-of-reorder flow still uses `PROVEEDOR_DEFAULT`, a fixed replenishment quantity and a temporary mock unit cost. These are explicit functional debts and are not part of the tenant-boundary correction.
 
 ## Counts
 

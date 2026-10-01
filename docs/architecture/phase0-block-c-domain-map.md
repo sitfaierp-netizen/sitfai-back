@@ -57,6 +57,18 @@ Sales order (legacy or Orders)
 
 The two sales-order entry paths still prevent a single runtime source of truth. Block C makes the target explicit but does not pretend the required data/API/event migration has already happened.
 
+### Explicit inbound event path: PuntoReorden -> Purchasing
+
+```text
+Inventory PuntoReordenAlcanzadoEvent
+  -> PuntoReordenEventListener (trusted messaging adapter)
+  -> ProcesarPuntoReordenUseCase (event empresaId, no SecurityContext)
+  -> OrdenCompraApplicationOperation
+  -> tenant-partitioned Purchasing repository
+```
+
+HTTP Purchasing commands remain a distinct path and continue authorizing their requested tenant through `CurrentTenantProvider`. The trusted path is selected by the inbound port type, never by a request flag, header, synthetic authentication or global tenant-provider bypass.
+
 ## Event catalogue
 
 Classification is by semantic role, not merely by a class suffix.

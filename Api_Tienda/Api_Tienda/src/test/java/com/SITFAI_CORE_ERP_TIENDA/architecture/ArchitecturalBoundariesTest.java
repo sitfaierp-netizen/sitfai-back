@@ -59,6 +59,15 @@ class ArchitecturalBoundariesTest {
     }
 
     @Test
+    void purchasingApplicationDoesNotImportSpringSecurity() throws IOException {
+        assertNoMatchingImport(
+                path -> normalized(path).contains("/purchasing/application/"),
+                line -> line.startsWith("import org.springframework.security."),
+                "Purchasing application must not resolve tenant trust from Spring Security"
+        );
+    }
+
+    @Test
     void webControllersDoNotImportRepositories() throws IOException {
         assertNoMatchingImport(
                 path -> normalized(path).contains("/infrastructure/adapter/in/web/")

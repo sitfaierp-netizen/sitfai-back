@@ -2,7 +2,7 @@
 
 ## Enforced rules
 
-`ArchitecturalBoundariesTest` is a source-level equivalent to ArchUnit tailored to the current package topology. It adds no runtime dependency and protects only rules already made true in this block.
+`ArchitecturalBoundariesTest` is a source-level guard based on Java imports and tailored to the current package topology. It adds no runtime dependency and protects imported dependencies and the current file/package topology. It is not equivalent to ArchUnit bytecode analysis and does not claim to detect reflective, generated or fully qualified dependencies that bypass imports.
 
 | Rule | Before Block C | After Block C | Enforcement |
 |---|---:|---:|---|
@@ -10,6 +10,7 @@
 | Domain must not import infrastructure | 0 observed imports | 0 | `domainDoesNotImportInfrastructure` |
 | Domain must not import application | 7 Inventory driving-port interfaces | 0 | `domainDoesNotImportApplication` |
 | Application must not import infrastructure | 3 Purchasing services | 0 | `applicationDoesNotImportInfrastructure` |
+| Purchasing application must not import Spring Security | 3 direct security-aware services before Block C | 0 | `purchasingApplicationDoesNotImportSpringSecurity` |
 | Web controllers must not import repositories | 1 Replenishment controller | 0 | `webControllersDoNotImportRepositories` |
 | Core Idempotency must not import Inventory | 1 cross-context dependency family across 6 production files | 0 | `coreIdempotencyDoesNotDependOnInventory` |
 | Core Audit has one dispatcher port | 2 interfaces | 1 domain output port | `coreAuditHasOneCanonicalEventDispatcherPort` |
@@ -26,6 +27,8 @@ Fourteen documented hexagonal dependency violations were removed: three domain-t
 ### Application tenant boundary
 
 Purchasing application services call `CurrentTenantProvider.authorizeTenant(...)`. This removes direct knowledge of `SecurityContextHolder` and `TenantAuthenticationDetails`, while preserving authenticated-tenant/global-admin semantics established in Block A.
+
+The `PuntoReorden -> Purchasing` path is a separate trusted inbound event path. `PuntoReordenEventListener` maps the Inventory event to `ProcesarPuntoReordenUseCase`; the use case takes the event-owned tenant explicitly and runs in a new transaction after the producer commit. Both authenticated and internal paths reuse `OrdenCompraApplicationOperation`, which has no dependency on JWT, Spring Security, HTTP or infrastructure adapters. No HTTP controller exposes the trusted input port.
 
 ### Web boundary
 
@@ -50,7 +53,7 @@ Inventory input ports that consume application commands/responses now live under
 ## Verification sequence
 
 1. `test-compile` compiles the complete production and test graph.
-2. Targeted unit tests cover pure event collection, idempotency, Purchasing tenant resolution, Replenishment orchestration and all eight architecture rules.
+2. Targeted unit tests cover pure event collection, idempotency, Purchasing tenant resolution, Replenishment orchestration and all nine architecture rules.
 3. Targeted Testcontainers integration covers Idempotency, Inventory receipt, Production BOM/order, Purchasing, Replenishment and canonical Fulfillment.
 4. Full `clean verify` is the release gate and includes all Surefire/Failsafe tests, Flyway, JaCoCo and OWASP Dependency-Check.
 

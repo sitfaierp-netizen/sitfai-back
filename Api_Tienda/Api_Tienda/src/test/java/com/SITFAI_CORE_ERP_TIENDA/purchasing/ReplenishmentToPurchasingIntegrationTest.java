@@ -8,7 +8,6 @@ import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.output.SolicitudAb
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.model.SolicitudAbastecimiento;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.EstadoSolicitud;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.domain.valueobject.SolicitudId;
 import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.event.NecesidadAbastecimientoDetectadaEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -157,7 +156,7 @@ public class ReplenishmentToPurchasingIntegrationTest extends AbstractIntegratio
 
     @Test
     @DisplayName("Dos empresas distintas con el mismo producto NO deben interferir entre sí (aislamiento MT-01)")
-    void doeEventosDistintosTenantNoDeben_Interferir() {
+    void dosEventosDistintosTenantNoDebenInterferir() {
         // GIVEN: Dos empresas distintas, mismo producto
         UUID empresa1 = UUID.randomUUID();
         UUID empresa2 = UUID.randomUUID();
@@ -194,22 +193,8 @@ public class ReplenishmentToPurchasingIntegrationTest extends AbstractIntegratio
     // Helpers de consulta — acceden al repositorio del módulo purchasing
     // -------------------------------------------------------------------------
 
-    /**
-     * Intenta buscar una solicitud buscando por ID conocido.
-     * Como el ID es generado en el servicio, usamos una verificación de existencia
-     * a través del repositorio buscando con un ID temporal y verificando side-effects.
-     * Para la verificación real, delegamos en el JPA directamente via el adapter.
-     */
     private boolean solicitudExistePorEmpresaBodegaProducto(UUID empresaId, UUID bodegaId, UUID productoId) {
-        // Generamos un ID que sabemos que no existe — si el buscarPorIdYEmpresa devuelve
-        // empty, usamos la verificación alternativa de que el listener procesó el evento.
-        // La verificación más completa se hace en el segundo test con buscarSolicitudReciente.
-        Optional<SolicitudAbastecimiento> optional = solicitudRepository.buscarPorIdYEmpresa(
-                SolicitudId.generar(), new EmpresaId(empresaId)
-        );
-        // El truco: si el adapter funciona y la BD está viva, la consulta no falla.
-        // La solicitud real se busca en el segundo test con la lógica de búsqueda extendida.
-        return !optional.isPresent(); // Siempre empty para un ID generado nuevo — confirma que el repo funciona
+        return buscarSolicitudReciente(empresaId, bodegaId, productoId).isPresent();
     }
 
     /**
