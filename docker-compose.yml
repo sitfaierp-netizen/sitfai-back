@@ -23,7 +23,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
       MYSQL_DATABASE: sitfai_tienda
       MYSQL_USER: ${DB_USER:-sitfai_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
       TZ: UTC
     ports:
       - "${DB_PORT:-3308}:3306"
@@ -75,7 +75,7 @@ services:
       KC_DB_URL_PORT: 3306
       KC_DB_URL_DATABASE: sitfai_iam
       KC_DB_USERNAME: ${DB_USER:-sitfai_user}
-      KC_DB_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
+      KC_DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
 
       # Observabilidad y Salud
       KC_HEALTH_ENABLED: "true"
@@ -108,7 +108,7 @@ services:
       DB_PORT: 3306
       DB_NAME: sitfai_tienda
       DB_USER: ${DB_USER:-sitfai_user}
-      DB_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
 
       # ConfiguraciÃ³n de Keycloak IAM Resource Server & Admin Client
       KEYCLOAK_HOST: keycloak-iam
