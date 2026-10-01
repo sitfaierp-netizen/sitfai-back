@@ -10,6 +10,7 @@ import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.CrearOrdenUs
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.EmitirOrdenCompraUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.GestionarLineasUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.infrastructure.adapter.in.web.dto.EmitirOrdenCompraWebRequest;
+import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.web.TenantId;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,7 +75,7 @@ public class OrdenCompraController {
      */
     @PostMapping("/borrador")
     public ResponseEntity<OrdenCompraResponse> crearBorrador(
-            @RequestAttribute("TenantId") UUID tenantId,
+            @TenantId UUID tenantId,
             @RequestBody CrearOrdenRequest request) {
 
         CrearBorradorCommand command = new CrearBorradorCommand(tenantId, request.proveedorId());
@@ -84,7 +85,7 @@ public class OrdenCompraController {
 
     @PostMapping("/{id}/lineas")
     public ResponseEntity<OrdenCompraResponse> agregarLinea(
-            @RequestAttribute("TenantId") UUID tenantId,
+            @TenantId UUID tenantId,
             @PathVariable UUID id,
             @RequestBody AgregarLineaRequest request) {
 
@@ -97,7 +98,7 @@ public class OrdenCompraController {
 
     @PatchMapping("/{id}/estado")
     public ResponseEntity<OrdenCompraResponse> cambiarEstado(
-            @RequestAttribute("TenantId") UUID tenantId,
+            @TenantId UUID tenantId,
             @PathVariable UUID id,
             @RequestBody CambiarEstadoRequest request) {
 

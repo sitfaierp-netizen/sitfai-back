@@ -4,5 +4,5 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.BodegaRes
 import java.util.List;
 
 public interface ObtenerBodegasPorSucursalUseCase {
-    List<BodegaResponse> ejecutar(String sucursalId);
+    List<BodegaResponse> ejecutar(String empresaId, String sucursalId);
 }

@@ -3,6 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.i
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.BodegaNoEncontradaException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.DomainException;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.StockInsuficienteException;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.exception.InventoryReferenceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,16 @@ import com.SITFAI_CORE_ERP_TIENDA.shared.domain.exception.OptimisticConcurrencyE
 
 @RestControllerAdvice(basePackages = "com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.web")
 public class InventoryExceptionHandler {
+
+    @ExceptionHandler(InventoryReferenceNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleInventoryReferenceNotFound(InventoryReferenceNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Recurso No Encontrado");
+        problem.setType(URI.create("urn:problem-type:inventory-reference-not-found"));
+        problem.setProperty("codigoError", ex.getCodigoError());
+        problem.setProperty("timestamp", Instant.now());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+    }
 
     @ExceptionHandler(OptimisticConcurrencyException.class)
     public ResponseEntity<ProblemDetail> handleOptimisticConcurrency(OptimisticConcurrencyException ex) {

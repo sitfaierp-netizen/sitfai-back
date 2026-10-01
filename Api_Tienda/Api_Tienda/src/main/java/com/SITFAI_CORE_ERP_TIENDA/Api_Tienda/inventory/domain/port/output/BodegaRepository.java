@@ -82,11 +82,4 @@ public interface BodegaRepository {
      */
     List<Bodega> listarPorSucursal(EmpresaId empresaId, String sucursalId);
 
-    /**
-     * Retorna todas las Bodegas de una Sucursal sin empresaId.
-     *
-     * @param sucursalId ID de la Sucursal.
-     * @return Lista (posiblemente vacia) de Bodegas de la Sucursal.
-     */
-    List<Bodega> listarPorSucursalId(String sucursalId);
 }

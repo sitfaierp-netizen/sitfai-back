@@ -21,7 +21,7 @@ public class BodegaQueryController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN_BODEGA', 'BODEGUERO')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN', 'BODEGA_OPERATOR')")
     public ResponseEntity<List<BodegaView>> listarBodegas(@com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.web.TenantId java.util.UUID empresaId) {
         List<BodegaView> bodegas = listarBodegasCQRSUseCase.listarBodegasPorEmpresa(empresaId);
         return ResponseEntity.ok(bodegas);

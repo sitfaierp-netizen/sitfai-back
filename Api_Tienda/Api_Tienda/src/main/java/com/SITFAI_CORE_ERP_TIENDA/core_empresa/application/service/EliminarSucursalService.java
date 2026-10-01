@@ -3,8 +3,12 @@ package com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.service;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.input.EliminarSucursalUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.output.EmpresaEventPublisher;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.output.EmpresaRepository;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.application.port.output.SucursalRepository;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.exception.EmpresaNoEncontradaException;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.model.Empresa;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.model.Sucursal;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.exception.EmpresaInvalidaException;
+import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.event.SucursalEliminadaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.core_empresa.domain.valueobject.SucursalId;
 import org.springframework.stereotype.Service;
@@ -18,10 +22,15 @@ import java.util.UUID;
 public class EliminarSucursalService implements EliminarSucursalUseCase {
 
     private final EmpresaRepository empresaRepository;
+    private final SucursalRepository sucursalRepository;
     private final EmpresaEventPublisher eventPublisher;
 
-    public EliminarSucursalService(EmpresaRepository empresaRepository, EmpresaEventPublisher eventPublisher) {
+    public EliminarSucursalService(
+            EmpresaRepository empresaRepository,
+            SucursalRepository sucursalRepository,
+            EmpresaEventPublisher eventPublisher) {
         this.empresaRepository = Objects.requireNonNull(empresaRepository);
+        this.sucursalRepository = Objects.requireNonNull(sucursalRepository);
         this.eventPublisher = Objects.requireNonNull(eventPublisher);
     }
 
@@ -30,12 +39,14 @@ public class EliminarSucursalService implements EliminarSucursalUseCase {
         EmpresaId empresaId = EmpresaId.de(empresaIdParam);
         SucursalId sucursalId = SucursalId.de(sucursalIdParam);
 
-        Empresa empresa = empresaRepository.buscarPorId(empresaId)
-                .orElseThrow(() -> new EmpresaNoEncontradaException(empresaId));
+        if (!empresaRepository.existe(empresaId)) {
+            throw new EmpresaNoEncontradaException(empresaId);
+        }
 
-        empresa.eliminarSucursal(sucursalId);
-
-        empresaRepository.guardar(empresa);
-        eventPublisher.publicarTodos(empresa.pullDomainEvents());
+        Sucursal sucursal = sucursalRepository.buscarPorIdYEmpresaId(sucursalId, empresaId)
+                .orElseThrow(() -> new EmpresaInvalidaException("Sucursal no encontrada."));
+        sucursal.eliminar();
+        sucursalRepository.guardar(sucursal, empresaId);
+        eventPublisher.publicarTodos(java.util.List.of(SucursalEliminadaEvent.ahora(empresaId, sucursalId)));
     }
 }

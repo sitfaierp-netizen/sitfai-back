@@ -31,7 +31,7 @@ public class InventoryQueryController {
      * MT-02: empresaId no se pasa por parámetro, lo resuelve el caso de uso.
      */
     @GetMapping("/bodegas/{bodegaId}/stock")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN_BODEGA', 'BODEGUERO')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN', 'BODEGA_OPERATOR')")
     public ResponseEntity<List<StockDisponibleView>> getStockByBodega(@PathVariable String bodegaId) {
         List<StockDisponibleView> stock = consultarStockUseCase.consultarStockBodega(bodegaId);
         return ResponseEntity.ok(stock);
@@ -42,7 +42,7 @@ public class InventoryQueryController {
      * MT-02: empresaId no se pasa por parámetro, lo resuelve el caso de uso.
      */
     @GetMapping("/bodegas/{bodegaId}/productos/{productoId}/kardex")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN_BODEGA', 'BODEGUERO')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN', 'BODEGA_OPERATOR')")
     public ResponseEntity<List<MovimientoKardexView>> getKardex(
             @PathVariable String bodegaId,
             @PathVariable String productoId) {

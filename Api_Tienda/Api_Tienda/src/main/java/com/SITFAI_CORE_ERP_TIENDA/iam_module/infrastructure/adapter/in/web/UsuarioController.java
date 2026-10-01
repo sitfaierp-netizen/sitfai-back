@@ -22,6 +22,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Driving Adapter: Controlador REST para la gestión de Identidad y Accesos (IAM).
@@ -36,73 +38,88 @@ public class UsuarioController {
     private final ReactivarUsuarioUseCase reactivarUsuarioUseCase;
     private final CambiarRolUsuarioUseCase cambiarRolUsuarioUseCase;
     private final ConsultarUsuarioUseCase consultarUsuarioUseCase;
+    private final CurrentTenantProvider currentTenantProvider;
 
     public UsuarioController(
             RegistrarUsuarioUseCase registrarUsuarioUseCase,
             DesactivarUsuarioUseCase desactivarUsuarioUseCase,
             ReactivarUsuarioUseCase reactivarUsuarioUseCase,
             CambiarRolUsuarioUseCase cambiarRolUsuarioUseCase,
-            ConsultarUsuarioUseCase consultarUsuarioUseCase
+            ConsultarUsuarioUseCase consultarUsuarioUseCase,
+            CurrentTenantProvider currentTenantProvider
     ) {
         this.registrarUsuarioUseCase = Objects.requireNonNull(registrarUsuarioUseCase, "registrarUsuarioUseCase no puede ser null.");
         this.desactivarUsuarioUseCase = Objects.requireNonNull(desactivarUsuarioUseCase, "desactivarUsuarioUseCase no puede ser null.");
         this.reactivarUsuarioUseCase = Objects.requireNonNull(reactivarUsuarioUseCase, "reactivarUsuarioUseCase no puede ser null.");
         this.cambiarRolUsuarioUseCase = Objects.requireNonNull(cambiarRolUsuarioUseCase, "cambiarRolUsuarioUseCase no puede ser null.");
         this.consultarUsuarioUseCase = Objects.requireNonNull(consultarUsuarioUseCase, "consultarUsuarioUseCase no puede ser null.");
+        this.currentTenantProvider = Objects.requireNonNull(currentTenantProvider, "currentTenantProvider no puede ser null.");
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<UsuarioResponse> registrar(@RequestBody RegistrarUsuarioRequest request) {
-        RegistrarUsuarioCommand command = UsuarioWebMapper.toCommand(request);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(request.empresaId());
+        RegistrarUsuarioCommand command = UsuarioWebMapper.toCommand(tenantAutorizado, request);
         UsuarioResponse response = registrarUsuarioUseCase.ejecutar(command);
-        URI location = URI.create("/iam/usuarios/" + response.id() + "?empresaId=" + response.empresaId());
+        URI location = URI.create("/iam/usuarios/" + response.id());
         return ResponseEntity.created(location).body(response);
     }
 
     @PatchMapping("/{id}/desactivar")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<UsuarioResponse> desactivar(
             @PathVariable UUID id,
             @RequestBody DesactivarUsuarioRequest request
     ) {
-        DesactivarUsuarioCommand command = UsuarioWebMapper.toCommand(id, request);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(request.empresaId());
+        DesactivarUsuarioCommand command = UsuarioWebMapper.toCommand(tenantAutorizado, id, request);
         UsuarioResponse response = desactivarUsuarioUseCase.ejecutar(command);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/reactivar")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<UsuarioResponse> reactivar(
             @PathVariable UUID id,
             @RequestBody ReactivarUsuarioRequest request
     ) {
-        ReactivarUsuarioCommand command = UsuarioWebMapper.toCommand(id, request);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(request.empresaId());
+        ReactivarUsuarioCommand command = UsuarioWebMapper.toCommand(tenantAutorizado, id, request);
         UsuarioResponse response = reactivarUsuarioUseCase.ejecutar(command);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/rol")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<UsuarioResponse> cambiarRol(
             @PathVariable UUID id,
             @RequestBody CambiarRolUsuarioRequest request
     ) {
-        CambiarRolUsuarioCommand command = UsuarioWebMapper.toCommand(id, request);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(request.empresaId());
+        CambiarRolUsuarioCommand command = UsuarioWebMapper.toCommand(tenantAutorizado, id, request);
         UsuarioResponse response = cambiarRolUsuarioUseCase.ejecutar(command);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<UsuarioResponse> obtenerPorId(
             @PathVariable UUID id,
             @RequestParam UUID empresaId
     ) {
-        UsuarioResponse response = consultarUsuarioUseCase.obtenerPorId(empresaId, id);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(empresaId);
+        UsuarioResponse response = consultarUsuarioUseCase.obtenerPorId(tenantAutorizado, id);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> listarPorEmpresa(
             @RequestParam UUID empresaId
     ) {
-        List<UsuarioResponse> response = consultarUsuarioUseCase.listarPorEmpresa(empresaId);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(empresaId);
+        List<UsuarioResponse> response = consultarUsuarioUseCase.listarPorEmpresa(tenantAutorizado);
         return ResponseEntity.ok(response);
     }
 }

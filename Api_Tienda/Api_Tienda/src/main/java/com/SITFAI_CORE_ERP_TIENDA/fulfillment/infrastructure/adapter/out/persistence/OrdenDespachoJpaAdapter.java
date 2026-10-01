@@ -49,6 +49,7 @@ public class OrdenDespachoJpaAdapter implements OrdenDespachoRepository {
             lineaEntity.setId(linea.getId().toString());
             lineaEntity.setProductoId(linea.getProductoId().valor().toString());
             lineaEntity.setCantidad(linea.getCantidad());
+            lineaEntity.setEmpresaId(empresaId.valor().toString());
             lineaEntity.setOrdenDespacho(entity);
             entity.getLineas().add(lineaEntity);
         }

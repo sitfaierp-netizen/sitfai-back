@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
 
 /**
  * Adaptador de entrada REST para el Bounded Context Core-Empresa.
@@ -47,6 +48,7 @@ public class EmpresaController {
     private final CambiarEstadoSucursalUseCase cambiarEstadoSucursalUseCase;
     private final ActualizarEmpresaUseCase actualizarEmpresaUseCase;
     private final EliminarEmpresaUseCase eliminarEmpresaUseCase;
+    private final CurrentTenantProvider currentTenantProvider;
 
     public EmpresaController(
             RegistrarEmpresaUseCase registrarEmpresaUseCase,
@@ -54,13 +56,15 @@ public class EmpresaController {
             ObtenerSucursalesPorEmpresaUseCase obtenerSucursalesPorEmpresaUseCase,
             CambiarEstadoSucursalUseCase cambiarEstadoSucursalUseCase,
             ActualizarEmpresaUseCase actualizarEmpresaUseCase,
-            EliminarEmpresaUseCase eliminarEmpresaUseCase) {
+            EliminarEmpresaUseCase eliminarEmpresaUseCase,
+            CurrentTenantProvider currentTenantProvider) {
         this.registrarEmpresaUseCase = Objects.requireNonNull(registrarEmpresaUseCase, "registrarEmpresaUseCase no puede ser null.");
         this.consultarEmpresaUseCase = Objects.requireNonNull(consultarEmpresaUseCase, "consultarEmpresaUseCase no puede ser null.");
         this.obtenerSucursalesPorEmpresaUseCase = Objects.requireNonNull(obtenerSucursalesPorEmpresaUseCase, "obtenerSucursalesPorEmpresaUseCase no puede ser null.");
         this.cambiarEstadoSucursalUseCase = Objects.requireNonNull(cambiarEstadoSucursalUseCase, "cambiarEstadoSucursalUseCase no puede ser null.");
         this.actualizarEmpresaUseCase = Objects.requireNonNull(actualizarEmpresaUseCase, "actualizarEmpresaUseCase no puede ser null.");
         this.eliminarEmpresaUseCase = Objects.requireNonNull(eliminarEmpresaUseCase, "eliminarEmpresaUseCase no puede ser null.");
+        this.currentTenantProvider = Objects.requireNonNull(currentTenantProvider, "currentTenantProvider no puede ser null.");
     }
 
     // =========================================================================
@@ -140,7 +144,8 @@ public class EmpresaController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
     public ResponseEntity<List<SucursalWebResponse>> listarSucursalesPorEmpresa(
             @PathVariable UUID empresaId) {
-        List<SucursalResponse> sucursales = obtenerSucursalesPorEmpresaUseCase.ejecutar(empresaId);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(empresaId);
+        List<SucursalResponse> sucursales = obtenerSucursalesPorEmpresaUseCase.ejecutar(tenantAutorizado);
         List<SucursalWebResponse> response = sucursales.stream()
                 .map(EmpresaWebMapper::toWebResponse)
                 .toList();
@@ -165,8 +170,8 @@ public class EmpresaController {
     public ResponseEntity<SucursalWebResponse> cambiarEstadoSucursal(
             @PathVariable UUID empresaId,
             @PathVariable UUID sucursalId) {
-        SucursalResponse sucursal = cambiarEstadoSucursalUseCase.ejecutar(empresaId, sucursalId);
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(empresaId);
+        SucursalResponse sucursal = cambiarEstadoSucursalUseCase.ejecutar(tenantAutorizado, sucursalId);
         return ResponseEntity.ok(EmpresaWebMapper.toWebResponse(sucursal));
     }
 }
-

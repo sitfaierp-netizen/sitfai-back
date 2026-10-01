@@ -19,47 +19,47 @@ public final class UsuarioWebMapper {
     private UsuarioWebMapper() {
     }
 
-    public static RegistrarUsuarioCommand toCommand(RegistrarUsuarioRequest request) {
+    public static RegistrarUsuarioCommand toCommand(UUID empresaId, RegistrarUsuarioRequest request) {
         if (request == null) {
             return null;
         }
         return new RegistrarUsuarioCommand(
                 request.id(),
-                request.empresaId(),
+                empresaId,
                 request.username(),
                 request.email(),
                 request.rol()
         );
     }
 
-    public static DesactivarUsuarioCommand toCommand(UUID id, DesactivarUsuarioRequest request) {
+    public static DesactivarUsuarioCommand toCommand(UUID empresaId, UUID id, DesactivarUsuarioRequest request) {
         if (request == null) {
             return null;
         }
         return new DesactivarUsuarioCommand(
                 id,
-                request.empresaId(),
+                empresaId,
                 request.motivo()
         );
     }
 
-    public static ReactivarUsuarioCommand toCommand(UUID id, ReactivarUsuarioRequest request) {
+    public static ReactivarUsuarioCommand toCommand(UUID empresaId, UUID id, ReactivarUsuarioRequest request) {
         if (request == null) {
             return null;
         }
         return new ReactivarUsuarioCommand(
                 id,
-                request.empresaId()
+                empresaId
         );
     }
 
-    public static CambiarRolUsuarioCommand toCommand(UUID id, CambiarRolUsuarioRequest request) {
+    public static CambiarRolUsuarioCommand toCommand(UUID empresaId, UUID id, CambiarRolUsuarioRequest request) {
         if (request == null) {
             return null;
         }
         return new CambiarRolUsuarioCommand(
                 id,
-                request.empresaId(),
+                empresaId,
                 request.nuevoRol()
         );
     }

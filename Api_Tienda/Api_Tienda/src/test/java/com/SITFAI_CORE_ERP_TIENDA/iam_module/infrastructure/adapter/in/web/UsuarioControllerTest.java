@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import com.SITFAI_CORE_ERP_TIENDA.shared.application.security.CurrentTenantProvider;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Infraestructura Web: UsuarioController y IamExceptionHandler")
@@ -57,6 +58,9 @@ class UsuarioControllerTest {
     @Mock
     private ConsultarUsuarioUseCase consultarUsuarioUseCase;
 
+    @Mock
+    private CurrentTenantProvider currentTenantProvider;
+
     private UsuarioController controller;
     private IamExceptionHandler exceptionHandler;
 
@@ -70,8 +74,12 @@ class UsuarioControllerTest {
                 desactivarUsuarioUseCase,
                 reactivarUsuarioUseCase,
                 cambiarRolUsuarioUseCase,
-                consultarUsuarioUseCase
+                consultarUsuarioUseCase,
+                currentTenantProvider
         );
+        org.mockito.Mockito.lenient()
+                .when(currentTenantProvider.authorizeTenant(any(UUID.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         exceptionHandler = new IamExceptionHandler();
     }
 

@@ -21,6 +21,9 @@ public class LineaDespachoJpaEntity extends AuditableJpaEntity {
     @JoinColumn(name = "orden_despacho_id", nullable = false)
     private OrdenDespachoJpaEntity ordenDespacho;
 
+    @Column(name = "empresa_id", length = 36, nullable = false, updatable = false)
+    private String empresaId;
+
     @Column(name = "producto_id", length = 36, nullable = false, updatable = false)
     private String productoId;
 
@@ -31,6 +34,8 @@ public class LineaDespachoJpaEntity extends AuditableJpaEntity {
     public void setId(String id) { this.id = id; }
     public OrdenDespachoJpaEntity getOrdenDespacho() { return ordenDespacho; }
     public void setOrdenDespacho(OrdenDespachoJpaEntity ordenDespacho) { this.ordenDespacho = ordenDespacho; }
+    public String getEmpresaId() { return empresaId; }
+    public void setEmpresaId(String empresaId) { this.empresaId = empresaId; }
     public String getProductoId() { return productoId; }
     public void setProductoId(String productoId) { this.productoId = productoId; }
     public int getCantidad() { return cantidad; }
