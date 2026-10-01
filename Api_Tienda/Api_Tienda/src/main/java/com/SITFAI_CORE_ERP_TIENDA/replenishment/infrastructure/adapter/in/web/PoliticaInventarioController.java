@@ -1,13 +1,9 @@
 package com.SITFAI_CORE_ERP_TIENDA.replenishment.infrastructure.adapter.in.web;
 
-import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.model.politica.PoliticaInventario;
-import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.model.politica.vo.BodegaId;
-import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.model.politica.vo.EmpresaId;
-import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.model.politica.vo.NivelOptimo;
-import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.model.politica.vo.PoliticaId;
-import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.model.politica.vo.ProductoId;
-import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.model.politica.vo.PuntoReorden;
-import com.SITFAI_CORE_ERP_TIENDA.replenishment.domain.port.output.PoliticaInventarioRepository;
+import com.SITFAI_CORE_ERP_TIENDA.replenishment.application.dto.GestionarPoliticaInventarioCommand;
+import com.SITFAI_CORE_ERP_TIENDA.replenishment.application.dto.PoliticaInventarioResult;
+import com.SITFAI_CORE_ERP_TIENDA.replenishment.application.exception.PoliticaInventarioNoEncontradaException;
+import com.SITFAI_CORE_ERP_TIENDA.replenishment.application.port.input.GestionarPoliticaInventarioUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.replenishment.infrastructure.adapter.in.web.dto.PoliticaInventarioRequest;
 import com.SITFAI_CORE_ERP_TIENDA.replenishment.infrastructure.adapter.in.web.dto.PoliticaInventarioResponse;
 import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.web.TenantId;
@@ -30,10 +26,10 @@ import java.util.UUID;
 @RequestMapping("/api/v1/replenishment/politicas")
 public class PoliticaInventarioController {
 
-    private final PoliticaInventarioRepository politicaRepository;
+    private final GestionarPoliticaInventarioUseCase gestionarPoliticaUseCase;
 
-    public PoliticaInventarioController(PoliticaInventarioRepository politicaRepository) {
-        this.politicaRepository = politicaRepository;
+    public PoliticaInventarioController(GestionarPoliticaInventarioUseCase gestionarPoliticaUseCase) {
+        this.gestionarPoliticaUseCase = gestionarPoliticaUseCase;
     }
 
     /**
@@ -46,17 +42,7 @@ public class PoliticaInventarioController {
             @TenantId UUID empresaId,
             @RequestBody PoliticaInventarioRequest request) {
 
-        PoliticaInventario politica = new PoliticaInventario(
-                new PoliticaId(UUID.randomUUID()),
-                new EmpresaId(empresaId),
-                new BodegaId(request.bodegaId()),
-                new ProductoId(request.productoId()),
-                new PuntoReorden(request.puntoReorden()),
-                new NivelOptimo(request.nivelOptimo()),
-                request.activa()
-        );
-
-        politicaRepository.guardar(politica);
+        PoliticaInventarioResult politica = gestionarPoliticaUseCase.crear(toCommand(null, empresaId, request));
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(politica));
     }
 
@@ -71,37 +57,39 @@ public class PoliticaInventarioController {
             @PathVariable UUID id,
             @RequestBody PoliticaInventarioRequest request) {
 
-        PoliticaInventario politicaExistente = politicaRepository
-                .buscarPorId(new PoliticaId(id), new EmpresaId(empresaId))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Política de inventario no encontrada: " + id));
-
-        PoliticaInventario politicaActualizada = new PoliticaInventario(
-                politicaExistente.getId(),
-                politicaExistente.getEmpresaId(),
-                new BodegaId(request.bodegaId()),
-                new ProductoId(request.productoId()),
-                new PuntoReorden(request.puntoReorden()),
-                new NivelOptimo(request.nivelOptimo()),
-                request.activa()
-        );
-
-        politicaRepository.guardar(politicaActualizada);
-        return ResponseEntity.ok(toResponse(politicaActualizada));
+        try {
+            PoliticaInventarioResult politica = gestionarPoliticaUseCase.actualizar(toCommand(id, empresaId, request));
+            return ResponseEntity.ok(toResponse(politica));
+        } catch (PoliticaInventarioNoEncontradaException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception);
+        }
     }
 
     // -------------------------------------------------------------------------
     // Mapper privado: Dominio → Web Response DTO
     // -------------------------------------------------------------------------
-    private PoliticaInventarioResponse toResponse(PoliticaInventario p) {
+    private GestionarPoliticaInventarioCommand toCommand(
+            UUID politicaId, UUID empresaId, PoliticaInventarioRequest request) {
+        return new GestionarPoliticaInventarioCommand(
+                politicaId,
+                empresaId,
+                request.bodegaId(),
+                request.productoId(),
+                request.puntoReorden(),
+                request.nivelOptimo(),
+                request.activa()
+        );
+    }
+
+    private PoliticaInventarioResponse toResponse(PoliticaInventarioResult p) {
         return new PoliticaInventarioResponse(
-                p.getId().valor(),
-                p.getEmpresaId().valor(),
-                p.getBodegaId().valor(),
-                p.getProductoId().valor(),
-                p.getPuntoReorden().valor(),
-                p.getNivelOptimo().valor(),
-                p.isActiva(),
+                p.id(),
+                p.empresaId(),
+                p.bodegaId(),
+                p.productoId(),
+                p.puntoReorden(),
+                p.nivelOptimo(),
+                p.activa(),
                 null, // creadoEn — manejado por AuditableJpaEntity
                 null  // actualizadoEn — manejado por AuditableJpaEntity
         );

@@ -3,7 +3,7 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.service;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.AprobarCuarentenaCommand;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.RegistrarMovimientoCommand;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.AprobarCuarentenaUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.RegistrarMovimientoUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.RegistrarMovimientoUseCase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

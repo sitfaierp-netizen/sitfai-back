@@ -1,6 +1,5 @@
 package com.SITFAI_CORE_ERP_TIENDA.fulfillment.infrastructure.adapter.in.web;
 
-import com.SITFAI_CORE_ERP_TIENDA.fulfillment.domain.exception.DespachoNoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,11 +27,4 @@ public class FulfillmentExceptionHandler extends ResponseEntityExceptionHandler 
         return problemDetail;
     }
 
-    @ExceptionHandler(DespachoNoEncontradoException.class)
-    public ProblemDetail handleDespachoNoEncontradoException(DespachoNoEncontradoException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problemDetail.setTitle("Despacho No Encontrado");
-        problemDetail.setType(URI.create("https://api.sitfai.com/errors/despacho-not-found"));
-        return problemDetail;
-    }
 }

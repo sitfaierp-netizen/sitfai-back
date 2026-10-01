@@ -1,7 +1,7 @@
 package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.infrastructure.adapter.in.messaging;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.dto.DescontarStockVentaCommand;
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.port.input.DescontarStockVentaUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.input.DescontarStockVentaUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.pos.domain.event.VentaRegistradaEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

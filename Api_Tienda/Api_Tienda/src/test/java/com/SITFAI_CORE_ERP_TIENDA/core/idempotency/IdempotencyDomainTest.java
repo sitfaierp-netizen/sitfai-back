@@ -1,12 +1,12 @@
 package com.SITFAI_CORE_ERP_TIENDA.core.idempotency;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.exception.ConcurrentProcessingException;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.exception.IdempotencyConflictException;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.IdempotencyKey;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.IdempotencyRecord;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.IdempotencyStatus;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.PayloadFingerprint;
+import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.EmpresaId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

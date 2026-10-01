@@ -2,7 +2,6 @@ package com.SITFAI_CORE_ERP_TIENDA.core.idempotency;
 
 import com.SITFAI_CORE_ERP_TIENDA.shared.infrastructure.test.AbstractIntegrationTest;
 
-import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.application.port.output.TenantProviderPort;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.infrastructure.adapter.in.web.Idempotent;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.infrastructure.adapter.out.persistence.SpringDataIdempotencyRepository;
 import com.SITFAI_CORE_ERP_TIENDA.core.idempotency.infrastructure.adapter.out.persistence.entity.IdempotencyJpaEntity;
@@ -55,7 +54,7 @@ class IdempotencyIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         repository.deleteAll();
-        Mockito.when(inventoryTenantProviderPort.getEmpresaIdAutenticada()).thenReturn(com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId.de(TENANT_ID));
+        Mockito.when(idempotencyCurrentTenantPort.requireCurrentTenant()).thenReturn(com.SITFAI_CORE_ERP_TIENDA.core.idempotency.domain.model.EmpresaId.de(TENANT_ID));
         DummyController.callCount.set(0);
     }
 

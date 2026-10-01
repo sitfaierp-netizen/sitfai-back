@@ -3,12 +3,14 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.orden;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.orden.event.ProduccionCompletadaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.orden.event.ProduccionIniciadaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.orden.vo.*;
-import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
-public class OrdenProduccion extends AbstractAggregateRoot<OrdenProduccion> {
+public class OrdenProduccion {
 
     private final EmpresaId empresaId;
     private final OrdenProduccionId id;
@@ -16,6 +18,7 @@ public class OrdenProduccion extends AbstractAggregateRoot<OrdenProduccion> {
     private final BodegaId bodegaId;
     private final CantidadProducir cantidadProducir;
     private EstadoOrdenProduccion estado;
+    private final List<Object> domainEvents;
     private Instant fechaCreacion;
     private Instant fechaActualizacion;
 
@@ -26,6 +29,7 @@ public class OrdenProduccion extends AbstractAggregateRoot<OrdenProduccion> {
         this.bodegaId = Objects.requireNonNull(bodegaId, "El bodegaId no puede ser nulo");
         this.cantidadProducir = Objects.requireNonNull(cantidadProducir, "La cantidad a producir no puede ser nula");
         this.estado = EstadoOrdenProduccion.PLANIFICADA;
+        this.domainEvents = new ArrayList<>();
         this.fechaCreacion = Instant.now();
         this.fechaActualizacion = this.fechaCreacion;
     }
@@ -37,6 +41,7 @@ public class OrdenProduccion extends AbstractAggregateRoot<OrdenProduccion> {
         this.bodegaId = Objects.requireNonNull(bodegaId, "El bodegaId no puede ser nulo");
         this.cantidadProducir = Objects.requireNonNull(cantidadProducir, "La cantidad a producir no puede ser nula");
         this.estado = Objects.requireNonNull(estado, "El estado no puede ser nulo");
+        this.domainEvents = new ArrayList<>();
         this.fechaCreacion = Instant.now();
         this.fechaActualizacion = this.fechaCreacion;
     }
@@ -53,7 +58,7 @@ public class OrdenProduccion extends AbstractAggregateRoot<OrdenProduccion> {
         this.estado = EstadoOrdenProduccion.EN_PROGRESO;
         this.fechaActualizacion = Instant.now();
 
-        registerEvent(new ProduccionIniciadaEvent(this.empresaId, this.id, this.recetaId));
+        domainEvents.add(new ProduccionIniciadaEvent(this.empresaId, this.id, this.recetaId));
     }
 
     public void completarProduccion() {
@@ -64,7 +69,7 @@ public class OrdenProduccion extends AbstractAggregateRoot<OrdenProduccion> {
         this.estado = EstadoOrdenProduccion.COMPLETADA;
         this.fechaActualizacion = Instant.now();
 
-        registerEvent(new ProduccionCompletadaEvent(this.empresaId, this.id, this.recetaId, this.cantidadProducir));
+        domainEvents.add(new ProduccionCompletadaEvent(this.empresaId, this.id, this.recetaId, this.cantidadProducir));
     }
 
     public void cancelarProduccion() {
@@ -89,10 +94,10 @@ public class OrdenProduccion extends AbstractAggregateRoot<OrdenProduccion> {
     public Instant getFechaActualizacion() { return fechaActualizacion; }
 
     public java.util.Collection<Object> obtenerEventosDominio() {
-        return domainEvents();
+        return Collections.unmodifiableList(new ArrayList<>(domainEvents));
     }
 
     public void limpiarEventosDominio() {
-        clearDomainEvents();
+        domainEvents.clear();
     }
 }

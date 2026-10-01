@@ -2,7 +2,6 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.bom;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.bom.event.RecetaProduccionAprobadaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.production.domain.model.bom.vo.*;
-import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -10,13 +9,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class ListaMateriales extends AbstractAggregateRoot<ListaMateriales> {
+public class ListaMateriales {
 
     private final EmpresaId empresaId;
     private final RecetaId id;
     private final ProductoFinalId productoFinalId;
     private EstadoReceta estado;
     private final List<ComponenteReceta> componentes;
+    private final List<Object> domainEvents;
     private Instant fechaCreacion;
     private Instant fechaActualizacion;
 
@@ -26,6 +26,7 @@ public class ListaMateriales extends AbstractAggregateRoot<ListaMateriales> {
         this.productoFinalId = Objects.requireNonNull(productoFinalId, "El productoFinalId no puede ser nulo");
         this.estado = EstadoReceta.BORRADOR;
         this.componentes = new ArrayList<>();
+        this.domainEvents = new ArrayList<>();
         this.fechaCreacion = Instant.now();
         this.fechaActualizacion = this.fechaCreacion;
     }
@@ -36,6 +37,7 @@ public class ListaMateriales extends AbstractAggregateRoot<ListaMateriales> {
         this.productoFinalId = Objects.requireNonNull(productoFinalId, "El productoFinalId no puede ser nulo");
         this.estado = Objects.requireNonNull(estado, "El estado no puede ser nulo");
         this.componentes = new ArrayList<>(componentes);
+        this.domainEvents = new ArrayList<>();
         this.fechaCreacion = Instant.now();
         this.fechaActualizacion = this.fechaCreacion;
     }
@@ -83,7 +85,7 @@ public class ListaMateriales extends AbstractAggregateRoot<ListaMateriales> {
         this.fechaActualizacion = Instant.now();
 
         // Registrar evento de dominio
-        registerEvent(new RecetaProduccionAprobadaEvent(this.empresaId, this.id, this.productoFinalId));
+        domainEvents.add(new RecetaProduccionAprobadaEvent(this.empresaId, this.id, this.productoFinalId));
     }
 
     public void marcarComoObsoleta() {
@@ -100,6 +102,6 @@ public class ListaMateriales extends AbstractAggregateRoot<ListaMateriales> {
     public Instant getFechaActualizacion() { return fechaActualizacion; }
 
     public java.util.Collection<Object> obtenerEventosDominio() {
-        return domainEvents();
+        return Collections.unmodifiableList(new ArrayList<>(domainEvents));
     }
 }

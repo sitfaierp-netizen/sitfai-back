@@ -4,11 +4,9 @@ import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.event.PuntoReorden
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.BodegaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.EmpresaId;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.valueobject.ProductoId;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.AgregarLineaCommand;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.CrearBorradorCommand;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.ProcesarPuntoReordenCommand;
 import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.dto.OrdenCompraResponse;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.GestionarLineasUseCase;
-import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.CrearOrdenUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.purchasing.application.port.input.ProcesarPuntoReordenUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +21,6 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
@@ -47,10 +44,7 @@ import static org.mockito.Mockito.*;
 class ReabastecimientoEventHandlerTest {
 
     @Mock
-    private CrearOrdenUseCase crearOrdenUseCase;
-
-    @Mock
-    private GestionarLineasUseCase gestionarLineasUseCase;
+    private ProcesarPuntoReordenUseCase procesarPuntoReordenUseCase;
 
     @InjectMocks
     private PuntoReordenEventListener listener;
@@ -87,7 +81,8 @@ class ReabastecimientoEventHandlerTest {
                 BigDecimal.ZERO,
                 Collections.emptyList()
         );
-        when(crearOrdenUseCase.crearBorrador(any(CrearBorradorCommand.class))).thenReturn(responseBorrador);
+        when(procesarPuntoReordenUseCase.procesar(any(ProcesarPuntoReordenCommand.class)))
+                .thenReturn(responseBorrador);
     }
 
     @Test
@@ -97,10 +92,11 @@ class ReabastecimientoEventHandlerTest {
         listener.handlePuntoReordenAlcanzadoEvent(evento);
 
         // THEN — Capturamos el comando enviado al Use Case para verificar el aislamiento MT-02
-        ArgumentCaptor<CrearBorradorCommand> captor = ArgumentCaptor.forClass(CrearBorradorCommand.class);
-        verify(crearOrdenUseCase, times(1)).crearBorrador(captor.capture());
+        ArgumentCaptor<ProcesarPuntoReordenCommand> captor =
+                ArgumentCaptor.forClass(ProcesarPuntoReordenCommand.class);
+        verify(procesarPuntoReordenUseCase).procesar(captor.capture());
 
-        CrearBorradorCommand comandoCapturado = captor.getValue();
+        ProcesarPuntoReordenCommand comandoCapturado = captor.getValue();
         assertThat(comandoCapturado.empresaId())
                 .as("El empresaId del evento DEBE propagarse a la OrdenCompra (aislamiento MT-02)")
                 .isEqualTo(empresaId);
@@ -113,19 +109,14 @@ class ReabastecimientoEventHandlerTest {
         listener.handlePuntoReordenAlcanzadoEvent(evento);
 
         // THEN — Verificar que se añadió una línea a la orden con el producto afectado
-        ArgumentCaptor<AgregarLineaCommand> captor = ArgumentCaptor.forClass(AgregarLineaCommand.class);
-        verify(gestionarLineasUseCase, times(1)).agregarLinea(captor.capture());
+        ArgumentCaptor<ProcesarPuntoReordenCommand> captor =
+                ArgumentCaptor.forClass(ProcesarPuntoReordenCommand.class);
+        verify(procesarPuntoReordenUseCase).procesar(captor.capture());
 
-        AgregarLineaCommand lineaCapturada = captor.getValue();
+        ProcesarPuntoReordenCommand lineaCapturada = captor.getValue();
         assertThat(lineaCapturada.productoId())
                 .as("La línea de la OC debe referenciar el producto que cruzó el punto de reorden")
                 .isEqualTo(productoId);
-        assertThat(lineaCapturada.ordenCompraId())
-                .as("La línea debe referenciarse a la OC recién creada")
-                .isEqualTo(ordenGeneradaId);
-        assertThat(lineaCapturada.cantidad())
-                .as("La cantidad de reposición estándar debe ser positiva")
-                .isGreaterThan(BigDecimal.ZERO);
         assertThat(lineaCapturada.empresaId())
                 .as("La línea también debe contener el empresaId (MT-02)")
                 .isEqualTo(empresaId);
@@ -138,8 +129,7 @@ class ReabastecimientoEventHandlerTest {
         listener.handlePuntoReordenAlcanzadoEvent(evento);
 
         // THEN — El handler debe invocar exactamente: 1 creación de borrador + 1 adición de línea
-        verify(crearOrdenUseCase, times(1)).crearBorrador(any());
-        verify(gestionarLineasUseCase, times(1)).agregarLinea(any());
-        verifyNoMoreInteractions(crearOrdenUseCase, gestionarLineasUseCase);
+        verify(procesarPuntoReordenUseCase, times(1)).procesar(any());
+        verifyNoMoreInteractions(procesarPuntoReordenUseCase);
     }
 }

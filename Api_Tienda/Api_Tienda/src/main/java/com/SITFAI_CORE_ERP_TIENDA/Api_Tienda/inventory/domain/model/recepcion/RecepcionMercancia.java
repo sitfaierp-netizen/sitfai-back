@@ -2,7 +2,6 @@ package com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.recepcion;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.recepcion.event.MercanciaRecibidaEvent;
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.inventory.domain.model.recepcion.vo.*;
-import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -11,13 +10,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class RecepcionMercancia extends AbstractAggregateRoot<RecepcionMercancia> {
+public class RecepcionMercancia {
     private final EmpresaId empresaId;
     private final RecepcionId id;
     private final OrdenCompraId ordenCompraId;
     private final BodegaId bodegaId;
     private EstadoRecepcion estado;
     private final List<LineaRecepcion> lineas;
+    private final List<Object> domainEvents;
     private final Instant fechaCreacion;
     private Instant fechaActualizacion;
 
@@ -28,6 +28,7 @@ public class RecepcionMercancia extends AbstractAggregateRoot<RecepcionMercancia
         this.bodegaId = Objects.requireNonNull(bodegaId, "BodegaId no puede ser nulo.");
         this.estado = EstadoRecepcion.PLANIFICADA;
         this.lineas = lineas != null ? new ArrayList<>(lineas) : new ArrayList<>();
+        this.domainEvents = new ArrayList<>();
         this.fechaCreacion = Instant.now();
         this.fechaActualizacion = this.fechaCreacion;
     }
@@ -39,6 +40,7 @@ public class RecepcionMercancia extends AbstractAggregateRoot<RecepcionMercancia
         this.bodegaId = bodegaId;
         this.estado = estado;
         this.lineas = lineas != null ? new ArrayList<>(lineas) : new ArrayList<>();
+        this.domainEvents = new ArrayList<>();
         this.fechaCreacion = Instant.now();
         this.fechaActualizacion = this.fechaCreacion;
     }
@@ -112,7 +114,7 @@ public class RecepcionMercancia extends AbstractAggregateRoot<RecepcionMercancia
         this.fechaActualizacion = Instant.now();
 
         // Registrar evento de dominio
-        registerEvent(new MercanciaRecibidaEvent(
+        domainEvents.add(new MercanciaRecibidaEvent(
                 this.empresaId,
                 this.bodegaId,
                 this.id,
@@ -121,6 +123,6 @@ public class RecepcionMercancia extends AbstractAggregateRoot<RecepcionMercancia
     }
 
     public java.util.Collection<Object> obtenerEventosDominio() {
-        return domainEvents();
+        return Collections.unmodifiableList(new ArrayList<>(domainEvents));
     }
 }
