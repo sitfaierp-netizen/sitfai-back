@@ -77,8 +77,22 @@ public class KeycloakIdentityProvisioningAdapter implements IdentityProvisioning
             UserResource userResource = users.get(identity.getId());
             actualizarPerfil(userResource, identity, usuario, creada);
             sincronizarRol(realm, userResource, usuario.getRol().name());
-            enviarOnboardingSiPendiente(userResource, identity);
-            log.info("Identidad Keycloak reconciliada: usuarioId={}, empresaId={}",
+            log.info("Identidad Keycloak preparada: usuarioId={}, empresaId={}",
+                    usuario.getId().valor(), usuario.getEmpresaId().valor());
+        });
+    }
+
+    @Override
+    public void completarOnboarding(Usuario usuario) {
+        ejecutarSeguro("completar onboarding", usuario, () -> {
+            if (!usuario.estaActivo()) {
+                throw new IdentityProvisioningException("El usuario local aún no está activo.");
+            }
+            UserRef ref = usuarioObligatorio(keycloak.realm(targetRealm).users(), usuario);
+            ref.representation().setEnabled(true);
+            ref.resource().update(ref.representation());
+            enviarOnboardingSiPendiente(ref.resource(), ref.representation());
+            log.info("Onboarding Keycloak habilitado: usuarioId={}, empresaId={}",
                     usuario.getId().valor(), usuario.getEmpresaId().valor());
         });
     }
@@ -104,6 +118,9 @@ public class KeycloakIdentityProvisioningAdapter implements IdentityProvisioning
     @Override
     public void reconciliar(Usuario usuario) {
         provisionar(usuario);
+        if (usuario.estaActivo()) {
+            completarOnboarding(usuario);
+        }
     }
 
     private UserRepresentation nuevaIdentidad(Usuario usuario) {

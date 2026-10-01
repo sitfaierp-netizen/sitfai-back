@@ -4,6 +4,7 @@ import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.dto.*;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.exception.IdentityProvisioningException;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.IdentityProvisioningPort;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioEventPublisher;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioRegistrationUnitOfWork;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioRepository;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.service.CambiarRolUsuarioService;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.service.ConsultarUsuarioService;
@@ -48,6 +49,9 @@ class UsuarioApplicationServiceTest {
     @Mock
     private IdentityProvisioningPort identityProvisioningPort;
 
+    @Mock
+    private UsuarioRegistrationUnitOfWork registrationUnitOfWork;
+
     private RegistrarUsuarioService registrarUsuarioService;
     private GestionarEstadoUsuarioService gestionarEstadoUsuarioService;
     private CambiarRolUsuarioService cambiarRolUsuarioService;
@@ -58,10 +62,24 @@ class UsuarioApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        registrarUsuarioService = new RegistrarUsuarioService(usuarioRepository, usuarioEventPublisher, identityProvisioningPort);
+        registrarUsuarioService = new RegistrarUsuarioService(usuarioRepository, registrationUnitOfWork, identityProvisioningPort);
         gestionarEstadoUsuarioService = new GestionarEstadoUsuarioService(usuarioRepository, usuarioEventPublisher, identityProvisioningPort);
         cambiarRolUsuarioService = new CambiarRolUsuarioService(usuarioRepository, usuarioEventPublisher, identityProvisioningPort);
         consultarUsuarioService = new ConsultarUsuarioService(usuarioRepository);
+    }
+
+    private Usuario pendientePersistido(Usuario source) {
+        return Usuario.reconstituir(
+                source.getId(), source.getEmpresaId(), source.getUsername(), source.getEmail(), source.getRol(),
+                com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.model.EstadoUsuario.PENDIENTE_IDENTIDAD,
+                source.getCreadoEn(), source.getActualizadoEn(), true, null, null
+        );
+    }
+
+    private Usuario usuarioPendiente(UUID id, String username, String email, RolUsuario rol) {
+        return Usuario.registrar(
+                UsuarioId.de(id), EmpresaId.de(empresaId), Username.de(username), Email.de(email), rol
+        );
     }
 
     @Nested
@@ -79,9 +97,10 @@ class UsuarioApplicationServiceTest {
                     "CAJERO"
             );
 
-            when(usuarioRepository.existePorUsername(any(EmpresaId.class), any(Username.class))).thenReturn(false);
-            when(usuarioRepository.existePorEmail(any(EmpresaId.class), any(Email.class))).thenReturn(false);
-            when(usuarioRepository.guardar(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(usuarioRepository.buscarPorUsername(any(EmpresaId.class), any(Username.class))).thenReturn(Optional.empty());
+            when(usuarioRepository.buscarPorEmail(any(EmpresaId.class), any(Email.class))).thenReturn(Optional.empty());
+            when(registrationUnitOfWork.guardarPendiente(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(registrationUnitOfWork.confirmarIdentidad(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             UsuarioResponse response = registrarUsuarioService.ejecutar(command);
 
@@ -93,14 +112,15 @@ class UsuarioApplicationServiceTest {
             assertThat(response.rol()).isEqualTo("CAJERO");
             assertThat(response.estado()).isEqualTo("ACTIVO");
 
-            verify(usuarioRepository).guardar(any(Usuario.class));
-            verify(usuarioEventPublisher).publicarTodos(anyList());
+            verify(registrationUnitOfWork).guardarPendiente(any(Usuario.class));
+            verify(registrationUnitOfWork).confirmarIdentidad(any(Usuario.class));
             verify(identityProvisioningPort).provisionar(any(Usuario.class));
+            verify(identityProvisioningPort).completarOnboarding(any(Usuario.class));
         }
 
         @Test
-        @DisplayName("Debe revertir el alta local si Keycloak no está disponible y permitir reintento")
-        void debeFallarSinPersistirCuandoKeycloakNoEstaDisponible() {
+        @DisplayName("Debe conservar el alta pendiente si Keycloak no está disponible y permitir reintento")
+        void debeConservarPendienteCuandoKeycloakNoEstaDisponible() {
             RegistrarUsuarioCommand command = new RegistrarUsuarioCommand(
                     usuarioId,
                     empresaId,
@@ -108,21 +128,69 @@ class UsuarioApplicationServiceTest {
                     "cajero01@empresa.com",
                     "CAJERO"
             );
-            when(usuarioRepository.existePorUsername(any(), any())).thenReturn(false);
-            when(usuarioRepository.existePorEmail(any(), any())).thenReturn(false);
+            when(usuarioRepository.buscarPorUsername(any(), any())).thenReturn(Optional.empty());
+            when(usuarioRepository.buscarPorEmail(any(), any())).thenReturn(Optional.empty());
+            when(registrationUnitOfWork.guardarPendiente(any())).thenAnswer(invocation -> invocation.getArgument(0));
             doThrow(new IdentityProvisioningException("Keycloak no está disponible."))
                     .doNothing()
                     .when(identityProvisioningPort).provisionar(any(Usuario.class));
-            when(usuarioRepository.guardar(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(registrationUnitOfWork.confirmarIdentidad(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
             assertThatThrownBy(() -> registrarUsuarioService.ejecutar(command))
                     .isInstanceOf(IdentityProvisioningException.class);
-            verify(usuarioRepository, never()).guardar(any());
+
+            ArgumentCaptor<Usuario> pendienteCaptor = ArgumentCaptor.forClass(Usuario.class);
+            verify(registrationUnitOfWork).guardarPendiente(pendienteCaptor.capture());
+            Usuario pendiente = pendientePersistido(pendienteCaptor.getValue());
+            assertThat(pendiente.estaPendienteIdentidad()).isTrue();
+            when(usuarioRepository.buscarPorUsername(any(), any())).thenReturn(Optional.of(pendiente));
+            when(usuarioRepository.buscarPorEmail(any(), any())).thenReturn(Optional.of(pendiente));
 
             UsuarioResponse response = registrarUsuarioService.ejecutar(command);
             assertThat(response.id()).isEqualTo(usuarioId);
             verify(identityProvisioningPort, times(2)).provisionar(any(Usuario.class));
-            verify(usuarioRepository).guardar(any(Usuario.class));
+            verify(registrationUnitOfWork).confirmarIdentidad(any(Usuario.class));
+            verify(identityProvisioningPort).completarOnboarding(any(Usuario.class));
+        }
+
+        @Test
+        @DisplayName("EXTERNAL_SUCCESS_LOCAL_FAILURE_RETRY mantiene el UUID servidor con id null")
+        void debeRecuperarExitoExternoSeguidoDeFalloLocalConIdNulo() {
+            RegistrarUsuarioCommand command = new RegistrarUsuarioCommand(
+                    null,
+                    empresaId,
+                    "cajero01",
+                    "cajero01@empresa.com",
+                    "CAJERO"
+            );
+            when(usuarioRepository.buscarPorUsername(any(), any())).thenReturn(Optional.empty());
+            when(usuarioRepository.buscarPorEmail(any(), any())).thenReturn(Optional.empty());
+            when(registrationUnitOfWork.guardarPendiente(any())).thenAnswer(invocation -> invocation.getArgument(0));
+            doThrow(new IllegalStateException("fallo local inyectado"))
+                    .doAnswer(invocation -> invocation.getArgument(0))
+                    .when(registrationUnitOfWork).confirmarIdentidad(any());
+
+            assertThatThrownBy(() -> registrarUsuarioService.ejecutar(command))
+                    .isInstanceOf(IllegalStateException.class);
+
+            ArgumentCaptor<Usuario> pendienteCaptor = ArgumentCaptor.forClass(Usuario.class);
+            verify(registrationUnitOfWork).guardarPendiente(pendienteCaptor.capture());
+            Usuario pendiente = pendientePersistido(pendienteCaptor.getValue());
+            UUID idServidor = pendiente.getId().valor();
+            when(usuarioRepository.buscarPorUsername(any(), any())).thenReturn(Optional.of(pendiente));
+            when(usuarioRepository.buscarPorEmail(any(), any())).thenReturn(Optional.of(pendiente));
+
+            UsuarioResponse response = registrarUsuarioService.ejecutar(command);
+
+            assertThat(response.id()).isEqualTo(idServidor);
+            assertThat(response.estado()).isEqualTo("ACTIVO");
+            ArgumentCaptor<Usuario> externalCaptor = ArgumentCaptor.forClass(Usuario.class);
+            verify(identityProvisioningPort, times(2)).provisionar(externalCaptor.capture());
+            assertThat(externalCaptor.getAllValues())
+                    .extracting(usuario -> usuario.getId().valor())
+                    .containsOnly(idServidor);
+            verify(registrationUnitOfWork, times(1)).guardarPendiente(any());
+            verify(identityProvisioningPort, times(1)).completarOnboarding(any());
         }
 
         @Test
@@ -136,14 +204,16 @@ class UsuarioApplicationServiceTest {
                     "CAJERO"
             );
 
-            when(usuarioRepository.existePorUsername(any(EmpresaId.class), any(Username.class))).thenReturn(true);
+            Usuario existente = usuarioPendiente(usuarioId, "cajero01", "otro@empresa.com", RolUsuario.CAJERO);
+            when(usuarioRepository.buscarPorUsername(any(EmpresaId.class), any(Username.class)))
+                    .thenReturn(Optional.of(existente));
+            when(usuarioRepository.buscarPorEmail(any(EmpresaId.class), any(Email.class))).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> registrarUsuarioService.ejecutar(command))
                     .isInstanceOf(UsuarioInvalidoException.class)
-                    .hasMessageContaining("ya está registrado en esta empresa");
+                    .hasMessageContaining("ya pertenece a otro usuario");
 
-            verify(usuarioRepository, never()).guardar(any());
-            verify(usuarioEventPublisher, never()).publicarTodos(any());
+            verify(registrationUnitOfWork, never()).guardarPendiente(any());
         }
 
         @Test
@@ -157,14 +227,16 @@ class UsuarioApplicationServiceTest {
                     "CAJERO"
             );
 
-            when(usuarioRepository.existePorUsername(any(EmpresaId.class), any(Username.class))).thenReturn(false);
-            when(usuarioRepository.existePorEmail(any(EmpresaId.class), any(Email.class))).thenReturn(true);
+            Usuario existente = usuarioPendiente(usuarioId, "otro01", "cajero01@empresa.com", RolUsuario.CAJERO);
+            when(usuarioRepository.buscarPorUsername(any(EmpresaId.class), any(Username.class))).thenReturn(Optional.empty());
+            when(usuarioRepository.buscarPorEmail(any(EmpresaId.class), any(Email.class)))
+                    .thenReturn(Optional.of(existente));
 
             assertThatThrownBy(() -> registrarUsuarioService.ejecutar(command))
                     .isInstanceOf(UsuarioInvalidoException.class)
-                    .hasMessageContaining("ya está registrado en esta empresa");
+                    .hasMessageContaining("ya pertenece a otro usuario");
 
-            verify(usuarioRepository, never()).guardar(any());
+            verify(registrationUnitOfWork, never()).guardarPendiente(any());
         }
 
         @Test
@@ -177,9 +249,6 @@ class UsuarioApplicationServiceTest {
                     "cajero01@empresa.com",
                     "ROL_INVENTADO"
             );
-
-            when(usuarioRepository.existePorUsername(any(EmpresaId.class), any(Username.class))).thenReturn(false);
-            when(usuarioRepository.existePorEmail(any(EmpresaId.class), any(Email.class))).thenReturn(false);
 
             assertThatThrownBy(() -> registrarUsuarioService.ejecutar(command))
                     .isInstanceOf(UsuarioInvalidoException.class)
@@ -201,6 +270,7 @@ class UsuarioApplicationServiceTest {
                     Email.de("usuario01@empresa.com"),
                     RolUsuario.CAJERO
             );
+            usuario.confirmarIdentidad();
             usuario.pullDomainEvents();
 
             when(usuarioRepository.buscarPorId(EmpresaId.de(empresaId), UsuarioId.de(usuarioId)))
@@ -226,6 +296,7 @@ class UsuarioApplicationServiceTest {
                     Email.de("usuario01@empresa.com"),
                     RolUsuario.CAJERO
             );
+            usuario.confirmarIdentidad();
             usuario.desactivar();
             usuario.pullDomainEvents();
 
@@ -267,6 +338,7 @@ class UsuarioApplicationServiceTest {
                     Email.de("usuario01@empresa.com"),
                     RolUsuario.CAJERO
             );
+            usuario.confirmarIdentidad();
             usuario.pullDomainEvents();
 
             when(usuarioRepository.buscarPorId(EmpresaId.de(empresaId), UsuarioId.de(usuarioId)))

@@ -128,7 +128,7 @@ class UsuarioTest {
     class RegistroUsuarioTests {
 
         @Test
-        @DisplayName("Debe registrar un nuevo usuario con estado ACTIVO y emitir UsuarioRegistradoEvent")
+        @DisplayName("Debe registrar pendiente y emitir UsuarioRegistradoEvent sólo al confirmar identidad")
         void debeRegistrarUsuarioExitosamente() {
             Usuario usuario = Usuario.registrar(
                     usuarioId,
@@ -143,9 +143,13 @@ class UsuarioTest {
             assertThat(usuario.getUsername()).isEqualTo(usernameValido);
             assertThat(usuario.getEmail()).isEqualTo(emailValido);
             assertThat(usuario.getRol()).isEqualTo(RolUsuario.CAJERO);
-            assertThat(usuario.getEstado()).isEqualTo(EstadoUsuario.ACTIVO);
-            assertThat(usuario.estaActivo()).isTrue();
+            assertThat(usuario.getEstado()).isEqualTo(EstadoUsuario.PENDIENTE_IDENTIDAD);
+            assertThat(usuario.estaActivo()).isFalse();
+            assertThat(usuario.estaPendienteIdentidad()).isTrue();
             assertThat(usuario.getCreadoEn()).isNotNull();
+            assertThat(usuario.getDomainEvents()).isEmpty();
+
+            usuario.confirmarIdentidad();
 
             List<DomainEvent> events = usuario.getDomainEvents();
             assertThat(events).hasSize(1);
@@ -189,6 +193,7 @@ class UsuarioTest {
                     emailValido,
                     RolUsuario.BODEGA_OPERATOR
             );
+            usuario.confirmarIdentidad();
             usuario.pullDomainEvents();
 
             usuario.desactivar("Fin de contrato laboral");
@@ -215,6 +220,7 @@ class UsuarioTest {
                     emailValido,
                     RolUsuario.SUCURSAL_MANAGER
             );
+            usuario.confirmarIdentidad();
             usuario.desactivar();
 
             assertThatThrownBy(usuario::desactivar)
@@ -232,6 +238,7 @@ class UsuarioTest {
                     emailValido,
                     RolUsuario.EMPRESA_ADMIN
             );
+            usuario.confirmarIdentidad();
             usuario.desactivar();
             usuario.pullDomainEvents();
 
@@ -255,10 +262,11 @@ class UsuarioTest {
                     emailValido,
                     RolUsuario.SUPER_ADMIN
             );
+            usuario.confirmarIdentidad();
 
             assertThatThrownBy(usuario::reactivar)
                     .isInstanceOf(UsuarioInvalidoException.class)
-                    .hasMessageContaining("ya se encuentra activo");
+                    .hasMessageContaining("Sólo un usuario inactivo");
         }
     }
 
@@ -276,6 +284,7 @@ class UsuarioTest {
                     emailValido,
                     RolUsuario.CAJERO
             );
+            usuario.confirmarIdentidad();
             usuario.pullDomainEvents();
 
             usuario.cambiarRol(RolUsuario.SUCURSAL_MANAGER);
@@ -301,11 +310,12 @@ class UsuarioTest {
                     emailValido,
                     RolUsuario.CAJERO
             );
+            usuario.confirmarIdentidad();
             usuario.desactivar();
 
             assertThatThrownBy(() -> usuario.cambiarRol(RolUsuario.EMPRESA_ADMIN))
                     .isInstanceOf(UsuarioInvalidoException.class)
-                    .hasMessageContaining("No se puede modificar el rol de un usuario inactivo");
+                    .hasMessageContaining("No se puede modificar el rol de un usuario no activo");
         }
 
         @Test
@@ -318,6 +328,7 @@ class UsuarioTest {
                     emailValido,
                     RolUsuario.BODEGA_OPERATOR
             );
+            usuario.confirmarIdentidad();
 
             assertThatThrownBy(() -> usuario.cambiarRol(RolUsuario.BODEGA_OPERATOR))
                     .isInstanceOf(UsuarioInvalidoException.class)
@@ -334,6 +345,7 @@ class UsuarioTest {
                     emailValido,
                     RolUsuario.SUPER_ADMIN
             );
+            usuario.confirmarIdentidad();
 
             assertThatThrownBy(() -> usuario.cambiarRol(null))
                     .isInstanceOf(UsuarioInvalidoException.class);

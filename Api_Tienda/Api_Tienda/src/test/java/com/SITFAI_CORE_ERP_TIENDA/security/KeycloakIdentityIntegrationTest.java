@@ -1,6 +1,11 @@
 package com.SITFAI_CORE_ERP_TIENDA.security;
 
 import com.SITFAI_CORE_ERP_TIENDA.Api_Tienda.ApiTiendaApplication;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioRegistrationUnitOfWork;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.output.UsuarioRepository;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.model.EstadoUsuario;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.valueobject.EmpresaId;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.domain.valueobject.Username;
 import org.junit.jupiter.api.Test;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -15,9 +20,11 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.GenericContainer;
@@ -30,11 +37,13 @@ import org.testcontainers.utility.MountableFile;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +52,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -127,6 +138,12 @@ class KeycloakIdentityIntegrationTest {
     @Autowired
     private Keycloak serviceAccount;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @MockitoSpyBean
+    private UsuarioRegistrationUnitOfWork registrationUnitOfWork;
+
     @Test
     void hardensProvisioningAuthorizationLifecycleAndRetryAgainstRealKeycloak() throws Exception {
         createLoginUser(GLOBAL_ADMIN, "global-admin@sitfai.test", null, "SUPER_ADMIN", GLOBAL_PASSWORD);
@@ -208,6 +225,55 @@ class KeycloakIdentityIntegrationTest {
         reconcile(globalToken, empresaA, tenantAdminId, status().isOk());
         assertThat(serviceAccount.realm(REALM).users().searchByUsername("blockb-admin-a", true))
                 .hasSize(1);
+    }
+
+    @Test
+    void recoversExternalSuccessLocalFailureRetryWithNullIdWithoutDuplicateOrPrematureEmail() throws Exception {
+        String globalAdmin = "blockb-consistency-admin";
+        String username = "blockb-null-id-user";
+        String email = "null-id-user@sitfai.test";
+        createLoginUser(globalAdmin, "consistency-admin@sitfai.test", null, "SUPER_ADMIN", GLOBAL_PASSWORD);
+        String globalToken = passwordToken(globalAdmin, GLOBAL_PASSWORD);
+        UUID empresaId = createEmpresa(globalToken, "91000000003", "Block B Consistency Tenant");
+
+        doThrow(new DataIntegrityViolationException("fallo local inyectado después de Keycloak"))
+                .doCallRealMethod()
+                .when(registrationUnitOfWork).confirmarIdentidad(any());
+
+        mockMvc.perform(post("/iam/usuarios")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(globalToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"empresaId\":\"" + empresaId + "\",\"username\":\"" + username
+                                + "\",\"email\":\"" + email + "\",\"rol\":\"EMPRESA_ADMIN\"}"))
+                .andExpect(status().isConflict());
+
+        var pendiente = usuarioRepository.buscarPorUsername(EmpresaId.de(empresaId), Username.de(username))
+                .orElseThrow();
+        UUID stableId = pendiente.getId().valor();
+        assertThat(pendiente.getEstado()).isEqualTo(EstadoUsuario.PENDIENTE_IDENTIDAD);
+        UserRepresentation externalPending = externalUser(username);
+        assertThat(externalPending.isEnabled()).isFalse();
+        assertThat(externalPending.getAttributes())
+                .containsEntry("sitfai_usuario_id", List.of(stableId.toString()));
+        assertThat(serviceAccount.realm(REALM).users().get(externalPending.getId()).credentials()).isEmpty();
+        assertNoOnboardingMail(email);
+
+        MvcResult retry = mockMvc.perform(post("/iam/usuarios")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(globalToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"empresaId\":\"" + empresaId + "\",\"username\":\"" + username
+                                + "\",\"email\":\"" + email + "\",\"rol\":\"EMPRESA_ADMIN\"}"))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        assertThat(UUID.fromString(json(retry).get("id").asText())).isEqualTo(stableId);
+        assertThat(json(retry).get("estado").asText()).isEqualTo("ACTIVO");
+        assertThat(serviceAccount.realm(REALM).users().searchByUsername(username, true)).hasSize(1);
+        UserRepresentation externalActive = externalUser(username);
+        assertThat(externalActive.isEnabled()).isTrue();
+        assertThat(externalActive.getAttributes())
+                .containsEntry("sitfai_usuario_id", List.of(stableId.toString()));
+        assertOnboardingMailDelivered(email);
     }
 
     private UUID createEmpresa(String token, String ruc, String razonSocial) throws Exception {
@@ -321,19 +387,32 @@ class KeycloakIdentityIntegrationTest {
 
     private void assertOnboardingMailDelivered(String recipient) throws Exception {
         HttpClient client = HttpClient.newHttpClient();
-        URI messagesUri = URI.create("http://" + MAILPIT.getHost() + ":" + MAILPIT.getMappedPort(8025)
-                + "/api/v1/search?query=to:" + recipient);
+        URI messagesUri = mailSearchUri(recipient);
         for (int attempt = 0; attempt < 20; attempt++) {
             HttpResponse<String> response = client.send(
                     HttpRequest.newBuilder(messagesUri).GET().build(),
                     HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200
-                    && objectMapper.readTree(response.body()).path("total").asInt() > 0) {
+                    && objectMapper.readTree(response.body()).path("messages_count").asInt() > 0) {
                 return;
             }
             Thread.sleep(250);
         }
         throw new AssertionError("No se recibió el correo de onboarding para " + recipient);
+    }
+
+    private void assertNoOnboardingMail(String recipient) throws Exception {
+        HttpResponse<String> response = HttpClient.newHttpClient().send(
+                HttpRequest.newBuilder(mailSearchUri(recipient)).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(objectMapper.readTree(response.body()).path("messages_count").asInt()).isZero();
+    }
+
+    private URI mailSearchUri(String recipient) {
+        return URI.create("http://" + MAILPIT.getHost() + ":" + MAILPIT.getMappedPort(8025)
+                + "/api/v1/search?query="
+                + URLEncoder.encode("to:" + recipient, StandardCharsets.UTF_8));
     }
 
     private String bearer(String token) {

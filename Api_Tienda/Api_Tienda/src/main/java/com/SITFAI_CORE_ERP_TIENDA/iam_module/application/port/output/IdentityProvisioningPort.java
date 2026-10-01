@@ -10,6 +10,8 @@ public interface IdentityProvisioningPort {
 
     void provisionar(Usuario usuario);
 
+    void completarOnboarding(Usuario usuario);
+
     void sincronizarRol(Usuario usuario);
 
     void sincronizarEstado(Usuario usuario);
