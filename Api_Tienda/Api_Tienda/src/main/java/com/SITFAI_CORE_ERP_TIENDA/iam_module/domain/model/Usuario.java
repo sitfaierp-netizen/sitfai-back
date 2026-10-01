@@ -76,7 +76,8 @@ public class Usuario {
 
     /**
      * Factory Method de Creación / Registro de un nuevo Usuario en el sistema.
-     * Invariante: Todo usuario nace con estado ACTIVO y debe tener un rol válido asignado.
+     * Invariante: Todo usuario nace pendiente de identidad externa y no es
+     * operativo hasta que el provisioning haya sido confirmado.
      */
     public static Usuario registrar(
             UsuarioId id,
@@ -92,28 +93,38 @@ public class Usuario {
                 username,
                 email,
                 rol,
-                EstadoUsuario.ACTIVO,
+                EstadoUsuario.PENDIENTE_IDENTIDAD,
                 ahora,
                 ahora
         );
-
-        usuario.domainEvents.add(new UsuarioRegistradoEvent(
-                id,
-                empresaId,
-                username.valor(),
-                email.valor(),
-                rol.name(),
-                ahora
-        ));
-
         return usuario;
+    }
+
+    /**
+     * Confirma que la identidad externa fue preparada y habilita el usuario
+     * local. El evento de registro sólo existe a partir de esta transición.
+     */
+    public void confirmarIdentidad() {
+        if (this.estado != EstadoUsuario.PENDIENTE_IDENTIDAD) {
+            throw new UsuarioInvalidoException("Sólo un usuario pendiente puede confirmar su identidad.");
+        }
+        this.estado = EstadoUsuario.ACTIVO;
+        this.actualizadoEn = Instant.now();
+        this.domainEvents.add(new UsuarioRegistradoEvent(
+                this.id,
+                this.empresaId,
+                this.username.valor(),
+                this.email.valor(),
+                this.rol.name(),
+                this.actualizadoEn
+        ));
     }
 
     /**
      * Desactiva / inhabilita al usuario en la plataforma.
      */
     public void desactivar(String motivo) {
-        if (this.estado == EstadoUsuario.INACTIVO) {
+        if (this.estado != EstadoUsuario.ACTIVO) {
             throw new UsuarioInvalidoException("El usuario '" + this.username.valor() + "' ya se encuentra inactivo.");
         }
         this.estado = EstadoUsuario.INACTIVO;
@@ -138,8 +149,8 @@ public class Usuario {
      * Reactiva al usuario inhabilitado.
      */
     public void reactivar() {
-        if (this.estado == EstadoUsuario.ACTIVO) {
-            throw new UsuarioInvalidoException("El usuario '" + this.username.valor() + "' ya se encuentra activo.");
+        if (this.estado != EstadoUsuario.INACTIVO) {
+            throw new UsuarioInvalidoException("Sólo un usuario inactivo puede reactivarse: " + this.username.valor());
         }
         this.estado = EstadoUsuario.ACTIVO;
         this.actualizadoEn = Instant.now();
@@ -159,8 +170,8 @@ public class Usuario {
         if (nuevoRol == null) {
             throw new UsuarioInvalidoException("El nuevo rol no puede ser nulo.");
         }
-        if (this.estado == EstadoUsuario.INACTIVO) {
-            throw new UsuarioInvalidoException("No se puede modificar el rol de un usuario inactivo: " + this.username.valor());
+        if (this.estado != EstadoUsuario.ACTIVO) {
+            throw new UsuarioInvalidoException("No se puede modificar el rol de un usuario no activo: " + this.username.valor());
         }
         if (this.rol == nuevoRol) {
             throw new UsuarioInvalidoException("El usuario '" + this.username.valor() + "' ya tiene asignado el rol " + nuevoRol);
@@ -251,6 +262,10 @@ public class Usuario {
 
     public boolean estaActivo() {
         return this.estado == EstadoUsuario.ACTIVO;
+    }
+
+    public boolean estaPendienteIdentidad() {
+        return this.estado == EstadoUsuario.PENDIENTE_IDENTIDAD;
     }
 
     public Instant getCreadoEn() {

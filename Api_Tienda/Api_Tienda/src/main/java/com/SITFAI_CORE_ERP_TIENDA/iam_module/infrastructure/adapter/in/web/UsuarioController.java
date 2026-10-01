@@ -9,6 +9,7 @@ import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.CambiarRolUs
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.ConsultarUsuarioUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.DesactivarUsuarioUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.ReactivarUsuarioUseCase;
+import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.ReconciliarIdentidadUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.application.port.input.RegistrarUsuarioUseCase;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.in.web.dto.CambiarRolUsuarioRequest;
 import com.SITFAI_CORE_ERP_TIENDA.iam_module.infrastructure.adapter.in.web.dto.DesactivarUsuarioRequest;
@@ -38,6 +39,7 @@ public class UsuarioController {
     private final ReactivarUsuarioUseCase reactivarUsuarioUseCase;
     private final CambiarRolUsuarioUseCase cambiarRolUsuarioUseCase;
     private final ConsultarUsuarioUseCase consultarUsuarioUseCase;
+    private final ReconciliarIdentidadUseCase reconciliarIdentidadUseCase;
     private final CurrentTenantProvider currentTenantProvider;
 
     public UsuarioController(
@@ -46,6 +48,7 @@ public class UsuarioController {
             ReactivarUsuarioUseCase reactivarUsuarioUseCase,
             CambiarRolUsuarioUseCase cambiarRolUsuarioUseCase,
             ConsultarUsuarioUseCase consultarUsuarioUseCase,
+            ReconciliarIdentidadUseCase reconciliarIdentidadUseCase,
             CurrentTenantProvider currentTenantProvider
     ) {
         this.registrarUsuarioUseCase = Objects.requireNonNull(registrarUsuarioUseCase, "registrarUsuarioUseCase no puede ser null.");
@@ -53,6 +56,7 @@ public class UsuarioController {
         this.reactivarUsuarioUseCase = Objects.requireNonNull(reactivarUsuarioUseCase, "reactivarUsuarioUseCase no puede ser null.");
         this.cambiarRolUsuarioUseCase = Objects.requireNonNull(cambiarRolUsuarioUseCase, "cambiarRolUsuarioUseCase no puede ser null.");
         this.consultarUsuarioUseCase = Objects.requireNonNull(consultarUsuarioUseCase, "consultarUsuarioUseCase no puede ser null.");
+        this.reconciliarIdentidadUseCase = Objects.requireNonNull(reconciliarIdentidadUseCase, "reconciliarIdentidadUseCase no puede ser null.");
         this.currentTenantProvider = Objects.requireNonNull(currentTenantProvider, "currentTenantProvider no puede ser null.");
     }
 
@@ -100,6 +104,16 @@ public class UsuarioController {
         CambiarRolUsuarioCommand command = UsuarioWebMapper.toCommand(tenantAutorizado, id, request);
         UsuarioResponse response = cambiarRolUsuarioUseCase.ejecutar(command);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/reconciliar-identidad")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'EMPRESA_ADMIN')")
+    public ResponseEntity<UsuarioResponse> reconciliarIdentidad(
+            @PathVariable UUID id,
+            @RequestParam UUID empresaId
+    ) {
+        UUID tenantAutorizado = currentTenantProvider.authorizeTenant(empresaId);
+        return ResponseEntity.ok(reconciliarIdentidadUseCase.ejecutar(tenantAutorizado, id));
     }
 
     @GetMapping("/{id}")

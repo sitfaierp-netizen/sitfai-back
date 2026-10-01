@@ -82,6 +82,22 @@ class KeycloakJwtAuthenticationConverterTest {
                     "ROLE_SUPER_ADMIN"
             );
         }
+
+        @Test
+        @DisplayName("Debe ignorar roles de realm no administrados por SITFAI")
+        void debeIgnorarRolesNoAdministrados() {
+            Jwt jwt = createMockJwt(Map.of(
+                    "sub", "user-123",
+                    "realm_access", Map.of("roles", List.of(
+                            "default-roles-sitfai-erp", "offline_access", "realm-admin", "CAJERO"))
+            ));
+
+            List<String> authNames = converter.extractAuthorities(jwt).stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
+
+            assertThat(authNames).containsExactly("ROLE_CAJERO");
+        }
     }
 
     @Nested

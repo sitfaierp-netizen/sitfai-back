@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -38,6 +39,13 @@ public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, Abstra
     public static final String CLAIM_EMPRESA_ID_ALT = "empresaId";
     public static final String CLAIM_PREFERRED_USERNAME = "preferred_username";
     public static final String ROLE_PREFIX = "ROLE_";
+    private static final Set<String> ALLOWED_REALM_ROLES = Set.of(
+            "SUPER_ADMIN",
+            "EMPRESA_ADMIN",
+            "SUCURSAL_MANAGER",
+            "BODEGA_OPERATOR",
+            "CAJERO"
+    );
 
     private final JwtGrantedAuthoritiesConverter defaultGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
 
@@ -84,7 +92,10 @@ public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, Abstra
                         .map(Object::toString)
                         .map(String::trim)
                         .filter(role -> !role.isBlank())
-                        .map(role -> role.startsWith(ROLE_PREFIX) ? role : ROLE_PREFIX + role)
+                        .map(role -> role.startsWith(ROLE_PREFIX) ? role.substring(ROLE_PREFIX.length()) : role)
+                        .map(role -> role.toUpperCase(Locale.ROOT))
+                        .filter(ALLOWED_REALM_ROLES::contains)
+                        .map(role -> ROLE_PREFIX + role)
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toSet());
                 authorities.addAll(realmRoles);

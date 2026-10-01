@@ -65,7 +65,7 @@ class UsuarioJpaAdapterTest {
             assertThat(entity.getUsername()).isEqualTo("cajero01");
             assertThat(entity.getEmail()).isEqualTo("cajero@sitfai.com");
             assertThat(entity.getRol()).isEqualTo("CAJERO");
-            assertThat(entity.getEstado()).isEqualTo("ACTIVO");
+            assertThat(entity.getEstado()).isEqualTo("PENDIENTE_IDENTIDAD");
 
             Usuario reconstruido = UsuarioPersistenceMapper.toDomainEntity(entity);
 
@@ -75,7 +75,7 @@ class UsuarioJpaAdapterTest {
             assertThat(reconstruido.getUsername().valor()).isEqualTo("cajero01");
             assertThat(reconstruido.getEmail().valor()).isEqualTo("cajero@sitfai.com");
             assertThat(reconstruido.getRol()).isEqualTo(RolUsuario.CAJERO);
-            assertThat(reconstruido.getEstado()).isEqualTo(EstadoUsuario.ACTIVO);
+            assertThat(reconstruido.getEstado()).isEqualTo(EstadoUsuario.PENDIENTE_IDENTIDAD);
         }
     }
 

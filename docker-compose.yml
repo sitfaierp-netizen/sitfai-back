@@ -23,7 +23,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
       MYSQL_DATABASE: sitfai_tienda
       MYSQL_USER: ${DB_USER:-sitfai_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
       TZ: UTC
     ports:
       - "${DB_PORT:-3308}:3306"
@@ -55,9 +55,19 @@ services:
       - ./docker/keycloak:/opt/keycloak/data/import:ro
       - ./keycloak/themes/sitfai-theme:/opt/keycloak/themes/sitfai-theme:ro
     environment:
-      # Credenciales de Administrador de Keycloak
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      # Bootstrap humano sólo para instalación; no es usado por el backend.
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME:?Set KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD:?Set KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD}
+      SITFAI_BACKEND_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
+      JAVA_OPTS_APPEND: -Dkeycloak.migration.replace-placeholders=true
+      KEYCLOAK_SMTP_HOST: ${KEYCLOAK_SMTP_HOST:?Set KEYCLOAK_SMTP_HOST}
+      KEYCLOAK_SMTP_PORT: ${KEYCLOAK_SMTP_PORT:-25}
+      KEYCLOAK_SMTP_FROM: ${KEYCLOAK_SMTP_FROM:?Set KEYCLOAK_SMTP_FROM}
+      KEYCLOAK_SMTP_AUTH: ${KEYCLOAK_SMTP_AUTH:-false}
+      KEYCLOAK_SMTP_STARTTLS: ${KEYCLOAK_SMTP_STARTTLS:-true}
+      KEYCLOAK_SMTP_SSL: ${KEYCLOAK_SMTP_SSL:-false}
+      KEYCLOAK_SMTP_USERNAME: ${KEYCLOAK_SMTP_USERNAME:-}
+      KEYCLOAK_SMTP_PASSWORD: ${KEYCLOAK_SMTP_PASSWORD:-}
 
       # ConexiÃ³n a Base de Datos MySQL
       KC_DB: mysql
@@ -65,7 +75,7 @@ services:
       KC_DB_URL_PORT: 3306
       KC_DB_URL_DATABASE: sitfai_iam
       KC_DB_USERNAME: ${DB_USER:-sitfai_user}
-      KC_DB_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
+      KC_DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
 
       # Observabilidad y Salud
       KC_HEALTH_ENABLED: "true"
@@ -98,14 +108,15 @@ services:
       DB_PORT: 3306
       DB_NAME: sitfai_tienda
       DB_USER: ${DB_USER:-sitfai_user}
-      DB_PASSWORD: ${DB_PASSWORD:-sitfai_secret_pwd}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
 
       # ConfiguraciÃ³n de Keycloak IAM Resource Server & Admin Client
       KEYCLOAK_HOST: keycloak-iam
       KEYCLOAK_URL: http://keycloak-iam:8080
       KEYCLOAK_REALM: sitfai-erp
-      KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
+      KEYCLOAK_ADMIN_AUTH_REALM: sitfai-erp
+      KEYCLOAK_ADMIN_CLIENT: sitfai-backend-admin
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
       IAM_PORT: 8080
     depends_on:
       keycloak-iam:
@@ -182,5 +193,3 @@ volumes:
   mysql_data:
     name: sitfai_mysql_data
     driver: local
-
-
